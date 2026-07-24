@@ -20,6 +20,57 @@ afterEach(() => {
 });
 
 describe("SecretWordGate", () => {
+  it("rotates every incorrect message while keeping the hint persistent", async () => {
+    const user = userEvent.setup();
+    render(<SecretWordGate validate={async () => false} onAccepted={vi.fn()} />);
+    const input = screen.getByLabelText("Palabra del camino");
+    const expectedMessages = [
+      ...experienceConfig.incorrectMessages,
+      experienceConfig.incorrectMessages[0],
+    ];
+
+    for (const [index, expectedMessage] of expectedMessages.entries()) {
+      await user.clear(input);
+      await user.type(input, `fallo${index + 1}`);
+      await user.keyboard("{Enter}");
+
+      expect(screen.getByTestId("secret-feedback")).toHaveTextContent(
+        expectedMessage,
+      );
+      expect(screen.getByTestId("secret-gate")).toHaveAttribute(
+        "data-attempt",
+        String(index + 1),
+      );
+
+      if (index >= 2) {
+        expect(screen.getByTestId("secret-hint")).toHaveTextContent(
+          experienceConfig.hint,
+        );
+      } else {
+        expect(screen.queryByTestId("secret-hint")).toBeNull();
+      }
+    }
+  });
+
+  it("remounts the wrong-door reaction on every failed attempt", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <SecretWordGate validate={async () => false} onAccepted={vi.fn()} />,
+    );
+    const input = screen.getByLabelText("Palabra del camino");
+
+    await user.type(input, "fallo uno");
+    await user.keyboard("{Enter}");
+    const firstReaction = container.querySelector("[data-state='wrong']");
+
+    await user.clear(input);
+    await user.type(input, "fallo dos");
+    await user.keyboard("{Enter}");
+    const secondReaction = container.querySelector("[data-state='wrong']");
+
+    expect(firstReaction).not.toBe(secondReaction);
+  });
+
   it("announces the hint after the third incorrect attempt", async () => {
     const user = userEvent.setup();
     render(<SecretWordGate validate={async () => false} onAccepted={vi.fn()} />);
@@ -31,11 +82,9 @@ describe("SecretWordGate", () => {
         screen.getByRole("button", { name: "Despertar la puerta" }),
       );
     }
-    expect(
-      screen.getByText(
-        "Es una palabra que une a quienes comparten el camino.",
-      ),
-    ).toBeVisible();
+    expect(screen.getByTestId("secret-hint")).toHaveTextContent(
+      "Es una palabra que une a quienes comparten el camino.",
+    );
   });
 
   it("keeps accepting attempts after revealing the hint", async () => {
@@ -53,11 +102,9 @@ describe("SecretWordGate", () => {
     }
 
     expect(validate).toHaveBeenCalledTimes(5);
-    expect(
-      screen.getByText(
-        "Es una palabra que une a quienes comparten el camino.",
-      ),
-    ).toBeVisible();
+    expect(screen.getByTestId("secret-hint")).toHaveTextContent(
+      "Es una palabra que une a quienes comparten el camino.",
+    );
   });
 
   it("announces validation messages through a polite live region", async () => {

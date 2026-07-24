@@ -9,6 +9,8 @@ const rows = [
   ["Vestimenta", weddingConfig.dressCode],
   ["Transporte", weddingConfig.transport],
   ["Alojamiento", weddingConfig.accommodation],
+  ["Regalos", weddingConfig.gifts],
+  ["Teléfono de contacto", weddingConfig.contactPhone],
 ] as const;
 
 export function EventDetails() {

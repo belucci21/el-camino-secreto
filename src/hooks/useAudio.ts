@@ -22,7 +22,17 @@ export function useAudio() {
     }
   }, []);
 
-  useVisibilityPause(stop);
+  const resume = useCallback(() => {
+    if (!enabled) return;
+
+    try {
+      void contextRef.current?.resume().catch(() => undefined);
+    } catch {
+      // Browsers may reject audio operations as their lifecycle changes.
+    }
+  }, [enabled]);
+
+  useVisibilityPause(stop, resume);
 
   const start = useCallback(async () => {
     try {

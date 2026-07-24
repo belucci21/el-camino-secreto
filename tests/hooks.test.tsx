@@ -151,4 +151,48 @@ describe("useAudio", () => {
 
     expect(audio.suspend).toHaveBeenCalledOnce();
   });
+
+  it("resumes user-enabled audio when the page becomes visible again", async () => {
+    const audio = installAudioContext();
+    const { result } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+    audio.resume.mockClear();
+
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: false,
+    });
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(audio.suspend).toHaveBeenCalledOnce();
+    expect(audio.resume).toHaveBeenCalledOnce();
+    expect(result.current.enabled).toBe(true);
+  });
+
+  it("does not resume audio after the user mutes it", async () => {
+    const audio = installAudioContext();
+    const { result } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+    act(() => result.current.mute());
+    audio.resume.mockClear();
+
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: false,
+    });
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(audio.resume).not.toHaveBeenCalled();
+    expect(result.current.enabled).toBe(false);
+  });
 });

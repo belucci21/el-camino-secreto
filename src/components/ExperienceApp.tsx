@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import {
   experienceReducer,
   initialExperienceState,
@@ -19,6 +25,16 @@ import { InvitationReveal } from "./InvitationReveal";
 import { SecretWordGate } from "./SecretWordGate";
 import { SoundGate } from "./SoundGate";
 
+const sceneAnnouncements = {
+  loading: "El camino está despertando",
+  threshold: "Umbral de entrada",
+  discovery: "Descubrimiento del camino",
+  approach: "Aproximación a la puerta",
+  gate: "Palabra del camino",
+  opening: "Apertura de la puerta",
+  revealed: "Invitación revelada",
+} as const;
+
 export function ExperienceApp() {
   const [state, dispatch] = useReducer(
     experienceReducer,
@@ -28,11 +44,23 @@ export function ExperienceApp() {
   const audio = useAudio();
   const tier = useDeviceCapabilities(motion.reducedMotion);
   const [online, setOnline] = useState(true);
+  const focusTargetRef = useRef<HTMLParagraphElement>(null);
+  const previousSceneRef = useRef(state.scene);
 
   useEffect(() => {
     const timer = window.setTimeout(() => dispatch({ type: "READY" }), 350);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (
+      state.scene !== "loading" &&
+      state.scene !== previousSceneRef.current
+    ) {
+      focusTargetRef.current?.focus();
+    }
+    previousSceneRef.current = state.scene;
+  }, [state.scene]);
 
   useEffect(() => {
     const update = () => setOnline(navigator.onLine);
@@ -60,7 +88,19 @@ export function ExperienceApp() {
       <div
         className="experience"
         data-reduced-motion={motion.reducedMotion ? "true" : "false"}
+        data-performance-tier={tier}
       >
+        <p
+          ref={focusTargetRef}
+          className="scene-focus-target"
+          data-testid="scene-focus-target"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          tabIndex={-1}
+        >
+          {sceneAnnouncements[state.scene]}
+        </p>
         {!online && (
           <p className="connection-status" role="status">
             Sin conexión. El camino continúa con los recursos disponibles.

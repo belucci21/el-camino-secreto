@@ -233,6 +233,15 @@ button:hover:not(:disabled) {
   box-shadow: 0 .8rem 2rem rgba(0, 0, 0, .4);
 }
 
+.scene-focus-target {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .accessibility-controls {
   max-width: min(42rem, calc(100% - 2rem));
   border: 1px solid rgba(212, 175, 55, .16);
@@ -315,6 +324,46 @@ button:hover:not(:disabled) {
   inset: -4%;
   transform: translate(var(--look-x), var(--look-y));
   transition: transform 300ms ease-out;
+}
+
+.experience[data-performance-tier="medium"] .layer {
+  transition-duration: 600ms;
+}
+
+.experience[data-performance-tier="medium"] .layer-mist {
+  opacity: .62;
+  filter: blur(7px);
+  animation-duration: 22s;
+}
+
+.experience[data-performance-tier="medium"] .approach .ancient-door {
+  transition-duration: 2s;
+}
+
+.experience[data-performance-tier="medium"] .door-leaf {
+  transition-duration: 2.5s;
+}
+
+.experience[data-performance-tier="low"] .particle-field {
+  display: none;
+}
+
+.experience[data-performance-tier="low"] .layer,
+.experience[data-performance-tier="low"] .layer-mist,
+.experience[data-performance-tier="low"] .approach .ancient-door,
+.experience[data-performance-tier="low"] .door-leaf {
+  animation: none;
+  transition: none;
+}
+
+.experience[data-performance-tier="low"] .layer,
+.experience[data-performance-tier="low"] .layer-mist {
+  transform: none;
+  filter: none;
+}
+
+.experience[data-performance-tier="low"] .layer-mist {
+  opacity: .12;
 }
 
 .layer-sky {

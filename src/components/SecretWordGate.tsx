@@ -46,17 +46,23 @@ export function SecretWordGate({
     const nextAttempts = attempts + 1;
     setAttempts(nextAttempts);
     setMessage(
-      nextAttempts >= 3
-        ? experienceConfig.hint
-        : experienceConfig.incorrectMessages[
-            (nextAttempts - 1) % experienceConfig.incorrectMessages.length
-          ],
+      experienceConfig.incorrectMessages[
+        (nextAttempts - 1) % experienceConfig.incorrectMessages.length
+      ],
     );
   }
 
   return (
-    <section className="scene gate" aria-labelledby="gate-title">
-      <AncientDoor state={attempts > 0 ? "wrong" : "waiting"} />
+    <section
+      className="scene gate"
+      aria-labelledby="gate-title"
+      data-attempt={attempts}
+      data-testid="secret-gate"
+    >
+      <AncientDoor
+        key={attempts}
+        state={attempts > 0 ? "wrong" : "waiting"}
+      />
       <form className="stone-form" onSubmit={submit}>
         <h2 id="gate-title">
           Solo quienes conocen la palabra podrán entrar.
@@ -73,9 +79,19 @@ export function SecretWordGate({
         <button disabled={busy} type="submit">
           {busy ? "Escuchando…" : "Despertar la puerta"}
         </button>
-        <p role="status" aria-live="polite">
+        <p
+          key={`feedback-${attempts}`}
+          data-testid="secret-feedback"
+          role="status"
+          aria-live="polite"
+        >
           {message}
         </p>
+        {attempts >= 3 && (
+          <p className="secret-hint" data-testid="secret-hint">
+            <strong>Pista:</strong> {experienceConfig.hint}
+          </p>
+        )}
       </form>
     </section>
   );

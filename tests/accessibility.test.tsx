@@ -37,7 +37,7 @@ async function tabTo(
   user: ReturnType<typeof userEvent.setup>,
   element: HTMLElement,
 ) {
-  for (let step = 0; step < 20 && document.activeElement !== element; step += 1) {
+  for (let step = 0; step < 40 && document.activeElement !== element; step += 1) {
     await user.tab();
   }
   expect(element).toHaveFocus();
@@ -253,6 +253,25 @@ it("labels unconfirmed event values without fake links", () => {
   expect(screen.queryByRole("link", { name: "Abrir ubicación" })).toBeNull();
 });
 
+it("renders every configurable event-detail field", () => {
+  render(<EventDetails />);
+
+  for (const label of [
+    "Fecha",
+    "Ceremonia",
+    "Celebración",
+    "Lugar",
+    "Dirección",
+    "Vestimenta",
+    "Transporte",
+    "Alojamiento",
+    "Regalos",
+    "Teléfono de contacto",
+  ]) {
+    expect(screen.getByText(label, { selector: "dt" })).toBeVisible();
+  }
+});
+
 it("keeps a confirmed map link inside a valid detail group", () => {
   const originalMapsUrl = { ...weddingConfig.event.mapsUrl };
 
@@ -403,6 +422,76 @@ it("uses only a confirmed configured URL for calendar downloads", async () => {
   }
 });
 
+it("recovers from a calendar download failure with manual details", async () => {
+  const user = userEvent.setup();
+  const requiredFields = [
+    weddingConfig.event.date,
+    weddingConfig.event.calendarStart,
+    weddingConfig.event.calendarEnd,
+    weddingConfig.event.venue,
+    weddingConfig.event.address,
+  ];
+  const originalFields = requiredFields.map((field) => ({ ...field }));
+  const originalSiteUrl = { ...weddingConfig.siteUrl };
+  const download = vi
+    .spyOn(generateICS, "downloadICS")
+    .mockImplementation(() => {
+      throw new Error("downloads blocked");
+    });
+
+  try {
+    Object.assign(weddingConfig.event.date, {
+      value: "12 de junio de 2027",
+      status: "confirmed",
+    });
+    Object.assign(weddingConfig.event.calendarStart, {
+      value: "2027-06-12T15:00:00Z",
+      status: "confirmed",
+    });
+    Object.assign(weddingConfig.event.calendarEnd, {
+      value: "2027-06-13T00:00:00Z",
+      status: "confirmed",
+    });
+    Object.assign(weddingConfig.event.venue, {
+      value: "El claro",
+      status: "confirmed",
+    });
+    Object.assign(weddingConfig.event.address, {
+      value: "Camino del bosque",
+      status: "confirmed",
+    });
+    Object.assign(weddingConfig.siteUrl, {
+      value: "https://example.test/invitacion",
+      status: "confirmed",
+    });
+
+    render(<CalendarDownload />);
+    await user.click(
+      screen.getByRole("button", { name: "Añadir la fecha al calendario" }),
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "No se pudo descargar el calendario.",
+    );
+    expect(screen.getByText("Guardar los datos manualmente")).toBeVisible();
+    expect(screen.getByText("12 de junio de 2027")).toBeVisible();
+    expect(
+      screen.getByText("2027-06-12T15:00:00Z – 2027-06-13T00:00:00Z"),
+    ).toBeVisible();
+    expect(screen.getByText("El claro")).toBeVisible();
+    expect(screen.getByText("Camino del bosque")).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Abrir invitación" }),
+    ).toHaveAttribute("href", "https://example.test/invitacion");
+  } finally {
+    requiredFields.forEach((field, index) => {
+      Object.assign(field, originalFields[index]);
+    });
+    Object.assign(weddingConfig.siteUrl, originalSiteUrl);
+    download.mockRestore();
+  }
+});
+
 it("reveals the couple and configurable details", () => {
   render(<InvitationReveal />);
   expect(
@@ -459,6 +548,115 @@ it("allows a keyboard user to skip to the invitation", async () => {
   expect(
     screen.getByRole("heading", { name: "Gladiola y Jordi" }),
   ).toBeVisible();
+});
+
+it("lets a keyboard user skip without a click and focuses the revealed scene", async () => {
+  const user = userEvent.setup();
+  render(<ExperienceApp />);
+  const skip = await screen.findByRole("button", {
+    name: "Saltar a la invitación",
+  });
+
+  await tabTo(user, skip);
+  await user.keyboard("{Enter}");
+
+  expect(
+    screen.getByRole("heading", { name: "Gladiola y Jordi" }),
+  ).toBeVisible();
+  expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+  expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
+    "Invitación revelada",
+  );
+});
+
+it("supports the complete Enter and Tab journey through reveal and replay", async () => {
+  const originalMatchMedia = window.matchMedia;
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    value: (query: string) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      onchange: null,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      dispatchEvent: () => true,
+    }),
+  });
+
+  try {
+    const user = userEvent.setup();
+    render(<ExperienceApp />);
+
+    const silence = await screen.findByRole("button", {
+      name: "Entrar en silencio",
+    });
+    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+    expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
+      "Umbral de entrada",
+    );
+    await tabTo(user, silence);
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+    expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
+      "Descubrimiento del camino",
+    );
+
+    const discover = await screen.findByRole("button", {
+      name: "Descubrir el camino",
+    });
+    await tabTo(user, discover);
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+    expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
+      "Aproximación a la puerta",
+    );
+
+    const approach = await screen.findByRole("button", { name: "Acércate" });
+    await tabTo(user, approach);
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+    expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
+      "Palabra del camino",
+    );
+
+    const secretWord = await screen.findByRole("textbox", {
+      name: "Palabra del camino",
+    });
+    await tabTo(user, secretWord);
+    await user.type(secretWord, "amigo");
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+    expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
+      "Apertura de la puerta",
+    );
+
+    const skipOpening = await screen.findByRole("button", {
+      name: "Saltar apertura",
+    });
+    await tabTo(user, skipOpening);
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+    expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
+      "Invitación revelada",
+    );
+
+    const replay = screen.getByRole("button", {
+      name: "Volver a ver la apertura",
+    });
+    await tabTo(user, replay);
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+    expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
+      "Apertura de la puerta",
+    );
+  } finally {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: originalMatchMedia,
+    });
+  }
 });
 
 it("lets a reduced-motion keyboard user reach the secret word field", async () => {
@@ -532,11 +730,17 @@ it("exposes an explicit reduced-motion preference to CSS", async () => {
   expect(
     container.querySelector("[data-reduced-motion='false']"),
   ).toBeInTheDocument();
+  expect(
+    container.querySelector("[data-performance-tier='high']"),
+  ).toBeInTheDocument();
 
   await user.click(motionButton);
 
   expect(
     container.querySelector("[data-reduced-motion='true']"),
+  ).toBeInTheDocument();
+  expect(
+    container.querySelector("[data-performance-tier='low']"),
   ).toBeInTheDocument();
 });
 
