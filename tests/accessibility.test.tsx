@@ -33,6 +33,16 @@ afterEach(() => {
   });
 });
 
+async function tabTo(
+  user: ReturnType<typeof userEvent.setup>,
+  element: HTMLElement,
+) {
+  for (let step = 0; step < 20 && document.activeElement !== element; step += 1) {
+    await user.tab();
+  }
+  expect(element).toHaveFocus();
+}
+
 describe("SoundGate", () => {
   it("offers sound, silence, reduced motion and skip actions", async () => {
     const user = userEvent.setup();
@@ -410,6 +420,18 @@ it("replays the opening from the final message", async () => {
   expect(onReplay).toHaveBeenCalledOnce();
 });
 
+it("renders the final message as an honest placeholder", () => {
+  render(<FinalMessage onReplay={vi.fn()} />);
+
+  expect(weddingConfig.finalMessage).toEqual({
+    value: "Mensaje final pendiente de confirmar",
+    status: "placeholder",
+  });
+  expect(
+    screen.getByText("Mensaje final pendiente de confirmar"),
+  ).toBeVisible();
+});
+
 it("recovers to the static invitation when a scene crashes", () => {
   const consoleError = vi
     .spyOn(console, "error")
@@ -437,6 +459,54 @@ it("allows a keyboard user to skip to the invitation", async () => {
   expect(
     screen.getByRole("heading", { name: "Gladiola y Jordi" }),
   ).toBeVisible();
+});
+
+it("lets a reduced-motion keyboard user reach the secret word field", async () => {
+  const originalMatchMedia = window.matchMedia;
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    value: (query: string) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      onchange: null,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      dispatchEvent: () => true,
+    }),
+  });
+
+  try {
+    const user = userEvent.setup();
+    render(<ExperienceApp />);
+
+    const silence = await screen.findByRole("button", {
+      name: "Entrar en silencio",
+    });
+    await tabTo(user, silence);
+    await user.keyboard("{Enter}");
+
+    const discover = await screen.findByRole("button", {
+      name: "Descubrir el camino",
+    });
+    await tabTo(user, discover);
+    await user.keyboard("{Enter}");
+
+    const approach = await screen.findByRole("button", { name: "Acércate" });
+    await tabTo(user, approach);
+    await user.keyboard("{Enter}");
+
+    const secretWord = await screen.findByRole("textbox", {
+      name: "Palabra del camino",
+    });
+    await tabTo(user, secretWord);
+  } finally {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: originalMatchMedia,
+    });
+  }
 });
 
 it("announces offline mode without blocking the experience", async () => {

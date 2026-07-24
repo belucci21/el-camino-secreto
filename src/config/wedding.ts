@@ -33,8 +33,5 @@ export const weddingConfig = {
   gifts: pending(),
   contactPhone: pending(),
   rsvpWhatsApp: pending("Número pendiente de confirmar"),
-  finalMessage: {
-    value: "La nuestra comienza contigo.",
-    status: "confirmed",
-  } satisfies ConfigValue,
+  finalMessage: pending("Mensaje final pendiente de confirmar"),
 } as const;
