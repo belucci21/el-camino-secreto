@@ -1,0 +1,75 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { experienceConfig } from "../config/experience";
+import { validateSecretWord } from "../utils/secretWord";
+import { AncientDoor } from "./AncientDoor";
+
+interface SecretWordGateProps {
+  validate?: (value: string) => Promise<boolean>;
+  onAccepted: () => void;
+}
+
+export function SecretWordGate({
+  validate = validateSecretWord,
+  onAccepted,
+}: SecretWordGateProps) {
+  const [value, setValue] = useState("");
+  const [attempts, setAttempts] = useState(0);
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!value.trim()) {
+      setMessage("La puerta espera una palabra.");
+      return;
+    }
+
+    setBusy(true);
+    const accepted = await validate(value);
+    setBusy(false);
+
+    if (accepted) {
+      (document.activeElement as HTMLElement | null)?.blur();
+      onAccepted();
+      return;
+    }
+
+    const nextAttempts = attempts + 1;
+    setAttempts(nextAttempts);
+    setMessage(
+      nextAttempts >= 3
+        ? experienceConfig.hint
+        : experienceConfig.incorrectMessages[
+            (nextAttempts - 1) % experienceConfig.incorrectMessages.length
+          ],
+    );
+  }
+
+  return (
+    <section className="scene gate" aria-labelledby="gate-title">
+      <AncientDoor state={attempts > 0 ? "wrong" : "waiting"} />
+      <form className="stone-form" onSubmit={submit}>
+        <h2 id="gate-title">
+          Solo quienes conocen la palabra podrán entrar.
+        </h2>
+        <label htmlFor="secret-word">Palabra del camino</label>
+        <input
+          id="secret-word"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder="Pronuncia la palabra"
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <button disabled={busy} type="submit">
+          {busy ? "Escuchando…" : "Despertar la puerta"}
+        </button>
+        <p role="status" aria-live="polite">
+          {message}
+        </p>
+      </form>
+    </section>
+  );
+}
