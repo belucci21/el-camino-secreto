@@ -1,12 +1,21 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AccessibilityControls } from "../src/components/AccessibilityControls";
 import { AncientDoor } from "../src/components/AncientDoor";
 import { ApproachScene } from "../src/components/ApproachScene";
 import { DiscoveryScene } from "../src/components/DiscoveryScene";
 import { ExperienceLoader } from "../src/components/ExperienceLoader";
 import { SoundGate } from "../src/components/SoundGate";
+import { experienceConfig } from "../src/config/experience";
+
+afterEach(cleanup);
 
 describe("SoundGate", () => {
   it("offers sound, silence, reduced motion and skip actions", async () => {
@@ -130,4 +139,84 @@ it("lets reduced-motion visitors continue through the approach immediately", asy
   continueButton.focus();
   await user.keyboard("{Enter}");
   expect(onFinished).toHaveBeenCalledOnce();
+});
+
+it("arrives immediately when reduced motion is enabled while mounted", () => {
+  vi.useFakeTimers();
+
+  try {
+    const onFinished = vi.fn();
+    const { rerender } = render(
+      <ApproachScene reducedMotion={false} onFinished={onFinished} />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Saltar aproximación" }),
+    ).toBeVisible();
+
+    rerender(<ApproachScene reducedMotion onFinished={onFinished} />);
+
+    expect(
+      screen.getByRole("button", { name: "Acércate" }),
+    ).toBeVisible();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("exposes arrival updates through a polite live status", () => {
+  vi.useFakeTimers();
+
+  try {
+    const onFinished = vi.fn();
+    const { rerender } = render(
+      <ApproachScene reducedMotion={false} onFinished={onFinished} />,
+    );
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveAttribute("aria-live", "polite");
+    expect(status).toHaveTextContent("La puerta se aproxima.");
+
+    rerender(<ApproachScene reducedMotion onFinished={onFinished} />);
+
+    expect(status).toHaveTextContent("La puerta está lista.");
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("moves focus to the continue action after automatic arrival", () => {
+  vi.useFakeTimers();
+
+  try {
+    render(<ApproachScene reducedMotion={false} onFinished={vi.fn()} />);
+    const skipButton = screen.getByRole("button", {
+      name: "Saltar aproximación",
+    });
+    skipButton.focus();
+    expect(skipButton).toHaveFocus();
+
+    act(() => {
+      vi.advanceTimersByTime(experienceConfig.approachDurationMs);
+    });
+
+    const continueButton = screen.getByRole("button", { name: "Acércate" });
+    expect(continueButton).not.toBe(skipButton);
+    expect(continueButton).toHaveFocus();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("preserves external focus when reduced motion starts at arrival", () => {
+  const sentinel = document.createElement("button");
+  document.body.append(sentinel);
+  sentinel.focus();
+
+  try {
+    render(<ApproachScene reducedMotion onFinished={vi.fn()} />);
+    expect(sentinel).toHaveFocus();
+  } finally {
+    sentinel.remove();
+  }
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { experienceConfig } from "../config/experience";
 import { AncientDoor } from "./AncientDoor";
 
@@ -13,17 +13,27 @@ export function ApproachScene({
   reducedMotion,
   onFinished,
 }: ApproachSceneProps) {
-  const [arrived, setArrived] = useState(reducedMotion);
+  const [hasArrived, setHasArrived] = useState(reducedMotion);
+  const arrived = reducedMotion || hasArrived;
+  const continueButtonRef = useRef<HTMLButtonElement>(null);
+  const wasArrived = useRef(arrived);
 
   useEffect(() => {
     if (reducedMotion) return;
 
     const timer = window.setTimeout(
-      () => setArrived(true),
+      () => setHasArrived(true),
       experienceConfig.approachDurationMs,
     );
     return () => window.clearTimeout(timer);
   }, [reducedMotion]);
+
+  useEffect(() => {
+    if (arrived && !wasArrived.current) {
+      continueButtonRef.current?.focus();
+    }
+    wasArrived.current = arrived;
+  }, [arrived]);
 
   return (
     <section
@@ -31,17 +41,28 @@ export function ApproachScene({
       aria-labelledby="approach-title"
     >
       <AncientDoor state={arrived ? "waiting" : "distant"} />
+      <p className="approach-status" role="status" aria-live="polite">
+        {arrived ? "La puerta está lista." : "La puerta se aproxima."}
+      </p>
       {arrived ? (
         <>
           <h2 id="approach-title">
             Solo quienes conocen la palabra podrán entrar.
           </h2>
-          <button onClick={onFinished}>Acércate</button>
+          <button
+            key="continue"
+            ref={continueButtonRef}
+            onClick={onFinished}
+          >
+            Acércate
+          </button>
         </>
       ) : (
         <>
           <p id="approach-title">La puerta despierta entre la niebla.</p>
-          <button onClick={() => setArrived(true)}>Saltar aproximación</button>
+          <button key="skip" onClick={() => setHasArrived(true)}>
+            Saltar aproximación
+          </button>
         </>
       )}
     </section>
