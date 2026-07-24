@@ -27,9 +27,7 @@ export function ExperienceApp() {
   const motion = useReducedMotion();
   const audio = useAudio();
   const tier = useDeviceCapabilities(motion.reducedMotion);
-  const [online, setOnline] = useState(
-    typeof navigator === "undefined" ? true : navigator.onLine,
-  );
+  const [online, setOnline] = useState(true);
 
   useEffect(() => {
     const timer = window.setTimeout(() => dispatch({ type: "READY" }), 350);
@@ -38,6 +36,7 @@ export function ExperienceApp() {
 
   useEffect(() => {
     const update = () => setOnline(navigator.onLine);
+    update();
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
     return () => {
@@ -58,68 +57,73 @@ export function ExperienceApp() {
 
   return (
     <ErrorBoundary>
-      {!online && (
-        <p className="connection-status" role="status">
-          Sin conexión. El camino continúa con los recursos disponibles.
-        </p>
-      )}
-      {state.scene !== "loading" && (
-        <AccessibilityControls
-          reducedMotion={motion.reducedMotion}
-          soundEnabled={audio.enabled}
-          volume={audio.volume}
-          onToggleMotion={() =>
-            motion.setReducedMotion(!motion.reducedMotion)
-          }
-          onToggleSound={() =>
-            audio.enabled ? audio.mute() : void audio.start()
-          }
-          onVolumeChange={audio.setVolume}
-          onSkip={reveal}
-        />
-      )}
-      {state.scene === "loading" && <ExperienceLoader />}
-      {state.scene === "threshold" && (
-        <SoundGate
-          reducedMotion={motion.reducedMotion}
-          onEnter={enter}
-          onToggleReducedMotion={() =>
-            motion.setReducedMotion(!motion.reducedMotion)
-          }
-          onSkip={reveal}
-        />
-      )}
-      {state.scene === "discovery" && (
-        <DiscoveryScene
-          tier={tier}
-          onDiscover={() => dispatch({ type: "DISCOVER" })}
-        />
-      )}
-      {state.scene === "approach" && (
-        <ApproachScene
-          reducedMotion={motion.reducedMotion}
-          onFinished={() => dispatch({ type: "APPROACH_FINISHED" })}
-        />
-      )}
-      {state.scene === "gate" && (
-        <SecretWordGate
-          onAccepted={() => dispatch({ type: "SECRET_ACCEPTED" })}
-        />
-      )}
-      {state.scene === "opening" && (
-        <DoorOpeningSequence
-          reducedMotion={motion.reducedMotion}
-          onFinished={() => dispatch({ type: "OPENING_FINISHED" })}
-        />
-      )}
-      {state.scene === "revealed" && (
-        <>
-          <InvitationReveal />
-          <FinalMessage
-            onReplay={() => dispatch({ type: "REPLAY_OPENING" })}
+      <div
+        className="experience"
+        data-reduced-motion={motion.reducedMotion ? "true" : "false"}
+      >
+        {!online && (
+          <p className="connection-status" role="status">
+            Sin conexión. El camino continúa con los recursos disponibles.
+          </p>
+        )}
+        {state.scene !== "loading" && (
+          <AccessibilityControls
+            reducedMotion={motion.reducedMotion}
+            soundEnabled={audio.enabled}
+            volume={audio.volume}
+            onToggleMotion={() =>
+              motion.setReducedMotion(!motion.reducedMotion)
+            }
+            onToggleSound={() =>
+              audio.enabled ? audio.mute() : void audio.start()
+            }
+            onVolumeChange={audio.setVolume}
+            onSkip={reveal}
           />
-        </>
-      )}
+        )}
+        {state.scene === "loading" && <ExperienceLoader />}
+        {state.scene === "threshold" && (
+          <SoundGate
+            reducedMotion={motion.reducedMotion}
+            onEnter={enter}
+            onToggleReducedMotion={() =>
+              motion.setReducedMotion(!motion.reducedMotion)
+            }
+            onSkip={reveal}
+          />
+        )}
+        {state.scene === "discovery" && (
+          <DiscoveryScene
+            tier={tier}
+            onDiscover={() => dispatch({ type: "DISCOVER" })}
+          />
+        )}
+        {state.scene === "approach" && (
+          <ApproachScene
+            reducedMotion={motion.reducedMotion}
+            onFinished={() => dispatch({ type: "APPROACH_FINISHED" })}
+          />
+        )}
+        {state.scene === "gate" && (
+          <SecretWordGate
+            onAccepted={() => dispatch({ type: "SECRET_ACCEPTED" })}
+          />
+        )}
+        {state.scene === "opening" && (
+          <DoorOpeningSequence
+            reducedMotion={motion.reducedMotion}
+            onFinished={() => dispatch({ type: "OPENING_FINISHED" })}
+          />
+        )}
+        {state.scene === "revealed" && (
+          <>
+            <InvitationReveal />
+            <FinalMessage
+              onReplay={() => dispatch({ type: "REPLAY_OPENING" })}
+            />
+          </>
+        )}
+      </div>
     </ErrorBoundary>
   );
 }

@@ -6,6 +6,7 @@ import {
   screen,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AccessibilityControls } from "../src/components/AccessibilityControls";
 import { AncientDoor } from "../src/components/AncientDoor";
@@ -24,7 +25,13 @@ import { experienceConfig } from "../src/config/experience";
 import { weddingConfig } from "../src/config/wedding";
 import * as generateICS from "../src/utils/generateICS";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  Object.defineProperty(navigator, "onLine", {
+    configurable: true,
+    value: true,
+  });
+});
 
 describe("SoundGate", () => {
   it("offers sound, silence, reduced motion and skip actions", async () => {
@@ -432,15 +439,46 @@ it("allows a keyboard user to skip to the invitation", async () => {
   ).toBeVisible();
 });
 
-it("announces offline mode without blocking the experience", () => {
+it("announces offline mode without blocking the experience", async () => {
   Object.defineProperty(navigator, "onLine", {
     configurable: true,
     value: false,
   });
   render(<ExperienceApp />);
   expect(
-    screen.getByText(
+    await screen.findByText(
       "Sin conexión. El camino continúa con los recursos disponibles.",
     ),
   ).toBeVisible();
+});
+
+it("exposes an explicit reduced-motion preference to CSS", async () => {
+  const user = userEvent.setup();
+  const { container } = render(<ExperienceApp />);
+  const motionButton = await screen.findByRole("button", {
+    name: "Movimiento",
+  });
+
+  expect(
+    container.querySelector("[data-reduced-motion='false']"),
+  ).toBeInTheDocument();
+
+  await user.click(motionButton);
+
+  expect(
+    container.querySelector("[data-reduced-motion='true']"),
+  ).toBeInTheDocument();
+});
+
+it("keeps initial markup deterministic while offline", () => {
+  Object.defineProperty(navigator, "onLine", {
+    configurable: true,
+    value: false,
+  });
+
+  const markup = renderToString(<ExperienceApp />);
+
+  expect(markup).not.toContain(
+    "Sin conexión. El camino continúa con los recursos disponibles.",
+  );
 });
