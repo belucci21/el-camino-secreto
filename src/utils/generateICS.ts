@@ -31,7 +31,7 @@ export function generateICS(event: CalendarEvent): string {
     `SUMMARY:${escapeICS(event.title)}`,
     `DESCRIPTION:${escapeICS(event.description)}`,
     `LOCATION:${escapeICS(event.location)}`,
-    `URL:${event.url}`,
+    `URL:${escapeICS(event.url)}`,
     "END:VEVENT",
     "END:VCALENDAR",
     "",

@@ -18,6 +18,22 @@ describe("generateICS", () => {
     expect(content).toContain("END:VCALENDAR\r\n");
   });
 
+  it("escapes line breaks in URLs so they cannot inject ICS properties", () => {
+    const content = generateICS({
+      title: "Gladiola & Jordi",
+      start: "2027-06-21T17:00:00+02:00",
+      end: "2027-06-21T23:59:00+02:00",
+      location: "Lugar",
+      description: "Vínculo eterno",
+      url: "https://gladiolajordivinculoeterno.com/\r\nX-INJECTED:value",
+    });
+
+    expect(content).toContain(
+      "URL:https://gladiolajordivinculoeterno.com/\\nX-INJECTED:value\r\n",
+    );
+    expect(content).not.toContain("\r\nX-INJECTED:value\r\n");
+  });
+
   it("downloads the generated event without an external service", () => {
     const createObjectURL = vi.fn(() => "blob:calendar");
     const revokeObjectURL = vi.fn();
