@@ -1,47 +1,97 @@
-import { ExperienceApp } from "../src/components/ExperienceApp";
+const journeySteps = [
+  ["01", "Descubre", "El camino revela una puerta antigua."],
+  ["02", "Se acerca", "La luz responde cuando el invitado avanza."],
+  ["03", "Amigo", "La palabra secreta despierta el umbral."],
+];
+
+const featureItems = [
+  ["Exploración", "Una experiencia móvil first con movimiento y atmósfera."],
+  ["Interacción", "Cada gesto activa una respuesta mágica."],
+  ["Revelación", "La invitación completa se abrirá cuando llegue el momento."],
+];
 
 export default function Home() {
   return (
-    <main id="main-content">
-      <header className="seo-introduction">
-        <p>El Camino Secreto</p>
-        <h1>Gladiola y Jordi: Vínculo Eterno</h1>
-      </header>
-      <ExperienceApp />
-      <article className="editorial-story">
-        <h2>Una puerta hacia la celebración</h2>
-        <p>
-          El Camino Secreto de Gladiola y Jordi nace como una invitación a
-          descubrir, no solo a leer. Su vínculo eterno se representa mediante
-          un sendero que atraviesa bosque, agua y piedra hasta llegar a una
-          puerta que no figura en ningún mapa. Cada visitante forma parte de la
-          historia desde el instante en que acepta avanzar.
-        </p>
-        <p>
-          Al otro lado espera una celebración compartida con las personas que
-          han acompañado a Gladiola y Jordi durante su camino. La palabra que
-          despierta el umbral no pretende guardar un secreto real: recuerda que
-          las aventuras importantes se recorren en compañía. La puerta, la luz
-          y los símbolos originales convierten la invitación en un gesto de
-          bienvenida.
-        </p>
-        <p>
-          Esta experiencia digital reúne misterio, naturaleza y calidez para
-          anunciar un nuevo comienzo. Cuando los detalles estén confirmados,
-          este mismo lugar mostrará la fecha, la ubicación y la forma de
-          acompañarlos. Hasta entonces, el sendero permanece abierto como
-          promesa de la celebración que está por llegar.
-        </p>
-        <p>
-          La invitación de Gladiola y Jordi propone detenerse, escuchar y
-          participar. No es una contraseña ni una barrera: es una pequeña
-          ceremonia digital antes de la ceremonia compartida. Quien encuentra
-          el camino secreto descubre que el vínculo eterno también se construye
-          con la memoria, la amistad y la presencia de quienes celebran junto a
-          ellos. Por eso la historia termina al abrir la puerta y, al mismo
-          tiempo, empieza allí.
-        </p>
-      </article>
+    <main className="coming-soon-page" id="main-content">
+      <section className="hero-panel" aria-labelledby="coming-soon-title">
+        <div className="ornate-corner ornate-corner--tl" aria-hidden="true" />
+        <div className="ornate-corner ornate-corner--tr" aria-hidden="true" />
+        <div className="ornate-corner ornate-corner--bl" aria-hidden="true" />
+        <div className="ornate-corner ornate-corner--br" aria-hidden="true" />
+
+        <div className="hero-art" aria-hidden="true" />
+
+        <header className="site-mark" aria-label="Gladiola y Jordi">
+          <span className="monogram">G&amp;J</span>
+          <span className="mark-line" />
+          <span>Gladiola &amp; Jordi</span>
+        </header>
+
+        <div className="hero-copy">
+          <p className="chapter">Invitación interactiva de boda</p>
+          <h1 id="coming-soon-title">
+            El Camino
+            <span>Secreto</span>
+          </h1>
+          <div className="coming-soon" aria-label="Coming soon">
+            Coming Soon
+          </div>
+          <p className="hero-lede">
+            Hay puertas que no aparecen en ningún mapa. Muy pronto, los
+            invitados de Gladiola y Jordi podrán cruzar el umbral y descubrir
+            el inicio de una aventura.
+          </p>
+          <div className="secret-lock" aria-label="Palabra secreta">
+            <span>Palabra del camino</span>
+            <strong>amigo</strong>
+          </div>
+        </div>
+
+        <aside className="phone-preview" aria-label="Vista previa móvil">
+          <div className="phone-shell">
+            <div className="phone-screen">
+              <span className="phone-status">9:41</span>
+              <span className="phone-monogram">G&amp;J</span>
+              <p>Estás invitado a</p>
+              <h2>Nuestra boda</h2>
+              <span className="phone-date">Coming Soon</span>
+              <button type="button">Despertar la puerta</button>
+            </div>
+          </div>
+        </aside>
+
+        <div className="journey-strip" aria-label="Fases de la experiencia">
+          {journeySteps.map(([number, title, description]) => (
+            <article key={number}>
+              <span>{number}</span>
+              <h2>{title}</h2>
+              <p>{description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="details-band" aria-labelledby="details-title">
+        <div>
+          <p className="chapter">El viaje del invitado</p>
+          <h2 id="details-title">La invitación está despertando.</h2>
+        </div>
+        <div className="feature-list">
+          {featureItems.map(([title, description]) => (
+            <article key={title}>
+              <span aria-hidden="true">✦</span>
+              <h3>{title}</h3>
+              <p>{description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <footer className="closing-line">
+        <span>El Camino Secreto</span>
+        <span aria-hidden="true">✦</span>
+        <span>Nuestra historia comienza contigo</span>
+      </footer>
     </main>
   );
 }
