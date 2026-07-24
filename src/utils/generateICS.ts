@@ -17,6 +17,16 @@ const escapeICS = (value: string) =>
 const toUtcStamp = (value: string) =>
   new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 
+const normalizeCalendarUrl = (value: string) => {
+  const url = new URL(value.replace(/\r/g, "%0D").replace(/\n/g, "%0A"));
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("Calendar URL must use HTTP or HTTPS.");
+  }
+
+  return url.toString();
+};
+
 export function generateICS(event: CalendarEvent): string {
   return [
     "BEGIN:VCALENDAR",
@@ -31,7 +41,7 @@ export function generateICS(event: CalendarEvent): string {
     `SUMMARY:${escapeICS(event.title)}`,
     `DESCRIPTION:${escapeICS(event.description)}`,
     `LOCATION:${escapeICS(event.location)}`,
-    `URL:${escapeICS(event.url)}`,
+    `URL:${normalizeCalendarUrl(event.url)}`,
     "END:VEVENT",
     "END:VCALENDAR",
     "",

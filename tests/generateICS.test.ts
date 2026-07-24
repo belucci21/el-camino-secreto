@@ -18,7 +18,7 @@ describe("generateICS", () => {
     expect(content).toContain("END:VCALENDAR\r\n");
   });
 
-  it("escapes line breaks in URLs so they cannot inject ICS properties", () => {
+  it("encodes line breaks in URLs so they cannot inject ICS properties", () => {
     const content = generateICS({
       title: "Gladiola & Jordi",
       start: "2027-06-21T17:00:00+02:00",
@@ -29,9 +29,25 @@ describe("generateICS", () => {
     });
 
     expect(content).toContain(
-      "URL:https://gladiolajordivinculoeterno.com/\\nX-INJECTED:value\r\n",
+      "URL:https://gladiolajordivinculoeterno.com/%0D%0AX-INJECTED:value\r\n",
     );
     expect(content).not.toContain("\r\nX-INJECTED:value\r\n");
+  });
+
+  it("keeps legal comma and semicolon characters unescaped in HTTPS URLs", () => {
+    const url = "https://gladiolajordivinculoeterno.com/ruta,a;detalle?x=uno,dos;tres";
+    const content = generateICS({
+      title: "Gladiola & Jordi",
+      start: "2027-06-21T17:00:00+02:00",
+      end: "2027-06-21T23:59:00+02:00",
+      location: "Lugar",
+      description: "Vínculo eterno",
+      url,
+    });
+
+    expect(content).toContain(`URL:${url}\r\n`);
+    expect(content).not.toContain("\\,");
+    expect(content).not.toContain("\\;");
   });
 
   it("downloads the generated event without an external service", () => {
