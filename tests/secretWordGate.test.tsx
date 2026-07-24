@@ -83,6 +83,33 @@ describe("SecretWordGate", () => {
     expect(onAccepted).toHaveBeenCalledOnce();
     expect(document.activeElement).toBe(document.body);
   });
+
+  it("recovers from validation errors and permits another attempt", async () => {
+    const user = userEvent.setup();
+    const validate = vi
+      .fn<(value: string) => Promise<boolean>>()
+      .mockRejectedValueOnce(new Error("validation unavailable"))
+      .mockResolvedValueOnce(true);
+    const onAccepted = vi.fn();
+    render(<SecretWordGate validate={validate} onAccepted={onAccepted} />);
+    await user.type(screen.getByLabelText("Palabra del camino"), "respuesta");
+    const submitButton = screen.getByRole("button", {
+      name: "Despertar la puerta",
+    });
+
+    await user.click(submitButton);
+
+    expect(
+      await screen.findByText(
+        "La puerta no puede escuchar ahora. Inténtalo de nuevo.",
+      ),
+    ).toBeVisible();
+    expect(submitButton).toBeEnabled();
+
+    await user.click(submitButton);
+    expect(validate).toHaveBeenCalledTimes(2);
+    expect(onAccepted).toHaveBeenCalledOnce();
+  });
 });
 
 describe("DoorOpeningSequence", () => {
@@ -155,6 +182,48 @@ describe("DoorOpeningSequence", () => {
     });
 
     expect(onFinished).toHaveBeenCalledOnce();
+  });
+
+  it("still finishes when GSAP cleanup throws", () => {
+    const kill = vi
+      .fn()
+      .mockImplementationOnce(() => {
+        throw new Error("animation cleanup unavailable");
+      })
+      .mockImplementation(() => undefined);
+    vi.mocked(gsap.fromTo).mockReturnValueOnce({ kill } as never);
+    const onFinished = vi.fn();
+    const suppressExpectedError = (event: ErrorEvent) => event.preventDefault();
+    window.addEventListener("error", suppressExpectedError);
+
+    try {
+      render(
+        <DoorOpeningSequence reducedMotion={false} onFinished={onFinished} />,
+      );
+      screen.getByRole("button", { name: "Saltar apertura" }).click();
+      expect(onFinished).toHaveBeenCalledOnce();
+    } finally {
+      window.removeEventListener("error", suppressExpectedError);
+    }
+  });
+
+  it("scopes each GSAP animation to its own door light", () => {
+    vi.mocked(gsap.fromTo).mockClear();
+    const { container } = render(
+      <>
+        <DoorOpeningSequence reducedMotion={false} onFinished={vi.fn()} />
+        <DoorOpeningSequence reducedMotion={false} onFinished={vi.fn()} />
+      </>,
+    );
+    const openingScenes = container.querySelectorAll(".opening");
+
+    expect(gsap.fromTo).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(gsap.fromTo).mock.calls[0][0]).toBe(
+      openingScenes[0].querySelector(".door-light"),
+    );
+    expect(vi.mocked(gsap.fromTo).mock.calls[1][0]).toBe(
+      openingScenes[1].querySelector(".door-light"),
+    );
   });
 
   it("cancels its timer and animation when unmounted", () => {

@@ -15,15 +15,13 @@ export function DoorOpeningSequence({
   onFinished,
 }: DoorOpeningSequenceProps) {
   const [opened, setOpened] = useState(reducedMotion);
+  const rootRef = useRef<HTMLElement>(null);
   const animationRef = useRef<ReturnType<typeof gsap.fromTo> | null>(null);
   const frameRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
   const finishedRef = useRef(false);
 
-  const finish = useCallback(() => {
-    if (finishedRef.current) return;
-    finishedRef.current = true;
-
+  const cancelScheduledWork = useCallback(() => {
     if (frameRef.current !== null) {
       cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
@@ -32,10 +30,26 @@ export function DoorOpeningSequence({
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    animationRef.current?.kill();
+
+    const animation = animationRef.current;
     animationRef.current = null;
-    onFinished();
-  }, [onFinished]);
+    try {
+      animation?.kill();
+    } catch {
+      // Visual enhancement failures must not block navigation.
+    }
+  }, []);
+
+  const finish = useCallback(() => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+
+    try {
+      cancelScheduledWork();
+    } finally {
+      onFinished();
+    }
+  }, [cancelScheduledWork, onFinished]);
 
   useEffect(() => {
     finishedRef.current = false;
@@ -46,11 +60,14 @@ export function DoorOpeningSequence({
 
     if (!reducedMotion) {
       try {
-        animationRef.current = gsap.fromTo(
-          ".opening .door-light",
-          { opacity: 0.2, scaleY: 0.05 },
-          { opacity: 1, scaleY: 1, duration: 2.8, ease: "power2.inOut" },
-        );
+        const doorLight = rootRef.current?.querySelector(".door-light");
+        if (doorLight) {
+          animationRef.current = gsap.fromTo(
+            doorLight,
+            { opacity: 0.2, scaleY: 0.05 },
+            { opacity: 1, scaleY: 1, duration: 2.8, ease: "power2.inOut" },
+          );
+        }
       } catch {
         animationRef.current = null;
       }
@@ -61,22 +78,15 @@ export function DoorOpeningSequence({
       reducedMotion ? 450 : experienceConfig.openingDurationMs,
     );
 
-    return () => {
-      if (frameRef.current !== null) {
-        cancelAnimationFrame(frameRef.current);
-        frameRef.current = null;
-      }
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-      animationRef.current?.kill();
-      animationRef.current = null;
-    };
-  }, [finish, reducedMotion]);
+    return cancelScheduledWork;
+  }, [cancelScheduledWork, finish, reducedMotion]);
 
   return (
-    <section className="scene opening" aria-label="La puerta se abre">
+    <section
+      ref={rootRef}
+      className="scene opening"
+      aria-label="La puerta se abre"
+    >
       <AncientDoor state={reducedMotion || opened ? "open" : "awake"} />
       <p className="opening-copy">El umbral te reconoce.</p>
       <button className="skip-opening" onClick={finish}>

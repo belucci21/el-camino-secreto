@@ -27,8 +27,15 @@ export function SecretWordGate({
     }
 
     setBusy(true);
-    const accepted = await validate(value);
-    setBusy(false);
+    let accepted: boolean;
+    try {
+      accepted = await validate(value);
+    } catch {
+      setMessage("La puerta no puede escuchar ahora. Inténtalo de nuevo.");
+      return;
+    } finally {
+      setBusy(false);
+    }
 
     if (accepted) {
       (document.activeElement as HTMLElement | null)?.blur();
