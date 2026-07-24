@@ -160,6 +160,11 @@ h1, h2 { font-family: var(--serif); font-weight: 500; text-wrap: balance; }
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
+
+  .gate .door-arch,
+  .gate .door-light {
+    animation: none !important;
+  }
 }
 
 .experience[data-reduced-motion="true"],
@@ -459,10 +464,21 @@ button:hover:not(:disabled) {
 }
 
 .ancient-door[data-state="wrong"] .door-arch {
-  animation: door-warning 420ms ease-in-out;
   box-shadow:
     inset 0 0 0 1px rgba(214, 110, 70, .72),
     0 2rem 5rem #000;
+}
+
+.gate:is([data-attempt="1"], [data-attempt="4"]) .ancient-door[data-state="wrong"] .door-arch {
+  animation: door-warning 420ms ease-in-out;
+}
+
+.gate:is([data-attempt="2"], [data-attempt="5"]) .ancient-door[data-state="wrong"] .door-light {
+  animation: door-flicker 520ms steps(4, end);
+}
+
+.gate:is([data-attempt="3"], [data-attempt="6"]) .ancient-door[data-state="wrong"] .door-arch {
+  animation: door-resonance 680ms ease-out;
 }
 
 .approach {
@@ -625,6 +641,25 @@ button:hover:not(:disabled) {
   0%, 100% { transform: translateX(0); }
   30% { transform: translateX(-.45rem); }
   70% { transform: translateX(.45rem); }
+}
+
+@keyframes door-flicker {
+  0%, 100% { opacity: .2; box-shadow: 0 0 1rem var(--gold); }
+  25% { opacity: .85; box-shadow: 0 0 4rem var(--gold); }
+  50% { opacity: .12; box-shadow: 0 0 .5rem var(--gold); }
+  75% { opacity: .65; box-shadow: 0 0 2.5rem var(--gold); }
+}
+
+@keyframes door-resonance {
+  0% { transform: scale(1); filter: brightness(1); }
+  40% { transform: scale(.985); filter: brightness(1.35); }
+  70% { transform: scale(1.012); filter: brightness(.85); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.experience[data-reduced-motion="true"] .gate .door-arch,
+.experience[data-reduced-motion="true"] .gate .door-light {
+  animation: none;
 }
 
 @media (max-width: 640px) {

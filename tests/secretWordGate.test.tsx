@@ -41,6 +41,10 @@ describe("SecretWordGate", () => {
         "data-attempt",
         String(index + 1),
       );
+      expect(screen.getByTestId("secret-gate")).toHaveAttribute(
+        "data-reaction",
+        ["warning", "flicker", "resonance"][index % 3],
+      );
 
       if (index >= 2) {
         expect(screen.getByTestId("secret-hint")).toHaveTextContent(
@@ -50,6 +54,24 @@ describe("SecretWordGate", () => {
         expect(screen.queryByTestId("secret-hint")).toBeNull();
       }
     }
+  });
+
+  it("announces the persistent hint through its own polite live region", async () => {
+    const user = userEvent.setup();
+    render(<SecretWordGate validate={async () => false} onAccepted={vi.fn()} />);
+    const input = screen.getByLabelText("Palabra del camino");
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      await user.clear(input);
+      await user.type(input, `fallo${attempt}`);
+      await user.keyboard("{Enter}");
+    }
+
+    const hint = screen.getByTestId("secret-hint");
+    expect(hint).toHaveAttribute("role", "status");
+    expect(hint).toHaveAttribute("aria-live", "polite");
+    expect(hint).toHaveAttribute("aria-atomic", "true");
+    expect(hint).toHaveTextContent(experienceConfig.hint);
   });
 
   it("remounts the wrong-door reaction on every failed attempt", async () => {

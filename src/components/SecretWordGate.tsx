@@ -18,6 +18,12 @@ export function SecretWordGate({
   const [attempts, setAttempts] = useState(0);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const reaction =
+    attempts === 0
+      ? "waiting"
+      : (["warning", "flicker", "resonance"] as const)[
+          (attempts - 1) % 3
+        ];
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -57,6 +63,7 @@ export function SecretWordGate({
       className="scene gate"
       aria-labelledby="gate-title"
       data-attempt={attempts}
+      data-reaction={reaction}
       data-testid="secret-gate"
     >
       <AncientDoor
@@ -88,7 +95,13 @@ export function SecretWordGate({
           {message}
         </p>
         {attempts >= 3 && (
-          <p className="secret-hint" data-testid="secret-hint">
+          <p
+            className="secret-hint"
+            data-testid="secret-hint"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             <strong>Pista:</strong> {experienceConfig.hint}
           </p>
         )}
