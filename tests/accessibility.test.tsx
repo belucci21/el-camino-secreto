@@ -14,6 +14,7 @@ import { CalendarDownload } from "../src/components/CalendarDownload";
 import { DiscoveryScene } from "../src/components/DiscoveryScene";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { EventDetails } from "../src/components/EventDetails";
+import { ExperienceApp } from "../src/components/ExperienceApp";
 import { ExperienceLoader } from "../src/components/ExperienceLoader";
 import { FinalMessage } from "../src/components/FinalMessage";
 import { InvitationReveal } from "../src/components/InvitationReveal";
@@ -418,4 +419,28 @@ it("recovers to the static invitation when a scene crashes", () => {
     screen.getByRole("heading", { name: "Gladiola y Jordi" }),
   ).toBeVisible();
   consoleError.mockRestore();
+});
+
+it("allows a keyboard user to skip to the invitation", async () => {
+  const user = userEvent.setup();
+  render(<ExperienceApp />);
+  await user.click(
+    await screen.findByRole("button", { name: "Saltar a la invitación" }),
+  );
+  expect(
+    screen.getByRole("heading", { name: "Gladiola y Jordi" }),
+  ).toBeVisible();
+});
+
+it("announces offline mode without blocking the experience", () => {
+  Object.defineProperty(navigator, "onLine", {
+    configurable: true,
+    value: false,
+  });
+  render(<ExperienceApp />);
+  expect(
+    screen.getByText(
+      "Sin conexión. El camino continúa con los recursos disponibles.",
+    ),
+  ).toBeVisible();
 });

@@ -1,0 +1,11 @@
+:root {
+  --graphite: #0d0d0d;
+  --forest: #142818;
+  --gold: #d4af37;
+  --ivory: #f2ede2;
+  --stone: #eae6dd;
+  --serif: Georgia, "Times New Roman", serif;
+  --sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --ease-cinematic: cubic-bezier(.22, .75, .18, 1);
+  --focus: 0 0 0 3px rgba(242, 237, 226, .95);
+}

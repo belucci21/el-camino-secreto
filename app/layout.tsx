@@ -1,38 +1,36 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { seoConfig } from "../src/config/seo";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Starter Project",
-  description: "A clean starting point for building your site.",
-  icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+  metadataBase: new URL(seoConfig.canonical),
+  title: seoConfig.title,
+  description: seoConfig.description,
+  alternates: { canonical: "/" },
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/favicon.png", shortcut: "/favicon.png" },
+  openGraph: {
+    type: "website",
+    locale: "es_ES",
+    url: "/",
+    title: seoConfig.title,
+    description: seoConfig.description,
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: seoConfig.title,
+    description: seoConfig.description,
+    images: ["/og.png"],
   },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+    <html lang="es">
+      <body>{children}</body>
     </html>
   );
 }
