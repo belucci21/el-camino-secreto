@@ -10,8 +10,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AccessibilityControls } from "../src/components/AccessibilityControls";
 import { AncientDoor } from "../src/components/AncientDoor";
 import { ApproachScene } from "../src/components/ApproachScene";
+import { CalendarDownload } from "../src/components/CalendarDownload";
 import { DiscoveryScene } from "../src/components/DiscoveryScene";
+import { ErrorBoundary } from "../src/components/ErrorBoundary";
+import { EventDetails } from "../src/components/EventDetails";
 import { ExperienceLoader } from "../src/components/ExperienceLoader";
+import { FinalMessage } from "../src/components/FinalMessage";
+import { InvitationReveal } from "../src/components/InvitationReveal";
+import { RSVPWhatsApp } from "../src/components/RSVPWhatsApp";
 import { SoundGate } from "../src/components/SoundGate";
 import { experienceConfig } from "../src/config/experience";
 
@@ -219,4 +225,81 @@ it("preserves external focus when reduced motion starts at arrival", () => {
   } finally {
     sentinel.remove();
   }
+});
+
+it("labels unconfirmed event values without fake links", () => {
+  render(<EventDetails />);
+  expect(screen.getAllByText("Pendiente de confirmar").length).toBeGreaterThan(0);
+  expect(screen.queryByRole("link", { name: "Abrir ubicación" })).toBeNull();
+});
+
+it("disables RSVP until the WhatsApp number is confirmed", () => {
+  render(<RSVPWhatsApp />);
+  expect(screen.getByRole("button", { name: "Sí, estaré allí" })).toBeDisabled();
+  expect(
+    screen.getByText("Número de WhatsApp pendiente de confirmar."),
+  ).toBeVisible();
+});
+
+it("copies the RSVP message when WhatsApp cannot open", async () => {
+  const user = userEvent.setup();
+  const writeText = vi.fn(async () => undefined);
+  const open = vi.spyOn(window, "open").mockReturnValue(null);
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: { writeText },
+  });
+  render(
+    <RSVPWhatsApp
+      phone={{ value: "34600111222", status: "confirmed" }}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Sí, estaré allí" }));
+  expect(writeText).toHaveBeenCalledOnce();
+  expect(
+    screen.getByText("Mensaje copiado para enviarlo manualmente."),
+  ).toBeVisible();
+  open.mockRestore();
+});
+
+it("does not create a false calendar event from placeholders", () => {
+  render(<CalendarDownload />);
+  expect(
+    screen.getByRole("button", { name: "Añadir la fecha al calendario" }),
+  ).toBeDisabled();
+});
+
+it("reveals the couple and configurable details", () => {
+  render(<InvitationReveal />);
+  expect(
+    screen.getByRole("heading", { name: "Gladiola y Jordi" }),
+  ).toBeVisible();
+});
+
+it("replays the opening from the final message", async () => {
+  const user = userEvent.setup();
+  const onReplay = vi.fn();
+  render(<FinalMessage onReplay={onReplay} />);
+  await user.click(
+    screen.getByRole("button", { name: "Volver a ver la apertura" }),
+  );
+  expect(onReplay).toHaveBeenCalledOnce();
+});
+
+it("recovers to the static invitation when a scene crashes", () => {
+  const consoleError = vi
+    .spyOn(console, "error")
+    .mockImplementation(() => undefined);
+  function BrokenScene(): never {
+    throw new Error("scene failed");
+  }
+  render(
+    <ErrorBoundary>
+      <BrokenScene />
+    </ErrorBoundary>,
+  );
+  expect(
+    screen.getByRole("heading", { name: "Gladiola y Jordi" }),
+  ).toBeVisible();
+  consoleError.mockRestore();
 });
