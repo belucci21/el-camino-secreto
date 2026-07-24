@@ -1,4 +1,5 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useAudio } from "../src/hooks/useAudio";
 import { useDeviceCapabilities } from "../src/hooks/useDeviceCapabilities";
@@ -35,7 +36,31 @@ describe("browser capability hooks", () => {
     expect(onHidden).toHaveBeenCalledOnce();
   });
 
-  it("selects a tier from browser capability signals", () => {
+  it("keeps the server and hydration tier deterministic across browser hints", () => {
+    function TierProbe() {
+      const tier = useDeviceCapabilities(false);
+      return <div data-performance-tier={tier} />;
+    }
+
+    vi.stubGlobal("navigator", {
+      deviceMemory: 8,
+      hardwareConcurrency: 8,
+      connection: { saveData: false },
+    });
+    const highMarkup = renderToString(<TierProbe />);
+
+    vi.stubGlobal("navigator", {
+      deviceMemory: 1,
+      hardwareConcurrency: 1,
+      connection: { saveData: true },
+    });
+    const lowMarkup = renderToString(<TierProbe />);
+
+    expect(highMarkup).toContain('data-performance-tier="medium"');
+    expect(lowMarkup).toBe(highMarkup);
+  });
+
+  it("selects a tier from browser capability signals after mounting", async () => {
     Object.defineProperty(navigator, "deviceMemory", {
       configurable: true,
       value: 8,
@@ -47,7 +72,7 @@ describe("browser capability hooks", () => {
 
     const { result } = renderHook(() => useDeviceCapabilities(false));
 
-    expect(result.current).toBe("high");
+    await waitFor(() => expect(result.current).toBe("high"));
   });
 
   it("uses a conservative tier when browser hints are unavailable", () => {
@@ -56,6 +81,26 @@ describe("browser capability hooks", () => {
     const { result } = renderHook(() => useDeviceCapabilities(false));
 
     expect(result.current).toBe("medium");
+  });
+
+  it("updates the tier when reduced motion changes", async () => {
+    Object.defineProperty(navigator, "deviceMemory", {
+      configurable: true,
+      value: 8,
+    });
+    Object.defineProperty(navigator, "hardwareConcurrency", {
+      configurable: true,
+      value: 8,
+    });
+    const { result, rerender } = renderHook(
+      ({ reducedMotion }) => useDeviceCapabilities(reducedMotion),
+      { initialProps: { reducedMotion: false } },
+    );
+    await waitFor(() => expect(result.current).toBe("high"));
+
+    rerender({ reducedMotion: true });
+
+    await waitFor(() => expect(result.current).toBe("low"));
   });
 });
 

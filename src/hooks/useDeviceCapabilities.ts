@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import {
   selectPerformanceTier,
   type PerformanceTier,
@@ -14,17 +14,37 @@ type NavigatorWithHints = Navigator & {
 export function useDeviceCapabilities(
   reducedMotion: boolean,
 ): PerformanceTier {
-  return useMemo(() => {
-    if (typeof navigator === "undefined") {
-      return reducedMotion ? "low" : "medium";
-    }
+  const [tier, setTier] = useState<PerformanceTier>(
+    reducedMotion ? "low" : "medium",
+  );
 
-    const browser = navigator as NavigatorWithHints;
-    return selectPerformanceTier({
-      reducedMotion,
-      deviceMemory: browser.deviceMemory,
-      hardwareConcurrency: browser.hardwareConcurrency,
-      saveData: browser.connection?.saveData,
+  useEffect(() => {
+    if (reducedMotion) return;
+
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+
+      if (typeof navigator === "undefined") {
+        setTier("medium");
+        return;
+      }
+
+      const browser = navigator as NavigatorWithHints;
+      setTier(
+        selectPerformanceTier({
+          reducedMotion: false,
+          deviceMemory: browser.deviceMemory,
+          hardwareConcurrency: browser.hardwareConcurrency,
+          saveData: browser.connection?.saveData,
+        }),
+      );
     });
+
+    return () => {
+      active = false;
+    };
   }, [reducedMotion]);
+
+  return reducedMotion ? "low" : tier;
 }
