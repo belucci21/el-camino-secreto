@@ -93,9 +93,12 @@ h1, h2 { font-family: var(--serif); font-weight: 500; text-wrap: balance; }
   display: grid;
   gap: 1rem;
   width: min(92vw, 34rem);
+  box-sizing: border-box;
 }
 .stone-form label { text-align: left; }
 .stone-form input {
+  width: 100%;
+  box-sizing: border-box;
   min-height: 48px;
   border: 1px solid rgba(212,175,55,.55);
   border-radius: .5rem;
