@@ -9,6 +9,10 @@ const pending = (value = "Pendiente de confirmar"): ConfigValue => ({
 });
 
 export const weddingConfig = {
+  siteUrl: {
+    value: "https://gladiolajordivinculoeterno.com/",
+    status: "confirmed",
+  } satisfies ConfigValue,
   couple: {
     firstPerson: "Gladiola",
     secondPerson: "Jordi",

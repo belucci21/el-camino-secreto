@@ -21,7 +21,12 @@ export function EventDetails() {
         </div>
       ))}
       {weddingConfig.event.mapsUrl.status === "confirmed" && (
-        <a href={weddingConfig.event.mapsUrl.value}>Abrir ubicación</a>
+        <div data-status={weddingConfig.event.mapsUrl.status}>
+          <dt>Mapa</dt>
+          <dd>
+            <a href={weddingConfig.event.mapsUrl.value}>Abrir ubicación</a>
+          </dd>
+        </div>
       )}
     </dl>
   );

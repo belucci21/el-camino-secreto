@@ -8,7 +8,8 @@ export function CalendarDownload() {
     weddingConfig.event.calendarStart.status === "confirmed" &&
     weddingConfig.event.calendarEnd.status === "confirmed" &&
     weddingConfig.event.venue.status === "confirmed" &&
-    weddingConfig.event.address.status === "confirmed";
+    weddingConfig.event.address.status === "confirmed" &&
+    weddingConfig.siteUrl.status === "confirmed";
 
   return (
     <button
@@ -23,7 +24,7 @@ export function CalendarDownload() {
           end: weddingConfig.event.calendarEnd.value,
           location: `${weddingConfig.event.venue.value}, ${weddingConfig.event.address.value}`,
           description: `Celebración del vínculo eterno de ${weddingConfig.couple.firstPerson} y ${weddingConfig.couple.secondPerson}.`,
-          url: "https://gladiolajordivinculoeterno.com/",
+          url: weddingConfig.siteUrl.value,
         });
       }}
     >

@@ -24,18 +24,18 @@ export function RSVPWhatsApp({
     const opened = window.open(
       buildWhatsAppUrl(phone.value, response, name),
       "_blank",
-      "noopener,noreferrer",
     );
 
-    if (!opened) {
-      try {
-        await navigator.clipboard.writeText(
-          buildWhatsAppMessage(response, name),
-        );
-        setStatus("Mensaje copiado para enviarlo manualmente.");
-      } catch {
-        setStatus("No se pudo abrir WhatsApp. Inténtalo desde otro navegador.");
-      }
+    if (opened) {
+      opened.opener = null;
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(buildWhatsAppMessage(response, name));
+      setStatus("Mensaje copiado para enviarlo manualmente.");
+    } catch {
+      setStatus("No se pudo abrir WhatsApp. Inténtalo desde otro navegador.");
     }
   }
 

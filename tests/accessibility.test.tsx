@@ -20,6 +20,8 @@ import { InvitationReveal } from "../src/components/InvitationReveal";
 import { RSVPWhatsApp } from "../src/components/RSVPWhatsApp";
 import { SoundGate } from "../src/components/SoundGate";
 import { experienceConfig } from "../src/config/experience";
+import { weddingConfig } from "../src/config/wedding";
+import * as generateICS from "../src/utils/generateICS";
 
 afterEach(cleanup);
 
@@ -233,6 +235,24 @@ it("labels unconfirmed event values without fake links", () => {
   expect(screen.queryByRole("link", { name: "Abrir ubicación" })).toBeNull();
 });
 
+it("keeps a confirmed map link inside a valid detail group", () => {
+  const originalMapsUrl = { ...weddingConfig.event.mapsUrl };
+
+  try {
+    Object.assign(weddingConfig.event.mapsUrl, {
+      value: "https://maps.example.test/location",
+      status: "confirmed",
+    });
+    const { container } = render(<EventDetails />);
+    const link = screen.getByRole("link", { name: "Abrir ubicación" });
+
+    expect(link.closest("dd")).not.toBeNull();
+    expect(container.querySelector("dl > a")).toBeNull();
+  } finally {
+    Object.assign(weddingConfig.event.mapsUrl, originalMapsUrl);
+  }
+});
+
 it("disables RSVP until the WhatsApp number is confirmed", () => {
   render(<RSVPWhatsApp />);
   expect(screen.getByRole("button", { name: "Sí, estaré allí" })).toBeDisabled();
@@ -262,11 +282,107 @@ it("copies the RSVP message when WhatsApp cannot open", async () => {
   open.mockRestore();
 });
 
+it("secures a successfully opened WhatsApp window without copying", async () => {
+  const user = userEvent.setup();
+  const writeText = vi.fn(async () => undefined);
+  const opened = { opener: window } as unknown as Window;
+  const open = vi.spyOn(window, "open").mockReturnValue(opened);
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: { writeText },
+  });
+
+  try {
+    render(
+      <RSVPWhatsApp
+        phone={{ value: "34600111222", status: "confirmed" }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Sí, estaré allí" }));
+
+    expect(open).toHaveBeenCalledWith(expect.any(String), "_blank");
+    expect(opened.opener).toBeNull();
+    expect(writeText).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText("Mensaje copiado para enviarlo manualmente."),
+    ).toBeNull();
+  } finally {
+    open.mockRestore();
+  }
+});
+
 it("does not create a false calendar event from placeholders", () => {
   render(<CalendarDownload />);
   expect(
     screen.getByRole("button", { name: "Añadir la fecha al calendario" }),
   ).toBeDisabled();
+});
+
+it("keeps the canonical wedding site URL in configuration", () => {
+  expect(weddingConfig.siteUrl).toEqual({
+    value: "https://gladiolajordivinculoeterno.com/",
+    status: "confirmed",
+  });
+});
+
+it("uses only a confirmed configured URL for calendar downloads", async () => {
+  const user = userEvent.setup();
+  const requiredFields = [
+    weddingConfig.event.calendarStart,
+    weddingConfig.event.calendarEnd,
+    weddingConfig.event.venue,
+    weddingConfig.event.address,
+  ];
+  const originalFields = requiredFields.map((field) => ({ ...field }));
+  const originalSiteUrl = { ...weddingConfig.siteUrl };
+  const download = vi
+    .spyOn(generateICS, "downloadICS")
+    .mockImplementation(() => undefined);
+
+  try {
+    Object.assign(weddingConfig.event.calendarStart, {
+      value: "2027-06-12T15:00:00Z",
+      status: "confirmed",
+    });
+    Object.assign(weddingConfig.event.calendarEnd, {
+      value: "2027-06-13T00:00:00Z",
+      status: "confirmed",
+    });
+    Object.assign(weddingConfig.event.venue, {
+      value: "El claro",
+      status: "confirmed",
+    });
+    Object.assign(weddingConfig.event.address, {
+      value: "Camino del bosque",
+      status: "confirmed",
+    });
+    Object.assign(weddingConfig.siteUrl, {
+      value: "https://example.test/invitacion",
+      status: "placeholder",
+    });
+
+    const { rerender } = render(<CalendarDownload />);
+    const calendarButton = screen.getByRole("button", {
+      name: "Añadir la fecha al calendario",
+    });
+    expect(calendarButton).toBeDisabled();
+
+    Object.assign(weddingConfig.siteUrl, { status: "confirmed" });
+    rerender(<CalendarDownload />);
+    await user.click(calendarButton);
+
+    expect(download).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: "https://example.test/invitacion",
+      }),
+    );
+  } finally {
+    requiredFields.forEach((field, index) => {
+      Object.assign(field, originalFields[index]);
+    });
+    Object.assign(weddingConfig.siteUrl, originalSiteUrl);
+    download.mockRestore();
+  }
 });
 
 it("reveals the couple and configurable details", () => {
