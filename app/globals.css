@@ -1,223 +1,272 @@
 @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&display=swap");
-@import "../src/styles/tokens.css";
+
+:root {
+  --graphite: #0d0d0d;
+  --graphite-2: #050505;
+  --forest: #142818;
+  --forest-deep: #07130d;
+  --gold: #d4af37;
+  --gold-soft: #e7ca6b;
+  --ivory: #f2ede2;
+  --stone: #eae6dd;
+  --muted: rgba(242, 237, 226, .72);
+  --line: rgba(212, 175, 55, .42);
+  --line-soft: rgba(212, 175, 55, .18);
+  --shadow: 0 30px 90px rgba(0, 0, 0, .55);
+  --serif-display: "Cinzel", Georgia, serif;
+  --serif-body: "Cormorant Garamond", Georgia, serif;
+  --ease-cinematic: cubic-bezier(.22, .75, .18, 1);
+}
 
 * {
   box-sizing: border-box;
 }
 
 html {
-  color-scheme: dark;
+  scroll-behavior: smooth;
   background: var(--graphite);
 }
 
 body {
-  min-width: 320px;
-  min-height: 100vh;
   margin: 0;
-  overflow-x: hidden;
-  background:
-    radial-gradient(circle at 78% 22%, rgba(212, 175, 55, .12), transparent 24rem),
-    linear-gradient(135deg, #050505 0%, var(--graphite) 48%, #071109 100%);
+  min-width: 320px;
   color: var(--ivory);
-  font-family: "Cormorant Garamond", Georgia, serif;
+  background:
+    radial-gradient(circle at 75% 15%, rgba(212, 175, 55, .16), transparent 34rem),
+    linear-gradient(180deg, #050505 0%, #0d0d0d 46%, #08120c 100%);
+  font-family: var(--serif-body);
+  text-rendering: geometricPrecision;
 }
 
-button {
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
   font: inherit;
 }
 
-button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus);
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--ivory);
+  outline-offset: 4px;
 }
 
-::selection {
-  background: var(--gold);
-  color: var(--graphite);
+.teaser-page {
+  position: relative;
+  overflow-x: clip;
+  background:
+    linear-gradient(180deg, rgba(5, 5, 5, .05), rgba(5, 5, 5, .82) 45%, #070d09 100%),
+    var(--graphite);
 }
 
-.coming-soon-page {
-  min-height: 100vh;
+.teaser-page::before {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(212, 175, 55, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212, 175, 55, .045) 1px, transparent 1px);
+  background-size: 70px 70px;
+  mask-image: linear-gradient(180deg, #000 0%, transparent 82%);
+}
+
+.proposal-hero,
+.journey-section,
+.phases-section,
+.opening-section,
+.proposal-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.proposal-hero {
+  min-height: 100svh;
+  padding: clamp(1.2rem, 3vw, 2.2rem);
   isolation: isolate;
   background:
-    linear-gradient(90deg, rgba(0, 0, 0, .78), rgba(0, 0, 0, .06) 54%, rgba(0, 0, 0, .16)),
-    radial-gradient(circle at 12% 16%, rgba(212, 175, 55, .08), transparent 18rem);
+    linear-gradient(90deg, rgba(5, 5, 5, .98) 0%, rgba(5, 5, 5, .88) 26%, rgba(5, 5, 5, .24) 58%, rgba(5, 5, 5, .18) 100%),
+    linear-gradient(180deg, rgba(5, 5, 5, .08) 0%, rgba(5, 5, 5, .24) 62%, #050505 100%),
+    url("/el-camino-secreto-hero.png") center / cover no-repeat;
 }
 
-.hero-panel {
-  position: relative;
-  display: grid;
-  min-height: 100svh;
-  grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem);
-  grid-template-rows: auto 1fr auto;
-  gap: clamp(1.25rem, 3vw, 3rem);
-  padding: clamp(1.25rem, 3vw, 2.2rem);
-  overflow: hidden;
-}
-
-.hero-panel::before,
-.hero-panel::after {
+.proposal-hero::before,
+.proposal-hero::after {
   position: absolute;
-  inset: clamp(.65rem, 1.3vw, 1rem);
-  content: "";
+  inset: clamp(1rem, 2.5vw, 1.8rem);
+  z-index: -1;
   pointer-events: none;
+  content: "";
 }
 
-.hero-panel::before {
-  z-index: 2;
-  border: 1px solid rgba(212, 175, 55, .82);
+.proposal-hero::before {
+  border: 1px solid rgba(212, 175, 55, .56);
   box-shadow:
-    inset 0 0 0 1px rgba(212, 175, 55, .18),
-    0 0 2.5rem rgba(212, 175, 55, .08);
+    inset 0 0 0 1px rgba(242, 237, 226, .05),
+    inset 0 0 80px rgba(212, 175, 55, .08);
 }
 
-.hero-panel::after {
-  z-index: 1;
+.proposal-hero::after {
   background:
-    repeating-linear-gradient(90deg, rgba(212, 175, 55, .035) 0 1px, transparent 1px 7rem),
-    repeating-linear-gradient(0deg, rgba(242, 237, 226, .018) 0 1px, transparent 1px 5rem);
-  mask-image: linear-gradient(90deg, #000, transparent 70%);
+    radial-gradient(circle at 79% 50%, rgba(231, 202, 107, .35), transparent 17rem),
+    radial-gradient(circle at 18% 22%, rgba(212, 175, 55, .16), transparent 12rem);
+  mix-blend-mode: screen;
 }
 
-.ornate-corner {
+.hero-frame span {
   position: absolute;
   z-index: 3;
-  width: clamp(2.4rem, 5vw, 4.3rem);
-  aspect-ratio: 1;
+  width: clamp(2.5rem, 7vw, 5.4rem);
+  height: clamp(2.5rem, 7vw, 5.4rem);
   border-color: var(--gold);
   pointer-events: none;
 }
 
-.ornate-corner::before,
-.ornate-corner::after {
-  position: absolute;
-  content: "";
-  border-color: inherit;
+.hero-frame span:nth-child(1) {
+  top: 1rem;
+  left: 1rem;
+  border-top: 3px solid;
+  border-left: 3px solid;
 }
 
-.ornate-corner::before {
-  inset: 22%;
-  border: 1px solid rgba(212, 175, 55, .72);
-  border-radius: 50% 0 50% 0;
-  transform: rotate(45deg);
+.hero-frame span:nth-child(2) {
+  top: 1rem;
+  right: 1rem;
+  border-top: 3px solid;
+  border-right: 3px solid;
 }
 
-.ornate-corner::after {
-  width: 80%;
-  height: 80%;
-  border-top: 2px solid rgba(212, 175, 55, .88);
-  border-left: 2px solid rgba(212, 175, 55, .88);
+.hero-frame span:nth-child(3) {
+  bottom: 1rem;
+  left: 1rem;
+  border-bottom: 3px solid;
+  border-left: 3px solid;
 }
 
-.ornate-corner--tl {
-  top: .72rem;
-  left: .72rem;
+.hero-frame span:nth-child(4) {
+  right: 1rem;
+  bottom: 1rem;
+  border-right: 3px solid;
+  border-bottom: 3px solid;
 }
 
-.ornate-corner--tr {
-  top: .72rem;
-  right: .72rem;
-  transform: rotate(90deg);
-}
-
-.ornate-corner--bl {
-  bottom: .72rem;
-  left: .72rem;
-  transform: rotate(-90deg);
-}
-
-.ornate-corner--br {
-  right: .72rem;
-  bottom: .72rem;
-  transform: rotate(180deg);
-}
-
-.hero-art {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  overflow: hidden;
-  background:
-    #050505 url("/el-camino-secreto-hero.png") center / cover no-repeat;
-  filter: saturate(1.04) contrast(1.04);
-}
-
-.hero-art::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background:
-    linear-gradient(90deg, rgba(5, 5, 5, .92) 0%, rgba(5, 5, 5, .72) 24%, rgba(5, 5, 5, .18) 54%, rgba(5, 5, 5, .22) 100%),
-    linear-gradient(180deg, rgba(5, 5, 5, .38), rgba(5, 5, 5, .2) 45%, rgba(5, 5, 5, .78));
-}
-
-.site-mark,
-.closing-line {
-  z-index: 4;
+.proposal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  max-width: 1380px;
+  margin: 0 auto;
+}
+
+.proposal-mark {
+  display: grid;
+  gap: .2rem;
+  width: max-content;
   color: var(--gold);
-  font-family: "Cinzel", Georgia, serif;
-  letter-spacing: .28em;
+  letter-spacing: .22em;
   text-transform: uppercase;
 }
 
-.site-mark {
-  grid-column: 1 / -1;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: .4rem clamp(.8rem, 2vw, 1.5rem);
-  font-size: clamp(.68rem, 1vw, .82rem);
+.proposal-monogram {
+  font-family: var(--serif-display);
+  font-size: clamp(3.5rem, 8vw, 7.2rem);
+  line-height: .82;
+  letter-spacing: -.06em;
+  text-shadow: 0 0 26px rgba(212, 175, 55, .28);
 }
 
-.monogram {
-  color: var(--gold);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: clamp(2.2rem, 5vw, 4.6rem);
-  font-weight: 500;
-  letter-spacing: -.02em;
-  line-height: 1;
-  text-transform: none;
-  text-shadow: 0 0 1.4rem rgba(212, 175, 55, .38);
+.proposal-names,
+.proposal-nav,
+.proposal-label,
+.coming-soon-badge,
+.stone-pill,
+.release-note,
+.hero-footer,
+.phase-number,
+.phone-time,
+.phone-mark,
+.opening-steps span,
+.proposal-footer {
+  font-family: var(--serif-display);
+  text-transform: uppercase;
 }
 
-.mark-line {
-  flex: 1;
+.proposal-names {
+  padding-left: .35rem;
+  font-size: .78rem;
+  letter-spacing: .38em;
+}
+
+.proposal-nav {
+  display: flex;
+  gap: clamp(.75rem, 2vw, 1.4rem);
+  padding-top: .85rem;
+  color: rgba(242, 237, 226, .72);
+  font-size: .74rem;
+  letter-spacing: .24em;
+}
+
+.proposal-nav a {
+  position: relative;
+}
+
+.proposal-nav a::after {
+  position: absolute;
+  right: 0;
+  bottom: -.45rem;
+  left: 0;
   height: 1px;
-  max-width: 30rem;
-  background:
-    linear-gradient(90deg, transparent, rgba(212, 175, 55, .9), transparent);
+  content: "";
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .28s ease;
+}
+
+.proposal-nav a:hover::after {
+  transform: scaleX(1);
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: minmax(0, .92fr) minmax(260px, .42fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+  max-width: 1380px;
+  min-height: calc(100svh - 13rem);
+  margin: 0 auto;
+  padding: clamp(2rem, 8vw, 7rem) clamp(.2rem, 2vw, 1rem) 3rem;
 }
 
 .hero-copy {
-  z-index: 4;
-  align-self: center;
-  max-width: min(42rem, 100%);
-  min-width: 0;
-  padding: clamp(1rem, 3vw, 2rem);
+  max-width: 760px;
 }
 
-.chapter {
-  margin: 0 0 clamp(1rem, 2vw, 1.45rem);
-  color: var(--gold);
-  font-family: "Cinzel", Georgia, serif;
+.proposal-label {
+  margin: 0 0 1.2rem;
+  color: var(--gold-soft);
   font-size: clamp(.72rem, 1vw, .9rem);
-  font-weight: 600;
-  letter-spacing: .28em;
-  text-transform: uppercase;
+  letter-spacing: .52em;
 }
 
 .hero-copy h1 {
+  max-width: 850px;
   margin: 0;
-  color: var(--stone);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: clamp(4.2rem, 8.5vw, 8.6rem);
+  color: var(--ivory);
+  font-family: var(--serif-display);
+  font-size: clamp(4.7rem, 13vw, 13.8rem);
   font-weight: 400;
-  line-height: .86;
+  line-height: .79;
+  letter-spacing: -.075em;
   text-transform: uppercase;
-  text-shadow:
-    0 .08em .5em rgba(0, 0, 0, .86),
-    0 0 2rem rgba(242, 237, 226, .12);
+  text-shadow: 0 18px 54px rgba(0, 0, 0, .66);
 }
 
 .hero-copy h1 span {
@@ -225,421 +274,799 @@ button:focus-visible {
   color: var(--gold);
 }
 
-.coming-soon {
-  width: fit-content;
-  margin: clamp(1.3rem, 2vw, 2rem) 0;
+.coming-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 4rem;
+  margin: clamp(1.5rem, 3vw, 2.4rem) 0 1.3rem;
+  padding: .85rem clamp(2rem, 5vw, 4.5rem);
   border: 1px solid rgba(212, 175, 55, .78);
-  padding: .82rem clamp(1.25rem, 3vw, 2.4rem);
-  color: var(--gold);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: clamp(.95rem, 1.5vw, 1.25rem);
-  font-weight: 700;
-  letter-spacing: .3em;
-  text-transform: uppercase;
-  background: rgba(5, 5, 5, .64);
+  color: var(--gold-soft);
+  background: rgba(5, 5, 5, .66);
   box-shadow:
-    inset 0 0 1.5rem rgba(212, 175, 55, .06),
-    0 0 2rem rgba(212, 175, 55, .08);
+    inset 0 0 28px rgba(212, 175, 55, .08),
+    0 18px 40px rgba(0, 0, 0, .36);
+  font-size: clamp(1rem, 2vw, 1.6rem);
+  font-weight: 700;
+  letter-spacing: .56em;
 }
 
 .hero-lede {
-  max-width: 38rem;
+  max-width: 720px;
   margin: 0;
-  color: rgba(242, 237, 226, .9);
-  font-size: clamp(1.25rem, 2vw, 1.8rem);
-  line-height: 1.35;
-  text-shadow: 0 .12em .8em #000;
+  color: rgba(242, 237, 226, .87);
+  font-size: clamp(1.25rem, 2.1vw, 2.05rem);
+  line-height: 1.18;
 }
 
-.secret-lock {
+.hero-actions {
   display: flex;
-  width: min(100%, 25rem);
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: clamp(1.3rem, 2vw, 2rem);
-  border: 1px solid rgba(212, 175, 55, .5);
-  padding: .75rem 1rem;
-  background: rgba(13, 13, 13, .66);
+  flex-wrap: wrap;
+  gap: .8rem;
+  margin-top: clamp(1.4rem, 3vw, 2rem);
 }
 
-.secret-lock span {
-  color: rgba(234, 230, 221, .72);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: .72rem;
+.stone-pill,
+.release-note {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: .75rem 1.1rem;
+  border: 1px solid var(--line);
+  color: var(--stone);
+  background: rgba(13, 13, 13, .66);
+  letter-spacing: .16em;
+}
+
+.stone-pill {
+  color: var(--gold-soft);
+}
+
+.release-note {
+  color: rgba(242, 237, 226, .72);
+}
+
+.invitation-device {
+  justify-self: end;
+  width: min(100%, 320px);
+  perspective: 1400px;
+}
+
+.phone-frame {
+  position: relative;
+  overflow: hidden;
+  min-height: 610px;
+  padding: 1rem;
+  border: 1px solid rgba(234, 230, 221, .34);
+  border-radius: 3.1rem;
+  background:
+    linear-gradient(140deg, rgba(234, 230, 221, .22), rgba(255, 255, 255, .02) 30%, rgba(0, 0, 0, .9)),
+    #0c0c0c;
+  box-shadow: var(--shadow);
+  transform: rotateY(-9deg) rotateX(3deg);
+}
+
+.phone-frame::before {
+  position: absolute;
+  top: .65rem;
+  left: 50%;
+  width: 5rem;
+  height: .45rem;
+  border-radius: 999px;
+  content: "";
+  background: rgba(0, 0, 0, .78);
+  transform: translateX(-50%);
+}
+
+.phone-glass {
+  display: grid;
+  align-content: start;
+  min-height: 580px;
+  padding: 1.5rem 1.15rem 1.25rem;
+  border: 1px solid rgba(212, 175, 55, .26);
+  border-radius: 2.35rem;
+  background:
+    linear-gradient(180deg, rgba(5, 5, 5, .04), rgba(5, 5, 5, .9)),
+    url("/el-camino-secreto-hero.png") 67% center / cover no-repeat;
+}
+
+.phone-time {
+  color: var(--ivory);
+  font-size: .78rem;
+  letter-spacing: .08em;
+}
+
+.phone-mark {
+  justify-self: center;
+  margin-top: 2.2rem;
+  color: var(--gold);
+  font-size: 2.3rem;
+  letter-spacing: -.04em;
+}
+
+.phone-glass p {
+  max-width: 12rem;
+  margin: 2.7rem auto 1rem;
+  color: rgba(242, 237, 226, .82);
+  font-size: 1.15rem;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.phone-door {
+  position: relative;
+  width: 7.4rem;
+  height: 10rem;
+  margin: .6rem auto 1.2rem;
+  border: 1px solid rgba(212, 175, 55, .62);
+  border-radius: 4rem 4rem .6rem .6rem;
+  background:
+    radial-gradient(circle at center, rgba(231, 202, 107, .9), transparent 9%),
+    linear-gradient(90deg, transparent 44%, rgba(231, 202, 107, .9) 49%, rgba(231, 202, 107, .92) 51%, transparent 56%),
+    rgba(5, 5, 5, .52);
+  box-shadow: 0 0 40px rgba(212, 175, 55, .44);
+}
+
+.phone-door span {
+  position: absolute;
+  inset: 1.1rem;
+  border: 1px solid rgba(212, 175, 55, .38);
+  border-radius: inherit;
+}
+
+.phone-glass strong {
+  display: block;
+  margin-top: auto;
+  color: var(--gold);
+  font-family: var(--serif-display);
+  font-size: 1.8rem;
+  letter-spacing: .16em;
+  text-align: center;
+}
+
+.phone-button {
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 1rem;
+  border: 0;
+  border-radius: 999px;
+  color: #160f04;
+  background: linear-gradient(180deg, #f5d875, var(--gold));
+  font-family: var(--serif-display);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  display: grid;
+  place-items: center;
+}
+
+.hero-footer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .8rem;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--line);
+  color: rgba(242, 237, 226, .72);
+  font-size: .73rem;
   letter-spacing: .18em;
+  text-align: center;
+}
+
+.journey-section,
+.phases-section,
+.opening-section {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: clamp(4.5rem, 8vw, 8rem) clamp(1.2rem, 4vw, 2.2rem);
+}
+
+.section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, .42fr) minmax(0, .9fr);
+  align-items: end;
+  gap: clamp(1.4rem, 4vw, 3rem);
+  margin-bottom: clamp(2rem, 4vw, 3.8rem);
+}
+
+.section-heading h2,
+.opening-copy h2 {
+  margin: 0;
+  color: var(--ivory);
+  font-family: var(--serif-display);
+  font-size: clamp(2.4rem, 5vw, 5.6rem);
+  font-weight: 400;
+  line-height: .92;
+  letter-spacing: -.04em;
   text-transform: uppercase;
 }
 
-.secret-lock strong {
-  color: var(--gold);
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 1.35rem;
-  font-style: italic;
-  font-weight: 600;
-}
-
-.phone-preview {
-  z-index: 4;
+.journey-track {
   display: grid;
-  align-self: center;
-  justify-self: end;
-  min-width: 0;
-  place-items: center;
-  width: min(100%, 21rem);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
-.phone-shell {
-  width: min(72vw, 18rem);
-  aspect-ratio: 9 / 18.6;
-  border: 1px solid rgba(234, 230, 221, .45);
-  border-radius: 2.4rem;
-  padding: .62rem;
-  background:
-    linear-gradient(140deg, rgba(234, 230, 221, .28), rgba(20, 20, 18, .2) 18% 70%, rgba(212, 175, 55, .32)),
-    #050505;
-  box-shadow:
-    0 2rem 6rem rgba(0, 0, 0, .68),
-    0 0 3rem rgba(212, 175, 55, .12);
-}
-
-.phone-screen {
+.journey-card {
   position: relative;
-  display: grid;
-  height: 100%;
-  align-content: end;
-  justify-items: center;
-  overflow: hidden;
-  border-radius: 1.85rem;
-  padding: 1.2rem;
-  text-align: center;
+  min-height: 17rem;
+  padding: 1.35rem 1rem 1.4rem;
+  border-right: 1px solid var(--line-soft);
   background:
-    linear-gradient(180deg, rgba(5, 5, 5, .08), rgba(5, 5, 5, .9) 74%),
-    url("/el-camino-secreto-hero.png") center / cover;
+    linear-gradient(180deg, rgba(212, 175, 55, .08), transparent 34%),
+    rgba(255, 255, 255, .015);
 }
 
-.phone-screen::before {
+.journey-card:first-child {
+  border-left: 1px solid var(--line-soft);
+}
+
+.journey-card span,
+.phase-number {
+  display: block;
+  color: var(--gold);
+  font-family: var(--serif-display);
+  font-size: 1.45rem;
+  letter-spacing: .06em;
+}
+
+.journey-card h3,
+.phase-card h3 {
+  margin: 1rem 0 .6rem;
+  color: var(--ivory);
+  font-family: var(--serif-display);
+  font-size: clamp(1.18rem, 1.7vw, 1.55rem);
+  font-weight: 500;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.journey-card p,
+.phase-card p,
+.opening-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(1.05rem, 1.35vw, 1.3rem);
+  line-height: 1.22;
+}
+
+.journey-card::after {
   position: absolute;
-  top: .48rem;
-  left: 50%;
-  width: 34%;
-  height: .52rem;
-  border-radius: 999px;
+  right: -8px;
+  bottom: 2.3rem;
+  z-index: 2;
+  width: 15px;
+  height: 15px;
+  border-top: 1px solid var(--gold);
+  border-right: 1px solid var(--gold);
   content: "";
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, .82);
+  background: var(--graphite);
+  transform: rotate(45deg);
 }
 
-.phone-status {
-  position: absolute;
-  top: .72rem;
-  left: 1.05rem;
-  color: var(--stone);
-  font-family: Arial, sans-serif;
-  font-size: .72rem;
-  font-weight: 700;
+.journey-card:last-child::after {
+  display: none;
 }
 
-.phone-monogram {
-  color: var(--gold);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: clamp(2.2rem, 5vw, 3.5rem);
-  line-height: .8;
-  text-shadow: 0 0 1.4rem rgba(212, 175, 55, .5);
+.phases-section {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(212, 175, 55, .14), transparent 24rem),
+    linear-gradient(180deg, transparent, rgba(20, 40, 24, .2), transparent);
 }
 
-.phone-screen p,
-.phone-screen h2,
-.phone-date,
-.phone-screen button {
+.phase-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.phase-card {
   position: relative;
-  z-index: 1;
+  display: grid;
+  gap: .75rem;
+  padding: clamp(1rem, 2vw, 1.6rem);
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(242, 237, 226, .045), rgba(5, 5, 5, .32)),
+    rgba(5, 5, 5, .42);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .26);
 }
 
-.phone-screen p {
-  margin: 1rem 0 .2rem;
-  color: var(--gold);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: .72rem;
-  font-weight: 700;
+.phase-phone {
+  display: grid;
+  place-items: center;
+  min-height: 20rem;
+  margin-bottom: .4rem;
+  border: 1px solid rgba(234, 230, 221, .22);
+  border-radius: 2rem;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .05), rgba(0, 0, 0, .85)),
+    url("/el-camino-secreto-hero.png") center / cover no-repeat;
+  box-shadow: inset 0 0 0 8px rgba(0, 0, 0, .36);
+}
+
+.phase-phone span {
+  width: 5.8rem;
+  height: 8.4rem;
+  border: 1px solid var(--line);
+  border-radius: 4rem 4rem .5rem .5rem;
+  background:
+    linear-gradient(90deg, transparent 45%, rgba(231, 202, 107, .92), transparent 55%),
+    rgba(5, 5, 5, .62);
+  box-shadow: 0 0 36px rgba(212, 175, 55, .5);
+}
+
+.phase-phone strong {
+  margin-top: 1rem;
+  color: var(--ivory);
+  font-family: var(--serif-display);
+  font-size: .78rem;
   letter-spacing: .16em;
   text-transform: uppercase;
 }
 
-.phone-screen h2 {
-  max-width: 10ch;
+.phase-subtitle {
+  color: var(--gold-soft) !important;
+  font-style: italic;
+}
+
+.opening-section {
+  display: grid;
+  grid-template-columns: minmax(0, .82fr) minmax(280px, .7fr);
+  align-items: start;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.opening-copy {
+  max-width: 720px;
+}
+
+.opening-copy p:last-child {
+  margin-top: 1.4rem;
+  max-width: 620px;
+}
+
+.opening-steps {
+  display: grid;
+  gap: .75rem;
   margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.opening-steps li {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  align-items: center;
+  min-height: 4.8rem;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(90deg, rgba(212, 175, 55, .14), transparent),
+    rgba(5, 5, 5, .42);
   color: var(--ivory);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: clamp(1.65rem, 4vw, 2.2rem);
-  font-weight: 500;
-  line-height: .95;
-  text-transform: uppercase;
+  font-size: clamp(1.15rem, 1.6vw, 1.5rem);
 }
 
-.phone-date {
-  margin: .85rem 0 1rem;
+.opening-steps span {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  border-right: 1px solid var(--line);
   color: var(--gold);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: .8rem;
-  letter-spacing: .2em;
+  font-size: .86rem;
+  letter-spacing: .12em;
+}
+
+.proposal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1.2rem 2.4rem;
+  border-top: 1px solid var(--line-soft);
+  color: rgba(242, 237, 226, .72);
+  font-size: .78rem;
+  letter-spacing: .22em;
+}
+
+/* Interactive route styles */
+.experience {
+  min-height: 100svh;
+  padding: clamp(1rem, 3vw, 2rem);
+  background:
+    linear-gradient(90deg, rgba(5, 5, 5, .88), rgba(5, 5, 5, .5)),
+    url("/el-camino-secreto-hero.png") center / cover fixed no-repeat;
+}
+
+.scene {
+  display: grid;
+  place-items: center;
+  min-height: calc(100svh - 4rem);
+  padding: clamp(1.5rem, 5vw, 4rem);
+  border: 1px solid var(--line);
+  background: rgba(5, 5, 5, .72);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.scene h1,
+.scene h2 {
+  max-width: 900px;
+  margin: 0 auto 1rem;
+  color: var(--ivory);
+  font-family: var(--serif-display);
+  font-size: clamp(2.5rem, 7vw, 6rem);
+  font-weight: 400;
+  line-height: .92;
   text-transform: uppercase;
 }
 
-.phone-screen button {
-  min-height: 2.65rem;
-  border: 1px solid rgba(212, 175, 55, .78);
+.scene p,
+.event-details,
+.rsvp {
+  color: var(--muted);
+  font-size: clamp(1.12rem, 1.8vw, 1.45rem);
+}
+
+.scene button,
+.actions button,
+.stone-form button,
+.rsvp button,
+.final-message button {
+  min-height: 3rem;
+  padding: .75rem 1.15rem;
+  border: 1px solid var(--line);
   border-radius: 999px;
-  padding: .55rem 1rem;
-  color: var(--graphite);
-  background: linear-gradient(180deg, #edca62, var(--gold));
-  font-family: "Cinzel", Georgia, serif;
-  font-size: .66rem;
+  color: #160f04;
+  background: linear-gradient(180deg, #f5d875, var(--gold));
+  font-family: var(--serif-display);
+  font-size: .8rem;
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
+  cursor: pointer;
 }
 
-.journey-strip {
-  z-index: 4;
-  display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(.8rem, 2vw, 1.5rem);
-  padding: 0 clamp(.8rem, 2vw, 1.5rem) clamp(.2rem, 1vw, .8rem);
-}
-
-.journey-strip article,
-.feature-list article {
-  border-top: 1px solid rgba(212, 175, 55, .4);
-  padding-top: .95rem;
-}
-
-.journey-strip span {
-  display: inline-grid;
-  width: 2.25rem;
-  aspect-ratio: 1;
-  place-items: center;
-  border: 1px solid rgba(212, 175, 55, .62);
-  border-radius: 999px;
-  color: var(--gold);
-  font-family: "Cinzel", Georgia, serif;
-}
-
-.journey-strip h2,
-.feature-list h3 {
-  margin: .75rem 0 .3rem;
-  color: var(--gold);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: clamp(.86rem, 1.2vw, 1rem);
-  letter-spacing: .16em;
-  text-transform: uppercase;
-}
-
-.journey-strip p,
-.feature-list p {
-  margin: 0;
-  color: rgba(242, 237, 226, .78);
-  font-size: clamp(1rem, 1.3vw, 1.18rem);
-  line-height: 1.35;
-}
-
-.details-band {
-  display: grid;
-  grid-template-columns: minmax(14rem, .72fr) minmax(18rem, 1fr);
-  gap: clamp(2rem, 5vw, 6rem);
-  border-block: 1px solid rgba(212, 175, 55, .28);
-  padding: clamp(3rem, 7vw, 6rem) clamp(1.4rem, 6vw, 6rem);
-  background:
-    radial-gradient(circle at 90% 10%, rgba(212, 175, 55, .07), transparent 22rem),
-    linear-gradient(180deg, rgba(13, 13, 13, .98), rgba(7, 14, 9, .98));
-}
-
-.details-band h2 {
-  max-width: 11ch;
-  margin: 0;
-  color: var(--stone);
-  font-family: "Cinzel", Georgia, serif;
-  font-size: clamp(2.6rem, 6vw, 6.4rem);
-  font-weight: 400;
-  line-height: .94;
-  text-transform: uppercase;
-}
-
-.feature-list {
-  display: grid;
-  gap: clamp(1.25rem, 3vw, 2rem);
-}
-
-.feature-list article {
-  display: grid;
-  grid-template-columns: 3rem 1fr;
-  column-gap: 1rem;
-  align-items: start;
-}
-
-.feature-list article > span {
-  display: grid;
-  width: 2.65rem;
-  aspect-ratio: 1;
-  place-items: center;
-  border: 1px solid rgba(212, 175, 55, .58);
-  border-radius: 999px;
-  color: var(--gold);
-}
-
-.feature-list h3,
-.feature-list p {
-  grid-column: 2;
-}
-
-.closing-line {
+.actions {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: clamp(.75rem, 2vw, 1.5rem);
-  padding: 1.15rem;
-  font-size: clamp(.66rem, 1vw, .8rem);
+  gap: .75rem;
+}
+
+.eyebrow,
+.secret-hint,
+.opening-copy {
+  color: var(--gold-soft);
+}
+
+.accessibility-controls {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  max-width: min(92vw, 720px);
+  padding: .55rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: rgba(5, 5, 5, .8);
+  backdrop-filter: blur(14px);
+}
+
+.accessibility-controls button {
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  color: var(--ivory);
+  background: rgba(255, 255, 255, .05);
+  font-family: var(--serif-display);
+  font-size: .68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.accessibility-controls label {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.scene-focus-target {
+  position: fixed;
+  left: -999px;
+}
+
+.connection-status {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  padding: .7rem 1rem;
+  border: 1px solid var(--line);
+  background: rgba(5, 5, 5, .86);
+}
+
+.ancient-door {
+  position: relative;
+  width: min(42vw, 280px);
+  height: min(58vw, 420px);
+  margin: 1.4rem auto;
+}
+
+.door-arch {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 50% 50% .7rem .7rem;
+  background: rgba(0, 0, 0, .46);
+  box-shadow: 0 0 70px rgba(212, 175, 55, .28);
+}
+
+.door-leaf,
+.door-light {
+  position: absolute;
+  inset: 8% 12%;
+  border: 1px solid rgba(212, 175, 55, .38);
+  border-radius: 50% 50% .4rem .4rem;
+}
+
+.door-left {
+  right: 50%;
+}
+
+.door-right {
+  left: 50%;
+}
+
+.door-light {
+  inset: 12% 48%;
+  background: var(--gold-soft);
+  box-shadow: 0 0 52px var(--gold);
+}
+
+.stone-form {
+  display: grid;
+  gap: .8rem;
+  width: min(100%, 460px);
+  margin: 1rem auto;
+}
+
+.stone-form input,
+.rsvp input,
+.rsvp select {
+  width: 100%;
+  min-height: 3.2rem;
+  border: 1px solid var(--line);
+  border-radius: .25rem;
+  color: var(--ivory);
+  background: rgba(5, 5, 5, .72);
+  padding: .75rem 1rem;
+}
+
+.forest-layers,
+.particle-field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+.layer-sky {
+  background: radial-gradient(circle at 60% 25%, rgba(212, 175, 55, .24), transparent 24rem);
+}
+
+.layer-mountains {
+  background: linear-gradient(135deg, transparent 35%, rgba(234, 230, 221, .08) 36%, transparent 52%);
+}
+
+.layer-water {
+  background: linear-gradient(180deg, transparent 58%, rgba(212, 175, 55, .12));
+}
+
+.layer-mist {
+  background: radial-gradient(ellipse at 50% 64%, rgba(234, 230, 221, .12), transparent 36%);
+}
+
+.layer-foreground {
+  background: linear-gradient(90deg, rgba(0, 0, 0, .62), transparent 48%, rgba(0, 0, 0, .44));
+}
+
+.event-details {
+  display: grid;
+  gap: .7rem;
+  width: min(100%, 780px);
+  margin: 1.5rem auto;
+  text-align: left;
+}
+
+.event-details div {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: 1rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.event-details dt {
+  color: var(--gold-soft);
+  font-family: var(--serif-display);
+  text-transform: uppercase;
+}
+
+.final-message {
+  margin-top: 1.5rem;
   text-align: center;
 }
 
 @media (max-width: 980px) {
-  .hero-panel {
+  .proposal-hero {
+    background:
+      linear-gradient(180deg, rgba(5, 5, 5, .92), rgba(5, 5, 5, .44) 52%, #050505 100%),
+      url("/el-camino-secreto-hero.png") 65% center / cover no-repeat;
+  }
+
+  .proposal-header,
+  .hero-content,
+  .section-heading,
+  .opening-section {
     grid-template-columns: 1fr;
-    min-height: auto;
   }
 
-  .site-mark {
-    justify-content: center;
+  .proposal-header {
+    display: grid;
   }
 
-  .mark-line {
+  .proposal-nav {
     display: none;
   }
 
-  .hero-copy {
-    padding-top: clamp(2rem, 8vw, 5rem);
+  .hero-content {
+    min-height: auto;
+    padding-top: 3rem;
   }
 
-  .phone-preview {
-    justify-self: center;
-    padding-left: 0;
+  .invitation-device {
+    justify-self: start;
+    width: min(100%, 285px);
   }
 
-  .journey-strip,
-  .details-band {
+  .phone-frame {
+    min-height: 500px;
+    transform: none;
+  }
+
+  .phone-glass {
+    min-height: 470px;
+  }
+
+  .hero-footer,
+  .journey-track,
+  .phase-grid {
     grid-template-columns: 1fr;
+  }
+
+  .journey-card {
+    min-height: auto;
+    border-right: 1px solid var(--line-soft);
+    border-left: 1px solid var(--line-soft);
+  }
+
+  .journey-card::after {
+    right: 2rem;
+    bottom: -8px;
+    transform: rotate(135deg);
+  }
+
+  .accessibility-controls {
+    right: .7rem;
+    left: .7rem;
+    justify-content: center;
+    border-radius: 1.2rem;
   }
 }
 
-@media (max-width: 640px) {
-  .hero-panel {
-    gap: 2rem;
+@media (max-width: 560px) {
+  .proposal-hero {
     padding: 1rem;
   }
 
-  .hero-panel::before,
-  .hero-panel::after {
-    inset: .5rem;
+  .proposal-hero::before,
+  .proposal-hero::after {
+    inset: .72rem;
   }
 
-  .site-mark {
-    flex-direction: column;
-    gap: .4rem;
-    padding-top: 1.5rem;
-    text-align: center;
+  .proposal-monogram {
+    font-size: 3.4rem;
   }
 
-  .monogram {
-    font-size: 3rem;
-  }
-
-  .hero-copy {
-    padding: 1.2rem .85rem 0;
+  .proposal-names,
+  .proposal-label,
+  .hero-footer,
+  .proposal-footer {
+    letter-spacing: .18em;
   }
 
   .hero-copy h1 {
-    font-size: clamp(3.05rem, 14vw, 4.25rem);
-    line-height: .9;
+    font-size: clamp(4rem, 21vw, 6.8rem);
   }
 
-  .chapter {
-    max-width: 100%;
-    font-size: .62rem;
-    letter-spacing: .16em;
-  }
-
-  .coming-soon {
+  .coming-soon-badge {
     width: 100%;
+    justify-content: center;
+    padding-inline: 1rem;
+    letter-spacing: .34em;
+  }
+
+  .stone-pill,
+  .release-note {
+    width: 100%;
+    justify-content: center;
     text-align: center;
   }
 
-  .secret-lock {
-    align-items: flex-start;
-    flex-direction: column;
+  .journey-section,
+  .phases-section,
+  .opening-section {
+    padding-inline: 1rem;
   }
 
-  .phone-preview {
-    justify-self: center;
-    padding-left: 0;
+  .opening-steps li {
+    grid-template-columns: 3.3rem 1fr;
   }
 
-  .phone-shell {
-    width: min(68vw, 13.5rem);
-    border-radius: 1.8rem;
-    padding: .46rem;
+  .scene {
+    min-height: calc(100svh - 2rem);
+    padding: 5.5rem 1rem 1.5rem;
   }
 
-  .phone-screen {
-    min-height: 27rem;
-    border-radius: 1.38rem;
-  }
-
-  .journey-strip {
+  .event-details div {
     grid-template-columns: 1fr;
-    padding-bottom: 1.4rem;
-  }
-
-  .details-band {
-    padding: 3rem 1.2rem;
-  }
-
-  .feature-list article {
-    grid-template-columns: 2.8rem 1fr;
-  }
-
-  .closing-line {
-    flex-direction: column;
-    letter-spacing: .18em;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .hero-art {
-    animation: slow-breath 18s ease-in-out infinite alternate;
+  .coming-soon-badge,
+  .phone-door,
+  .door-light {
+    animation: gold-pulse 3.8s ease-in-out infinite;
   }
 
-  .coming-soon,
-  .phone-screen button {
-    animation: gold-pulse 3.6s ease-in-out infinite;
-  }
-}
-
-@keyframes slow-breath {
-  from {
-    transform: scale(1);
-  }
-
-  to {
-    transform: scale(1.035);
+  .proposal-hero {
+    animation: hero-breathe 12s var(--ease-cinematic) infinite alternate;
   }
 }
 
 @keyframes gold-pulse {
   0%,
   100% {
-    box-shadow: 0 0 1.5rem rgba(212, 175, 55, .08);
+    box-shadow: 0 0 22px rgba(212, 175, 55, .22);
   }
 
   50% {
-    box-shadow: 0 0 2.4rem rgba(212, 175, 55, .24);
+    box-shadow: 0 0 54px rgba(212, 175, 55, .58);
+  }
+}
+
+@keyframes hero-breathe {
+  from {
+    background-position: center;
+  }
+
+  to {
+    background-position: 52% center;
   }
 }
