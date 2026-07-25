@@ -191,7 +191,7 @@ export function HomeInvitation() {
               state={portalState}
               mode={portalMode}
               progress={progress}
-              variant="atmosphere"
+              variant="artwork"
               reducedMotion={motion.reducedMotion}
               tier={tier}
               label="Portal ceremonial que se abre al avanzar por el camino"
