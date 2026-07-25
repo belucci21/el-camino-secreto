@@ -6,8 +6,46 @@ import { useDeviceCapabilities } from "../src/hooks/useDeviceCapabilities";
 import { useReducedMotion } from "../src/hooks/useReducedMotion";
 import { useVisibilityPause } from "../src/hooks/useVisibilityPause";
 
+const howlerMock = vi.hoisted(() => {
+  const instances: Array<{
+    options: { src: string[]; loop?: boolean; volume?: number };
+    play: ReturnType<typeof vi.fn>;
+    pause: ReturnType<typeof vi.fn>;
+    playing: ReturnType<typeof vi.fn>;
+    volume: ReturnType<typeof vi.fn>;
+  }> = [];
+  const Howler = { volume: vi.fn() };
+  const Howl = vi.fn(function MockHowl(options) {
+    let isPlaying = false;
+    const instance = {
+      options,
+      play: vi.fn(() => {
+        isPlaying = true;
+        return 1;
+      }),
+      pause: vi.fn(() => {
+        isPlaying = false;
+      }),
+      playing: vi.fn(() => isPlaying),
+      volume: vi.fn(),
+    };
+    instances.push(instance);
+    return instance;
+  });
+
+  return { instances, Howl, Howler };
+});
+
+vi.mock("howler", () => ({
+  Howl: howlerMock.Howl,
+  Howler: howlerMock.Howler,
+}));
+
 afterEach(() => {
   vi.unstubAllGlobals();
+  howlerMock.instances.length = 0;
+  howlerMock.Howl.mockClear();
+  howlerMock.Howler.volume.mockClear();
   Object.defineProperty(document, "hidden", {
     configurable: true,
     value: false,
@@ -105,72 +143,42 @@ describe("browser capability hooks", () => {
 });
 
 describe("useAudio", () => {
-  function installAudioContext() {
-    const gain = {
-      gain: {
-        value: 0,
-        setTargetAtTime: vi.fn(),
-      },
-      connect: vi.fn(),
-    };
-    const oscillator = {
-      type: "sine",
-      frequency: { value: 0 },
-      connect: vi.fn(),
-      start: vi.fn(),
-    };
-    const resume = vi.fn(async () => undefined);
-    const suspend = vi.fn(async () => undefined);
-    const constructor = vi.fn(
-      class TestAudioContext {
-        currentTime = 0;
-        destination = {};
-        resume = resume;
-        suspend = suspend;
-        createGain = vi.fn(() => gain);
-        createOscillator = vi.fn(() => oscillator);
-      },
-    );
-    vi.stubGlobal("AudioContext", constructor);
-
-    return { constructor, gain, oscillator, resume, suspend };
-  }
-
   it("starts audio only after the explicit start action", async () => {
-    const audio = installAudioContext();
-
     const { result } = renderHook(() => useAudio());
     expect(result.current.enabled).toBe(false);
-    expect(audio.constructor).not.toHaveBeenCalled();
+    expect(howlerMock.Howl).not.toHaveBeenCalled();
 
     await act(async () => result.current.start());
 
     expect(result.current.enabled).toBe(true);
-    expect(audio.constructor).toHaveBeenCalledOnce();
-    expect(audio.oscillator.start).toHaveBeenCalledOnce();
+    expect(howlerMock.Howl).toHaveBeenCalledTimes(3);
+    expect(howlerMock.instances[0].options.src).toEqual([
+      "/audio/ambient-loop.wav",
+    ]);
+    expect(howlerMock.instances[0].play).toHaveBeenCalledOnce();
   });
 
   it("supports clamped volume changes", async () => {
-    const audio = installAudioContext();
     const { result } = renderHook(() => useAudio());
     await act(async () => result.current.start());
 
     act(() => result.current.setVolume(0.4));
 
     expect(result.current.volume).toBe(0.4);
-    expect(audio.gain.gain.setTargetAtTime).toHaveBeenCalledWith(
-      0.008,
-      0,
-      0.08,
-    );
+    expect(howlerMock.Howler.volume).toHaveBeenCalledWith(0.4);
+    expect(howlerMock.instances[0].volume).toHaveBeenCalledWith(0.192);
+    expect(howlerMock.instances[1].volume).toHaveBeenCalledWith(0.288);
+    expect(howlerMock.instances[2].volume).toHaveBeenCalledWith(0.328);
 
     act(() => result.current.setVolume(2));
     expect(result.current.volume).toBe(1);
+    expect(howlerMock.Howler.volume).toHaveBeenCalledWith(1);
   });
 
-  it("fails silently when browser audio is unavailable", async () => {
-    vi.stubGlobal("AudioContext", undefined);
-    vi.stubGlobal("webkitAudioContext", undefined);
+  it("fails silently when Howler cannot start", async () => {
+    howlerMock.Howl.mockImplementationOnce(() => {
+      throw new Error("audio unavailable");
+    });
     const { result } = renderHook(() => useAudio());
 
     await expect(
@@ -184,7 +192,6 @@ describe("useAudio", () => {
   });
 
   it("pauses active audio when the page becomes hidden", async () => {
-    const audio = installAudioContext();
     const { result } = renderHook(() => useAudio());
     await act(async () => result.current.start());
     Object.defineProperty(document, "hidden", {
@@ -194,14 +201,13 @@ describe("useAudio", () => {
 
     document.dispatchEvent(new Event("visibilitychange"));
 
-    expect(audio.suspend).toHaveBeenCalledOnce();
+    expect(howlerMock.instances[0].pause).toHaveBeenCalledOnce();
   });
 
   it("resumes user-enabled audio when the page becomes visible again", async () => {
-    const audio = installAudioContext();
     const { result } = renderHook(() => useAudio());
     await act(async () => result.current.start());
-    audio.resume.mockClear();
+    howlerMock.instances[0].play.mockClear();
 
     Object.defineProperty(document, "hidden", {
       configurable: true,
@@ -217,17 +223,16 @@ describe("useAudio", () => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
 
-    expect(audio.suspend).toHaveBeenCalledOnce();
-    expect(audio.resume).toHaveBeenCalledOnce();
+    expect(howlerMock.instances[0].pause).toHaveBeenCalledOnce();
+    expect(howlerMock.instances[0].play).toHaveBeenCalledOnce();
     expect(result.current.enabled).toBe(true);
   });
 
   it("does not resume audio after the user mutes it", async () => {
-    const audio = installAudioContext();
     const { result } = renderHook(() => useAudio());
     await act(async () => result.current.start());
     act(() => result.current.mute());
-    audio.resume.mockClear();
+    howlerMock.instances[0].play.mockClear();
 
     Object.defineProperty(document, "hidden", {
       configurable: true,
@@ -237,7 +242,21 @@ describe("useAudio", () => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
 
-    expect(audio.resume).not.toHaveBeenCalled();
+    expect(howlerMock.instances[0].play).not.toHaveBeenCalled();
     expect(result.current.enabled).toBe(false);
+  });
+
+  it("plays cinematic cues only after audio is enabled", async () => {
+    const { result } = renderHook(() => useAudio());
+
+    act(() => result.current.playCue("unlock"));
+    expect(howlerMock.instances).toHaveLength(0);
+
+    await act(async () => result.current.start());
+    act(() => result.current.playCue("unlock"));
+    act(() => result.current.playCue("opening"));
+
+    expect(howlerMock.instances[1].play).toHaveBeenCalledOnce();
+    expect(howlerMock.instances[2].play).toHaveBeenCalledOnce();
   });
 });

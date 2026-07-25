@@ -15,11 +15,13 @@ export function SoundGate({
 }: SoundGateProps) {
   return (
     <section className="scene threshold" aria-labelledby="threshold-title">
-      <p className="eyebrow">El Camino Secreto</p>
+      <div className="threshold-mark" aria-hidden="true">
+        G&amp;J
+      </div>
       <h2 id="threshold-title">Hay puertas que no aparecen en ningún mapa.</h2>
       <p>Si has llegado hasta aquí, el camino ya te reconoce.</p>
       <div className="actions">
-        <button onClick={() => onEnter(true)}>Entrar con sonido</button>
+        <button onClick={() => onEnter(true)}>Entrar con música</button>
         <button onClick={() => onEnter(false)}>Entrar en silencio</button>
         <button aria-pressed={reducedMotion} onClick={onToggleReducedMotion}>
           {reducedMotion ? "Restaurar movimiento" : "Reducir movimiento"}

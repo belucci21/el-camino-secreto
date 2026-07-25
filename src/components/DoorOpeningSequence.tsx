@@ -3,15 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { experienceConfig } from "../config/experience";
-import { AncientDoor } from "./AncientDoor";
+import type { PerformanceTier } from "../utils/performanceTier";
+import { PortalStage } from "./PortalStage";
 
 interface DoorOpeningSequenceProps {
   reducedMotion: boolean;
+  tier?: PerformanceTier;
   onFinished: () => void;
 }
 
 export function DoorOpeningSequence({
   reducedMotion,
+  tier = "medium",
   onFinished,
 }: DoorOpeningSequenceProps) {
   const [opened, setOpened] = useState(reducedMotion);
@@ -64,8 +67,14 @@ export function DoorOpeningSequence({
         if (doorLight) {
           animationRef.current = gsap.fromTo(
             doorLight,
-            { opacity: 0.2, scaleY: 0.05 },
-            { opacity: 1, scaleY: 1, duration: 2.8, ease: "power2.inOut" },
+            { opacity: 0.18, scaleY: 0.08, filter: "blur(8px)" },
+            {
+              opacity: 1,
+              scaleY: 1.08,
+              filter: "blur(0px)",
+              duration: 3.8,
+              ease: "power2.inOut",
+            },
           );
         }
       } catch {
@@ -87,8 +96,13 @@ export function DoorOpeningSequence({
       className="scene opening"
       aria-label="La puerta se abre"
     >
-      <AncientDoor state={reducedMotion || opened ? "open" : "awake"} />
-      <p className="opening-copy">El umbral te reconoce.</p>
+      <PortalStage
+        state={reducedMotion || opened ? "open" : "awake"}
+        mode="opening"
+        reducedMotion={reducedMotion}
+        tier={tier}
+      />
+      <p className="opening-copy">El umbral se abre. La luz cruza el bosque.</p>
       <button className="skip-opening" onClick={finish}>
         Saltar apertura
       </button>

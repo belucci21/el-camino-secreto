@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { experienceConfig } from "../config/experience";
 import { validateSecretWord } from "../utils/secretWord";
-import { AncientDoor } from "./AncientDoor";
+import { PortalStage } from "./PortalStage";
 
 interface SecretWordGateProps {
   validate?: (value: string) => Promise<boolean>;
@@ -66,14 +66,17 @@ export function SecretWordGate({
       data-reaction={reaction}
       data-testid="secret-gate"
     >
-      <AncientDoor
+      <PortalStage
         key={attempts}
         state={attempts > 0 ? "wrong" : "waiting"}
+        mode="gate"
       />
       <form className="stone-form" onSubmit={submit}>
-        <h2 id="gate-title">
-          Solo quienes conocen la palabra podrán entrar.
-        </h2>
+        <h2 id="gate-title">La piedra escucha una sola palabra.</h2>
+        <p>
+          Escríbela como si la estuvieras pronunciando ante el umbral. Si es la
+          correcta, la puerta responderá.
+        </p>
         <label htmlFor="secret-word">Palabra del camino</label>
         <input
           id="secret-word"

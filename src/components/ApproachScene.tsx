@@ -2,15 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { experienceConfig } from "../config/experience";
-import { AncientDoor } from "./AncientDoor";
+import type { PerformanceTier } from "../utils/performanceTier";
+import { PortalStage } from "./PortalStage";
 
 interface ApproachSceneProps {
   reducedMotion: boolean;
+  tier?: PerformanceTier;
   onFinished: () => void;
 }
 
 export function ApproachScene({
   reducedMotion,
+  tier = "medium",
   onFinished,
 }: ApproachSceneProps) {
   const [hasArrived, setHasArrived] = useState(reducedMotion);
@@ -40,7 +43,12 @@ export function ApproachScene({
       className={`scene approach${arrived ? " is-arrived" : ""}`}
       aria-labelledby="approach-title"
     >
-      <AncientDoor state={arrived ? "waiting" : "distant"} />
+      <PortalStage
+        state={arrived ? "waiting" : "distant"}
+        mode="approach"
+        reducedMotion={reducedMotion}
+        tier={tier}
+      />
       <p className="approach-status" role="status" aria-live="polite">
         {arrived ? "La puerta está lista." : "La puerta se aproxima."}
       </p>

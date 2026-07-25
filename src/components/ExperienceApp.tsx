@@ -83,6 +83,12 @@ export function ExperienceApp() {
 
   const reveal = () => dispatch({ type: "SKIP_TO_REVEAL" });
 
+  const acceptSecret = () => {
+    audio.playCue("unlock");
+    window.setTimeout(() => audio.playCue("opening"), 280);
+    dispatch({ type: "SECRET_ACCEPTED" });
+  };
+
   return (
     <ErrorBoundary>
       <div
@@ -141,17 +147,17 @@ export function ExperienceApp() {
         {state.scene === "approach" && (
           <ApproachScene
             reducedMotion={motion.reducedMotion}
+            tier={tier}
             onFinished={() => dispatch({ type: "APPROACH_FINISHED" })}
           />
         )}
         {state.scene === "gate" && (
-          <SecretWordGate
-            onAccepted={() => dispatch({ type: "SECRET_ACCEPTED" })}
-          />
+          <SecretWordGate onAccepted={acceptSecret} />
         )}
         {state.scene === "opening" && (
           <DoorOpeningSequence
             reducedMotion={motion.reducedMotion}
+            tier={tier}
             onFinished={() => dispatch({ type: "OPENING_FINISHED" })}
           />
         )}

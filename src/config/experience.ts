@@ -1,6 +1,6 @@
 export const experienceConfig = {
-  approachDurationMs: 4000,
-  openingDurationMs: 6000,
+  approachDurationMs: 2600,
+  openingDurationMs: 5200,
   incorrectMessages: [
     "La piedra permanece en silencio.",
     "Esa palabra no despierta el umbral.",

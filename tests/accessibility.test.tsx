@@ -4,6 +4,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderToString } from "react-dom/server";
@@ -18,7 +19,9 @@ import { EventDetails } from "../src/components/EventDetails";
 import { ExperienceApp } from "../src/components/ExperienceApp";
 import { ExperienceLoader } from "../src/components/ExperienceLoader";
 import { FinalMessage } from "../src/components/FinalMessage";
+import { HomeInvitation } from "../src/components/HomeInvitation";
 import { InvitationReveal } from "../src/components/InvitationReveal";
+import { PortalStage } from "../src/components/PortalStage";
 import { RSVPWhatsApp } from "../src/components/RSVPWhatsApp";
 import { SoundGate } from "../src/components/SoundGate";
 import { experienceConfig } from "../src/config/experience";
@@ -60,7 +63,7 @@ describe("SoundGate", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: "Entrar con sonido" }),
+      screen.getByRole("button", { name: "Entrar con música" }),
     ).toBeVisible();
     expect(
       screen.getByRole("button", { name: "Entrar en silencio" }),
@@ -120,6 +123,29 @@ it("renders a lightweight loading message", () => {
   expect(screen.getByText("El camino está despertando.")).toBeVisible();
 });
 
+it("starts the scroll ritual without requiring audio", async () => {
+  const user = userEvent.setup();
+  const { container } = render(<HomeInvitation />);
+
+  expect(
+    screen.getByRole("heading", { name: "La invitación está sellada" }),
+  ).toBeVisible();
+  expect(
+    container.querySelector("[data-started='false']"),
+  ).toBeInTheDocument();
+
+  await user.click(
+    screen.getByRole("button", { name: "Entrar sin música" }),
+  );
+
+  expect(
+    container.querySelector("[data-started='true']"),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("Desliza para despertar el camino"),
+  ).toBeVisible();
+});
+
 it("keeps discovery actionable without animation", async () => {
   const user = userEvent.setup();
   const onDiscover = vi.fn();
@@ -140,7 +166,7 @@ it("keeps discovery actionable without animation", async () => {
   expect(scene?.style.getPropertyValue("--look-x")).toBe("");
 
   const discoverButton = screen.getByRole("button", {
-    name: "Descubrir el camino",
+    name: "Acercarse al portal",
   });
   discoverButton.focus();
   await user.keyboard("{Enter}");
@@ -152,6 +178,26 @@ it("keeps discovery actionable without animation", async () => {
 it("exposes the door state as deterministic markup", () => {
   const { container } = render(<AncientDoor state="wrong" />);
   expect(container.querySelector("[data-state='wrong']")).toBeInTheDocument();
+});
+
+it("keeps two hinged ornamental leaves in the cinematic opening", () => {
+  const { container } = render(
+    <PortalStage
+      state="open"
+      mode="opening"
+      reducedMotion
+      tier="low"
+    />,
+  );
+
+  const artwork = container.querySelector(".portal-artwork");
+  expect(artwork).toHaveAttribute("data-state", "open");
+  expect(
+    artwork?.querySelector(".portal-artwork-leaf-left"),
+  ).toHaveAttribute("data-hinge", "left");
+  expect(
+    artwork?.querySelector(".portal-artwork-leaf-right"),
+  ).toHaveAttribute("data-hinge", "right");
 });
 
 it("lets reduced-motion visitors continue through the approach immediately", async () => {
@@ -592,7 +638,9 @@ it("supports the complete Enter and Tab journey through reveal and replay", asyn
     const silence = await screen.findByRole("button", {
       name: "Entrar en silencio",
     });
-    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByTestId("scene-focus-target")).toHaveFocus(),
+    );
     expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
       "Umbral de entrada",
     );
@@ -604,7 +652,7 @@ it("supports the complete Enter and Tab journey through reveal and replay", asyn
     );
 
     const discover = await screen.findByRole("button", {
-      name: "Descubrir el camino",
+      name: "Acercarse al portal",
     });
     await tabTo(user, discover);
     await user.keyboard("{Enter}");
@@ -686,7 +734,7 @@ it("lets a reduced-motion keyboard user reach the secret word field", async () =
     await user.keyboard("{Enter}");
 
     const discover = await screen.findByRole("button", {
-      name: "Descubrir el camino",
+      name: "Acercarse al portal",
     });
     await tabTo(user, discover);
     await user.keyboard("{Enter}");

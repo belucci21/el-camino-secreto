@@ -1,22 +1,47 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { Howl, Howler } from "howler";
 import { useVisibilityPause } from "./useVisibilityPause";
 
-type WindowWithWebkitAudio = Window & {
-  webkitAudioContext?: typeof AudioContext;
+export type AudioCue = "unlock" | "opening";
+
+type AudioTracks = {
+  ambient: Howl;
+  unlock: Howl;
+  opening: Howl;
 };
 
+function createTracks(volume: number): AudioTracks {
+  return {
+    ambient: new Howl({
+      src: ["/audio/ambient-loop.wav"],
+      loop: true,
+      volume: volume * 0.48,
+      html5: false,
+    }),
+    unlock: new Howl({
+      src: ["/audio/unlock-chime.wav"],
+      volume: volume * 0.72,
+      html5: false,
+    }),
+    opening: new Howl({
+      src: ["/audio/portal-opening.wav"],
+      volume: volume * 0.82,
+      html5: false,
+    }),
+  };
+}
+
 export function useAudio() {
-  const contextRef = useRef<AudioContext | null>(null);
-  const gainRef = useRef<GainNode | null>(null);
+  const tracksRef = useRef<AudioTracks | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [available, setAvailable] = useState(true);
   const [volume, setVolumeState] = useState(0.65);
 
   const stop = useCallback(() => {
     try {
-      void contextRef.current?.suspend().catch(() => undefined);
+      tracksRef.current?.ambient.pause();
     } catch {
       // Browsers may reject audio operations as their lifecycle changes.
     }
@@ -26,7 +51,8 @@ export function useAudio() {
     if (!enabled) return;
 
     try {
-      void contextRef.current?.resume().catch(() => undefined);
+      const ambient = tracksRef.current?.ambient;
+      if (ambient && !ambient.playing()) ambient.play();
     } catch {
       // Browsers may reject audio operations as their lifecycle changes.
     }
@@ -37,30 +63,15 @@ export function useAudio() {
   const start = useCallback(async () => {
     try {
       if (typeof window === "undefined") {
-        throw new Error("AudioContext unavailable");
+        throw new Error("Audio unavailable");
       }
 
-      const AudioContextClass =
-        window.AudioContext ||
-        (window as WindowWithWebkitAudio).webkitAudioContext;
-      if (!AudioContextClass) throw new Error("AudioContext unavailable");
-
-      contextRef.current ??= new AudioContextClass();
-      if (!gainRef.current) {
-        const context = contextRef.current;
-        const gain = context.createGain();
-        const oscillator = context.createOscillator();
-        oscillator.type = "sine";
-        oscillator.frequency.value = 78;
-        gain.gain.value = volume * 0.02;
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start();
-        gainRef.current = gain;
-      }
-
-      await contextRef.current.resume();
+      tracksRef.current ??= createTracks(volume);
+      Howler.volume(volume);
+      const ambient = tracksRef.current.ambient;
+      if (!ambient.playing()) ambient.play();
       setEnabled(true);
+      setAvailable(true);
     } catch {
       setAvailable(false);
       setEnabled(false);
@@ -70,12 +81,15 @@ export function useAudio() {
   const setVolume = useCallback((value: number) => {
     const next = Math.min(1, Math.max(0, value));
     setVolumeState(next);
-    const context = contextRef.current;
-    gainRef.current?.gain.setTargetAtTime(
-      next * 0.02,
-      context?.currentTime ?? 0,
-      0.08,
-    );
+
+    try {
+      Howler.volume(next);
+      tracksRef.current?.ambient.volume(next * 0.48);
+      tracksRef.current?.unlock.volume(next * 0.72);
+      tracksRef.current?.opening.volume(next * 0.82);
+    } catch {
+      setAvailable(false);
+    }
   }, []);
 
   const mute = useCallback(() => {
@@ -83,5 +97,18 @@ export function useAudio() {
     stop();
   }, [stop]);
 
-  return { enabled, available, volume, setVolume, start, mute };
+  const playCue = useCallback(
+    (cue: AudioCue) => {
+      if (!enabled) return;
+
+      try {
+        tracksRef.current?.[cue].play();
+      } catch {
+        setAvailable(false);
+      }
+    },
+    [enabled],
+  );
+
+  return { enabled, available, volume, setVolume, start, mute, playCue };
 }

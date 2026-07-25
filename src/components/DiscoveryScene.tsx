@@ -4,6 +4,7 @@ import { useRef, type PointerEvent } from "react";
 import type { PerformanceTier } from "../utils/performanceTier";
 import { ForestLayers } from "./ForestLayers";
 import { ParticleField } from "./ParticleField";
+import { PortalStage } from "./PortalStage";
 
 interface DiscoverySceneProps {
   tier: PerformanceTier;
@@ -33,11 +34,16 @@ export function DiscoveryScene({
     >
       <ForestLayers />
       <ParticleField tier={tier} />
+      <PortalStage state="distant" mode="discovery" tier={tier} />
       <div className="scene-copy">
         <h2 id="discovery-title">
           Hay puertas que solo aparecen ante quienes fueron llamados.
         </h2>
-        <button onClick={onDiscover}>Descubrir el camino</button>
+        <p>
+          Entre la niebla, el oro antiguo empieza a responder. No es una página:
+          es un umbral.
+        </p>
+        <button onClick={onDiscover}>Acercarse al portal</button>
       </div>
     </section>
   );
