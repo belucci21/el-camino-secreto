@@ -134,6 +134,9 @@ it("starts the scroll ritual without requiring audio", async () => {
   expect(
     container.querySelector("[data-started='false']"),
   ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: /Ir directamente a la puerta/ }),
+  ).toHaveAttribute("href", "/experiencia");
 
   await user.click(
     screen.getByRole("button", { name: "Entrar sin música" }),

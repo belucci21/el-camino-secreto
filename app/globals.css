@@ -1325,20 +1325,30 @@ button:hover,
 }
 
 .gate {
+  grid-template-rows: minmax(0, 1fr) auto;
   align-content: center;
   gap: 0;
+  height: calc(100svh - (2 * clamp(1rem, 3vw, 2rem)));
+  min-height: 0;
+  padding-block: clamp(4.8rem, 9svh, 6.4rem) clamp(.8rem, 2svh, 1.5rem);
 }
 
 .gate-portal-stage {
   position: relative;
   z-index: 1;
   display: grid;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   width: 100%;
   place-items: center;
 }
 
-.gate .portal-stage {
-  width: min(84vw, 900px);
+.gate .portal-stage[data-portal-variant="artwork"] {
+  width: auto;
+  max-width: min(84vw, 900px);
+  height: min(45svh, 472px);
+  max-height: 100%;
   margin-bottom: 0;
 }
 
@@ -1910,11 +1920,15 @@ button:hover,
 
   .gate {
     align-content: start;
-    padding-top: 6.75rem;
+    height: calc(100svh - 2rem);
+    padding: 6.25rem .85rem .8rem;
   }
 
   .gate .portal-stage[data-portal-variant="artwork"] {
-    width: min(calc(100vw - 2rem), 430px);
+    width: min(100%, 430px);
+    height: auto;
+    max-height: min(34svh, 300px);
+    aspect-ratio: 5 / 4;
   }
 
   .gate-rune-orbit span {
@@ -1929,15 +1943,15 @@ button:hover,
   }
 
   .secret-pedestal {
-    width: calc(100% - 2rem);
-    margin-top: -2.2rem;
-    padding: 1.1rem 1rem 1.2rem;
+    width: min(100%, 430px);
+    margin-top: -1.65rem;
+    padding: .9rem .85rem 1rem;
     clip-path: polygon(4% 0, 96% 0, 100% 8%, 100% 92%, 96% 100%, 4% 100%, 0 92%, 0 8%);
   }
 
   .secret-pedestal h2,
   .stone-form.secret-pedestal h2 {
-    font-size: clamp(1.45rem, 7vw, 2rem);
+    font-size: clamp(1.32rem, 6.5vw, 1.8rem);
   }
 
   .pedestal-kicker {
@@ -1984,7 +1998,7 @@ button:hover,
   }
 
   .scene .portal-stage[data-portal-variant="artwork"] {
-    width: min(calc(100vw - 2rem), 390px);
+    width: min(100%, 390px);
     height: auto;
     min-height: 0;
     aspect-ratio: 5 / 4;
@@ -2327,7 +2341,8 @@ button:hover,
 }
 
 .ritual-open-button,
-.ritual-silent-button {
+.ritual-silent-button,
+.ritual-gate-link {
   min-height: 3.5rem;
   padding: .9rem 1.35rem;
   font-family: var(--serif-display);
@@ -2349,6 +2364,31 @@ button:hover,
   border: 1px solid rgba(212, 175, 55, .48);
   color: var(--ivory);
   background: rgba(3, 4, 3, .58);
+}
+
+.ritual-gate-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .7rem;
+  border: 0;
+  color: var(--gold-soft);
+  background: transparent;
+  text-decoration: underline;
+  text-decoration-color: rgba(212, 175, 55, .48);
+  text-underline-offset: .38rem;
+  transition:
+    color .28s ease,
+    transform .28s var(--ease-cinematic);
+}
+
+.ritual-gate-link:hover {
+  color: var(--ivory);
+  transform: translateX(.2rem);
+}
+
+.ritual-gate-link span {
+  font-size: 1rem;
 }
 
 .ritual-portal-wrap {
@@ -2778,8 +2818,14 @@ button:hover,
   }
 
   .ritual-open-button,
-  .ritual-silent-button {
+  .ritual-silent-button,
+  .ritual-gate-link {
     width: 100%;
+  }
+
+  .ritual-gate-link {
+    min-height: 2.65rem;
+    padding-block: .55rem;
   }
 
   .ritual-seal > small {

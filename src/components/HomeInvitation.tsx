@@ -223,7 +223,7 @@ export function HomeInvitation() {
                 type="button"
                 onClick={() => begin(true)}
               >
-                Abrir la invitación
+                Comenzar el camino
               </button>
               <button
                 className="ritual-silent-button"
@@ -232,8 +232,14 @@ export function HomeInvitation() {
               >
                 Entrar sin música
               </button>
+              <a className="ritual-gate-link" href="/experiencia">
+                Ir directamente a la puerta
+                <span aria-hidden="true">→</span>
+              </a>
             </div>
-            <small>Activa el sonido para vivir la apertura completa</small>
+            <small>
+              Recorre el camino o entra directamente con la palabra secreta
+            </small>
           </section>
 
           <div className="ritual-narrative" aria-live="polite">
