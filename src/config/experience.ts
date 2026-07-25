@@ -1,5 +1,6 @@
 export const experienceConfig = {
   approachDurationMs: 2600,
+  recognitionDurationMs: 900,
   openingDurationMs: 5200,
   incorrectMessages: [
     "La piedra permanece en silencio.",

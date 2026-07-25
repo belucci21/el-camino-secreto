@@ -47,7 +47,7 @@ async function tabTo(
 }
 
 describe("SoundGate", () => {
-  it("offers sound, silence, reduced motion and skip actions", async () => {
+  it("offers sound, silence, reduced motion and a path to the secret word", async () => {
     const user = userEvent.setup();
     const onEnter = vi.fn();
     const onToggleReducedMotion = vi.fn();
@@ -58,7 +58,7 @@ describe("SoundGate", () => {
         reducedMotion={false}
         onEnter={onEnter}
         onToggleReducedMotion={onToggleReducedMotion}
-        onSkip={onSkip}
+        onSkipMotion={onSkip}
       />,
     );
 
@@ -80,7 +80,7 @@ describe("SoundGate", () => {
     expect(onToggleReducedMotion).toHaveBeenCalledOnce();
 
     const skipButton = screen.getByRole("button", {
-      name: "Saltar a la invitación",
+      name: "Continuar sin animación",
     });
     skipButton.focus();
     await user.keyboard(" ");
@@ -101,6 +101,7 @@ it("exposes accessible persistent controls including volume", async () => {
       onToggleMotion={vi.fn()}
       onToggleSound={onToggleSound}
       onVolumeChange={onVolumeChange}
+      skipLabel="Ir a la palabra"
       onSkip={vi.fn()}
     />,
   );
@@ -585,33 +586,36 @@ it("recovers to the static invitation when a scene crashes", () => {
   consoleError.mockRestore();
 });
 
-it("allows a keyboard user to skip to the invitation", async () => {
+it("sends a keyboard user who skips motion to the required secret word", async () => {
   const user = userEvent.setup();
   render(<ExperienceApp />);
   await user.click(
-    await screen.findByRole("button", { name: "Saltar a la invitación" }),
+    await screen.findByRole("button", { name: "Continuar sin animación" }),
   );
   expect(
-    screen.getByRole("heading", { name: "Gladiola y Jordi" }),
+    screen.getByRole("textbox", { name: "Palabra del camino" }),
   ).toBeVisible();
+  expect(
+    screen.queryByRole("heading", { name: "Gladiola y Jordi" }),
+  ).not.toBeInTheDocument();
 });
 
-it("lets a keyboard user skip without a click and focuses the revealed scene", async () => {
+it("lets a keyboard user skip motion without bypassing the secret gate", async () => {
   const user = userEvent.setup();
   render(<ExperienceApp />);
   const skip = await screen.findByRole("button", {
-    name: "Saltar a la invitación",
+    name: "Continuar sin animación",
   });
 
   await tabTo(user, skip);
   await user.keyboard("{Enter}");
 
   expect(
-    screen.getByRole("heading", { name: "Gladiola y Jordi" }),
+    screen.getByRole("textbox", { name: "Palabra del camino" }),
   ).toBeVisible();
   expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
   expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
-    "Invitación revelada",
+    "Palabra del camino",
   );
 });
 
@@ -675,10 +679,12 @@ it("supports the complete Enter and Tab journey through reveal and replay", asyn
     await tabTo(user, secretWord);
     await user.type(secretWord, "amigo");
     await user.keyboard("{Enter}");
-    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
-    expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
-      "Apertura de la puerta",
+    await waitFor(() =>
+      expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
+        "Apertura de la puerta",
+      ),
     );
+    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
 
     const skipOpening = await screen.findByRole("button", {
       name: "Saltar apertura",

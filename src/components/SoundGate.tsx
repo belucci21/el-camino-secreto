@@ -4,14 +4,14 @@ interface SoundGateProps {
   reducedMotion: boolean;
   onEnter: (soundEnabled: boolean) => void;
   onToggleReducedMotion: () => void;
-  onSkip: () => void;
+  onSkipMotion: () => void;
 }
 
 export function SoundGate({
   reducedMotion,
   onEnter,
   onToggleReducedMotion,
-  onSkip,
+  onSkipMotion,
 }: SoundGateProps) {
   return (
     <section className="scene threshold" aria-labelledby="threshold-title">
@@ -26,7 +26,7 @@ export function SoundGate({
         <button aria-pressed={reducedMotion} onClick={onToggleReducedMotion}>
           {reducedMotion ? "Restaurar movimiento" : "Reducir movimiento"}
         </button>
-        <button onClick={onSkip}>Saltar a la invitación</button>
+        <button onClick={onSkipMotion}>Continuar sin animación</button>
       </div>
     </section>
   );

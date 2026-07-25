@@ -25,10 +25,23 @@ describe("experienceReducer", () => {
     ]);
   });
 
-  it("can skip directly to the revealed invitation", () => {
+  it("skips motion only as far as the required secret-word gate", () => {
     expect(
-      experienceReducer(initialExperienceState, { type: "SKIP_TO_REVEAL" }).scene,
-    ).toBe("revealed");
+      experienceReducer(initialExperienceState, { type: "SKIP_TO_GATE" }).scene,
+    ).toBe("gate");
+  });
+
+  it("cannot skip the opening before the secret word has been accepted", () => {
+    const gate = {
+      ...initialExperienceState,
+      scene: "gate" as const,
+    };
+    expect(experienceReducer(gate, { type: "SKIP_OPENING" }).scene).toBe("gate");
+
+    const opening = experienceReducer(gate, { type: "SECRET_ACCEPTED" });
+    expect(experienceReducer(opening, { type: "SKIP_OPENING" }).scene).toBe(
+      "revealed",
+    );
   });
 
   it("replays the door opening without losing preferences", () => {

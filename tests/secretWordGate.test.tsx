@@ -151,6 +151,29 @@ describe("SecretWordGate", () => {
     await user.keyboard("{Enter}");
     expect(onAccepted).toHaveBeenCalledOnce();
     expect(document.activeElement).toBe(document.body);
+    expect(screen.getByTestId("secret-gate")).toHaveAttribute(
+      "data-phase",
+      "accepted",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "La palabra ha sido reconocida.",
+    );
+  });
+
+  it("awakens the portal while the guest types", async () => {
+    const user = userEvent.setup();
+    render(<SecretWordGate validate={async () => false} onAccepted={vi.fn()} />);
+
+    await user.type(screen.getByLabelText("Palabra del camino"), "a");
+
+    expect(screen.getByTestId("secret-gate")).toHaveAttribute(
+      "data-phase",
+      "typing",
+    );
+    expect(screen.getByRole("img")).toHaveAttribute(
+      "data-portal-state",
+      "awake",
+    );
   });
 
   it("recovers from validation errors and permits another attempt", async () => {

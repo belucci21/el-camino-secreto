@@ -7,7 +7,8 @@ interface AccessibilityControlsProps {
   onToggleMotion: () => void;
   onToggleSound: () => void;
   onVolumeChange: (value: number) => void;
-  onSkip: () => void;
+  skipLabel?: string;
+  onSkip?: () => void;
 }
 
 export function AccessibilityControls(props: AccessibilityControlsProps) {
@@ -30,7 +31,9 @@ export function AccessibilityControls(props: AccessibilityControlsProps) {
           onChange={(event) => props.onVolumeChange(Number(event.target.value))}
         />
       </label>
-      <button onClick={props.onSkip}>Saltar experiencia</button>
+      {props.skipLabel && props.onSkip ? (
+        <button onClick={props.onSkip}>{props.skipLabel}</button>
+      ) : null}
     </nav>
   );
 }

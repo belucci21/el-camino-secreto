@@ -11,6 +11,7 @@ import {
   experienceReducer,
   initialExperienceState,
 } from "../state/experienceMachine";
+import { experienceConfig } from "../config/experience";
 import { useAudio } from "../hooks/useAudio";
 import { useDeviceCapabilities } from "../hooks/useDeviceCapabilities";
 import { useReducedMotion } from "../hooks/useReducedMotion";
@@ -46,11 +47,21 @@ export function ExperienceApp() {
   const [online, setOnline] = useState(true);
   const focusTargetRef = useRef<HTMLParagraphElement>(null);
   const previousSceneRef = useRef(state.scene);
+  const recognitionTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => dispatch({ type: "READY" }), 350);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(
+    () => () => {
+      if (recognitionTimerRef.current !== null) {
+        window.clearTimeout(recognitionTimerRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (
@@ -81,13 +92,33 @@ export function ExperienceApp() {
     [audio],
   );
 
-  const reveal = () => dispatch({ type: "SKIP_TO_REVEAL" });
-
   const acceptSecret = () => {
     audio.playCue("unlock");
-    window.setTimeout(() => audio.playCue("opening"), 280);
-    dispatch({ type: "SECRET_ACCEPTED" });
+    recognitionTimerRef.current = window.setTimeout(
+      () => {
+        recognitionTimerRef.current = null;
+        audio.playCue("opening");
+        dispatch({ type: "SECRET_ACCEPTED" });
+      },
+      motion.reducedMotion ? 180 : experienceConfig.recognitionDurationMs,
+    );
   };
+
+  const canSkipMotion =
+    state.scene === "threshold" ||
+    state.scene === "discovery" ||
+    state.scene === "approach";
+  const canSkipOpening = state.scene === "opening";
+  const skipLabel = canSkipMotion
+    ? "Ir a la palabra"
+    : canSkipOpening
+      ? "Terminar apertura"
+      : undefined;
+  const skipAction = canSkipMotion
+    ? () => dispatch({ type: "SKIP_TO_GATE" })
+    : canSkipOpening
+      ? () => dispatch({ type: "SKIP_OPENING" })
+      : undefined;
 
   return (
     <ErrorBoundary>
@@ -124,7 +155,8 @@ export function ExperienceApp() {
               audio.enabled ? audio.mute() : void audio.start()
             }
             onVolumeChange={audio.setVolume}
-            onSkip={reveal}
+            skipLabel={skipLabel}
+            onSkip={skipAction}
           />
         )}
         {state.scene === "loading" && <ExperienceLoader />}
@@ -135,7 +167,7 @@ export function ExperienceApp() {
             onToggleReducedMotion={() =>
               motion.setReducedMotion(!motion.reducedMotion)
             }
-            onSkip={reveal}
+            onSkipMotion={() => dispatch({ type: "SKIP_TO_GATE" })}
           />
         )}
         {state.scene === "discovery" && (

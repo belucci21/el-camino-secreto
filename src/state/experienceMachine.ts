@@ -21,7 +21,8 @@ export type ExperienceAction =
   | { type: "SECRET_ACCEPTED" }
   | { type: "OPENING_FINISHED" }
   | { type: "SET_REDUCED_MOTION"; value: boolean }
-  | { type: "SKIP_TO_REVEAL" }
+  | { type: "SKIP_TO_GATE" }
+  | { type: "SKIP_OPENING" }
   | { type: "REPLAY_OPENING" };
 
 export const initialExperienceState: ExperienceState = {
@@ -43,12 +44,25 @@ export function experienceReducer(
       return { ...state, scene: "approach" };
     case "APPROACH_FINISHED":
       return { ...state, scene: "gate" };
+    case "SKIP_TO_GATE":
+      if (
+        state.scene === "loading" ||
+        state.scene === "threshold" ||
+        state.scene === "discovery" ||
+        state.scene === "approach"
+      ) {
+        return { ...state, scene: "gate" };
+      }
+      return state;
     case "SECRET_ACCEPTED":
     case "REPLAY_OPENING":
       return { ...state, scene: "opening" };
     case "OPENING_FINISHED":
-    case "SKIP_TO_REVEAL":
       return { ...state, scene: "revealed" };
+    case "SKIP_OPENING":
+      return state.scene === "opening"
+        ? { ...state, scene: "revealed" }
+        : state;
     case "SET_REDUCED_MOTION":
       return { ...state, reducedMotion: action.value };
   }
