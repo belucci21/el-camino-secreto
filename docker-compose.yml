@@ -11,7 +11,6 @@ services:
       - "3000"
     labels:
       - traefik.enable=true
-      - traefik.docker.network=traefik-proxy
       - traefik.http.services.el-camino-secreto.loadbalancer.server.port=3000
       - traefik.http.routers.el-camino-http.rule=Host(`gladiolajordivinculoeterno.com`) || Host(`www.gladiolajordivinculoeterno.com`)
       - traefik.http.routers.el-camino-http.entrypoints=web
@@ -26,9 +25,3 @@ services:
       - traefik.http.middlewares.el-camino-www.redirectregex.regex=^https://www\.(.*)
       - traefik.http.middlewares.el-camino-www.redirectregex.replacement=https://$${1}
       - traefik.http.middlewares.el-camino-www.redirectregex.permanent=true
-    networks:
-      - traefik-proxy
-
-networks:
-  traefik-proxy:
-    external: true
