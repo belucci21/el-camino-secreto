@@ -1,0 +1,34 @@
+services:
+  web:
+    image: ghcr.io/belucci21/el-camino-secreto:latest
+    container_name: el-camino-secreto
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    expose:
+      - "3000"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-proxy
+      - traefik.http.services.el-camino-secreto.loadbalancer.server.port=3000
+      - traefik.http.routers.el-camino-http.rule=Host(`gladiolajordivinculoeterno.com`) || Host(`www.gladiolajordivinculoeterno.com`)
+      - traefik.http.routers.el-camino-http.entrypoints=web
+      - traefik.http.routers.el-camino-http.middlewares=el-camino-https
+      - traefik.http.middlewares.el-camino-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.el-camino-https.redirectscheme.permanent=true
+      - traefik.http.routers.el-camino.rule=Host(`gladiolajordivinculoeterno.com`) || Host(`www.gladiolajordivinculoeterno.com`)
+      - traefik.http.routers.el-camino.entrypoints=websecure
+      - traefik.http.routers.el-camino.tls=true
+      - traefik.http.routers.el-camino.tls.certresolver=letsencrypt
+      - traefik.http.routers.el-camino.middlewares=el-camino-www
+      - traefik.http.middlewares.el-camino-www.redirectregex.regex=^https://www\.(.*)
+      - traefik.http.middlewares.el-camino-www.redirectregex.replacement=https://$${1}
+      - traefik.http.middlewares.el-camino-www.redirectregex.permanent=true
+    networks:
+      - traefik-proxy
+
+networks:
+  traefik-proxy:
+    external: true

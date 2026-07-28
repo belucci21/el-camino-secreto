@@ -1,32 +1,47 @@
 # El Camino Secreto
 
-Invitación digital narrativa de Gladiola y Jordi.
+Invitación inmersiva de boda de Gladiola y Jordi.
 
-## Desarrollo
+## Desarrollo local
 
-```powershell
-npm install
+```bash
+npm ci
 npm run dev
 ```
 
-## Verificación
+Abre [http://localhost:3000](http://localhost:3000).
 
-```powershell
-npm run test:unit
+## Validación
+
+```bash
 npm run lint
+npm run test:unit
 npm run build
 ```
 
-## Datos pendientes
+## Despliegue en Hostinger
 
-Editar únicamente `src/config/wedding.ts` para confirmar fecha, horarios,
-lugar, dirección, Google Maps, vestimenta, transporte, alojamiento, regalos,
-teléfono de contacto, WhatsApp y mensaje final.
+Cada cambio publicado en `main` ejecuta las comprobaciones y construye la
+imagen `ghcr.io/belucci21/el-camino-secreto:latest`.
 
-La palabra del umbral es un recurso narrativo y no una protección de seguridad.
-La web y sus datos compilados son públicos.
+En hPanel, abre **Docker Manager → Compose → Compose desde URL** y utiliza:
 
-## Publicación
+```text
+https://raw.githubusercontent.com/belucci21/el-camino-secreto/main/docker-compose.yml
+```
 
-La primera versión se publica con Sites. GitHub, Docker, Nginx, Traefik,
-dominio y Hostinger pertenecen a la siguiente fase.
+Nombre del proyecto:
+
+```text
+el-camino-secreto
+```
+
+El Compose conecta la aplicación con la red externa `traefik-proxy` y publica:
+
+- `https://gladiolajordivinculoeterno.com`
+- `https://www.gladiolajordivinculoeterno.com` (redirige al dominio principal)
+
+No se guardan contraseñas, claves del VPS ni secretos en el repositorio.
+
+Los datos finales de la boda se centralizan en `src/config/wedding.ts`. La
+palabra del umbral es narrativa; el código entregado al navegador es público.

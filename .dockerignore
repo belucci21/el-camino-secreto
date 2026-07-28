@@ -1,0 +1,15 @@
+.git
+.github
+.openai
+.playwright-cli
+.vinext
+.wrangler
+dist
+node_modules
+output
+outputs
+work
+*.log
+.env*
+coverage
+npm-debug.log*
