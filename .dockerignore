@@ -1,6 +1,6 @@
 .git
 .github
-.openai
+.openai/*.tar.gz
 .playwright-cli
 .vinext
 .wrangler
