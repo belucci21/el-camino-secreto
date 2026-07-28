@@ -778,27 +778,65 @@ it("announces offline mode without blocking the experience", async () => {
 });
 
 it("exposes an explicit reduced-motion preference to CSS", async () => {
+  const originalDeviceMemory = Object.getOwnPropertyDescriptor(
+    navigator,
+    "deviceMemory",
+  );
+  const originalHardwareConcurrency = Object.getOwnPropertyDescriptor(
+    navigator,
+    "hardwareConcurrency",
+  );
+  Object.defineProperty(navigator, "deviceMemory", {
+    configurable: true,
+    value: 8,
+  });
+  Object.defineProperty(navigator, "hardwareConcurrency", {
+    configurable: true,
+    value: 8,
+  });
+
   const user = userEvent.setup();
   const { container } = render(<ExperienceApp />);
   const motionButton = await screen.findByRole("button", {
     name: "Movimiento",
   });
 
-  expect(
-    container.querySelector("[data-reduced-motion='false']"),
-  ).toBeInTheDocument();
-  expect(
-    container.querySelector("[data-performance-tier='high']"),
-  ).toBeInTheDocument();
+  try {
+    expect(
+      container.querySelector("[data-reduced-motion='false']"),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        container.querySelector("[data-performance-tier='high']"),
+      ).toBeInTheDocument(),
+    );
 
-  await user.click(motionButton);
+    await user.click(motionButton);
 
-  expect(
-    container.querySelector("[data-reduced-motion='true']"),
-  ).toBeInTheDocument();
-  expect(
-    container.querySelector("[data-performance-tier='low']"),
-  ).toBeInTheDocument();
+    expect(
+      container.querySelector("[data-reduced-motion='true']"),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector("[data-performance-tier='low']"),
+    ).toBeInTheDocument();
+  } finally {
+    if (originalDeviceMemory) {
+      Object.defineProperty(
+        navigator,
+        "deviceMemory",
+        originalDeviceMemory,
+      );
+    } else {
+      delete (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+    }
+    if (originalHardwareConcurrency) {
+      Object.defineProperty(
+        navigator,
+        "hardwareConcurrency",
+        originalHardwareConcurrency,
+      );
+    }
+  }
 });
 
 it("keeps initial markup deterministic while offline", () => {
