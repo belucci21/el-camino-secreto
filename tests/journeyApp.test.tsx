@@ -12,6 +12,13 @@ vi.mock("gsap", () => ({
     set: vi.fn(),
     fromTo: vi.fn(),
     to: vi.fn(),
+    timeline: vi.fn(() => {
+      const timeline = {
+        fromTo: vi.fn(() => timeline),
+        kill: vi.fn(),
+      };
+      return timeline;
+    }),
   },
 }));
 
@@ -31,6 +38,18 @@ afterEach(() => {
 });
 
 describe("JourneyApp", () => {
+  it("keeps the active scene eager and provides a 2x source for high-density screens", () => {
+    render(<JourneyApp initialStep={5} />);
+
+    const sceneImage = screen.getByRole("img", {
+      name: /LA RESPUESTA CORRECTA/i,
+    });
+
+    expect(sceneImage).toHaveAttribute("loading", "eager");
+    expect(sceneImage).toHaveAttribute("src", "/journey-hd/5.webp");
+    expect(sceneImage).toHaveAttribute("srcset", "/journey-hd/5.webp 2x");
+  });
+
   it("starts the approved journey from the home cover", async () => {
     const user = userEvent.setup();
     render(<JourneyApp initialStep={2} />);

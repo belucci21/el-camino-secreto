@@ -121,6 +121,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const audio = useAudio();
   const { reducedMotion, setReducedMotion } = useReducedMotion();
   const imagePath = `${reference.experience_contract.asset_base_path}/${scene.asset.filename}`;
+  const hdImagePath = `${reference.experience_contract.hd_asset_base_path}/${scene.asset.filename.replace(/\.png$/i, ".webp")}`;
   const hotspots = useMemo(() => journeyHotspots[step] ?? {}, [step]);
 
   const goToStep = useCallback(
@@ -135,7 +136,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     const next = scenes.slice(step, step + 2);
     next.forEach((item) => {
       const image = new window.Image();
-      image.src = `${reference.experience_contract.asset_base_path}/${item.asset.filename}`;
+      image.src = `${reference.experience_contract.hd_asset_base_path}/${item.asset.filename.replace(/\.png$/i, ".webp")}`;
+      void image.decode?.().catch(() => undefined);
     });
   }, [step]);
 
@@ -161,34 +163,39 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     if (!visual) return;
 
     if (reducedMotion) {
-      gsap.set(visual, { autoAlpha: 1, scale: 1, y: 0, filter: "brightness(1)" });
+      gsap.set(visual, { autoAlpha: 1, scale: 1, y: 0 });
       return;
     }
 
     const context = gsap.context(() => {
-      gsap.fromTo(
+      const timeline = gsap.timeline({
+        defaults: {
+          ease: step === 5 ? "power3.inOut" : "power2.out",
+        },
+      });
+
+      timeline.fromTo(
         visual,
         {
-          autoAlpha: 0,
+          autoAlpha: step === 5 ? 0.88 : 0.92,
           scale: step === 5 ? 1.045 : 1.018,
           y: step === 5 ? 12 : 20,
-          filter: "brightness(.68)",
         },
         {
           autoAlpha: 1,
           scale: 1,
           y: 0,
-          filter: "brightness(1)",
           duration: step === 5 ? 1.55 : 0.9,
-          ease: step === 5 ? "power3.inOut" : "power2.out",
         },
+        0,
       );
 
       if (step === 5) {
-        gsap.fromTo(
+        timeline.fromTo(
           ".journey-threshold-flare",
           { opacity: 0.95, scale: 0.4 },
           { opacity: 0, scale: 2.2, duration: 2, ease: "power2.out" },
+          0,
         );
       }
     }, stageRef);
@@ -414,12 +421,14 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className="journey-scene-image"
-            src={imagePath}
+            src={hdImagePath}
             alt={`${reference.couple}. ${scene.visible_copy.slice(1, 6).join(". ")}`}
             draggable={false}
             width={scene.asset.width}
             height={scene.asset.height}
-            loading={step <= 2 ? "eager" : "lazy"}
+            loading="eager"
+            decoding="async"
+            srcSet={`${hdImagePath} 2x`}
             fetchPriority={step <= 2 ? "high" : "auto"}
           />
         </div>

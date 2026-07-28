@@ -32,6 +32,7 @@ export type JourneyReference = {
   experience_contract: {
     entry_route: string;
     asset_base_path: string;
+    hd_asset_base_path: string;
     sequence: string[];
     primary_viewport: {
       reference_width: number;

@@ -8,6 +8,7 @@
   "experience_contract": {
     "entry_route": "/",
     "asset_base_path": "/journey",
+    "hd_asset_base_path": "/journey-hd",
     "entry_route_is_mandatory": true,
     "must_not_start_at": "/experiencia",
     "sequence_source": "numeric_filename",
