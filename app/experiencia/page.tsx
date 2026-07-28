@@ -1,5 +1,5 @@
-import { ExperienceApp } from "../../src/components/ExperienceApp";
+import { redirect } from "next/navigation";
 
 export default function ExperiencePage() {
-  return <ExperienceApp />;
+  redirect("/");
 }

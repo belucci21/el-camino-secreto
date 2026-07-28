@@ -1,0 +1,954 @@
+{
+  "schema_version": "1.0.0",
+  "document_type": "visual_journey_source_of_truth",
+  "status": "implementation_active",
+  "locale": "es-ES",
+  "title": "El Camino hacia el Vínculo Eterno",
+  "couple": "Gladiola & Jordi",
+  "experience_contract": {
+    "entry_route": "/",
+    "asset_base_path": "/journey",
+    "entry_route_is_mandatory": true,
+    "must_not_start_at": "/experiencia",
+    "sequence_source": "numeric_filename",
+    "sequence_is_locked": true,
+    "sequence": [
+      "1.png",
+      "2.png",
+      "3.png",
+      "4.png",
+      "5.png",
+      "6.png",
+      "7.png",
+      "8.png",
+      "9.png",
+      "10.png",
+      "11.png"
+    ],
+    "visual_fidelity": "pixel-directed",
+    "copy_fidelity": "verbatim",
+    "interaction_fidelity": "all listed button surfaces must be semantic buttons or links",
+    "journey_mode": "single continuous immersive journey",
+    "primary_viewport": {
+      "orientation": "portrait",
+      "reference_width": 853,
+      "reference_height": 1844
+    }
+  },
+  "global_visual_system": {
+    "direction": "romantic cinematic fantasy forest wedding",
+    "palette": [
+      "deep forest green",
+      "aged gold",
+      "warm ivory parchment",
+      "sunlit amber",
+      "graphite shadow"
+    ],
+    "materials": [
+      "engraved gold",
+      "aged parchment",
+      "dark green enamel",
+      "mossy stone",
+      "white gladiolus",
+      "glowing runes"
+    ],
+    "typography": {
+      "headlines": "high-contrast classical Roman serif in uppercase",
+      "body": "elegant readable serif",
+      "accent": "formal calligraphic italic"
+    },
+    "recurring_environment": [
+      "enchanted forest",
+      "golden volumetric sunlight",
+      "floating firefly particles",
+      "white flowers",
+      "stone path",
+      "distant fantasy architecture"
+    ],
+    "recurring_controls": {
+      "music": {
+        "control_type": "toggle_button",
+        "visible_label": "MÚSICA OFF",
+        "position": "top corner as shown in each reference",
+        "audio_rule": "opt-in only; state persists across the full journey"
+      },
+      "chapters": {
+        "control_type": "button",
+        "visible_label": "CAPÍTULOS",
+        "position": "top right when shown",
+        "behavior": "open chapter navigation without leaving the home journey"
+      }
+    },
+    "button_policy": {
+      "rule": "Every control, plaque, card, timeline row, treasure card, confirmation panel or CTA listed in button_surfaces must be implemented as a real semantic button or link.",
+      "forbidden": [
+        "click handlers on non-semantic decorative divs",
+        "invisible hotspots whose bounds do not match the visible section",
+        "replacing a referenced section with generic UI"
+      ],
+      "keyboard_required": true,
+      "touch_required": true,
+      "focus_style": "ornamental gold focus treatment consistent with the reference"
+    },
+    "motion_3d_contract": {
+      "camera": "forward movement along the forest path; frontal camera for portal interactions",
+      "depth_layers": [
+        "foreground leaves and flowers",
+        "subject or interactive prop",
+        "midground path and architecture",
+        "background forest and mountains",
+        "volumetric light and particles"
+      ],
+      "transition_rule": "Each step must visually transform into the next; do not hard-cut to generic cards.",
+      "portal_rule": "The secret door remains frontal, monumental and physically opens on the correct word.",
+      "reduced_motion": "preserve every step and interaction while replacing camera travel with crossfades and static depth states"
+    }
+  },
+  "reference_assets": [
+    {
+      "id": "seal_aged_leather",
+      "filename": "IMG_0176.jpeg",
+      "public_asset_path": "/journey/IMG_0176.jpeg",
+      "role": "material and aged-metal reference for the G/J seal",
+      "width": 1242,
+      "height": 1261,
+      "bytes": 469492,
+      "sha256": "099bd85b85f7408c7cbf916f13d1aa268d5ff9b51c15e3c45536e409c10ef3e0",
+      "description": "Bronze and blue-black circular rune seal on embossed warm leather, with intertwined hearts and G/J monogram."
+    },
+    {
+      "id": "seal_polished_gold",
+      "filename": "IMG_0177.png",
+      "public_asset_path": "/journey/IMG_0177.png",
+      "role": "clean geometry and polished-gold reference for the G/J seal",
+      "width": 1024,
+      "height": 1041,
+      "bytes": 1292483,
+      "sha256": "604adea91531812435c53131bedc36a74c570992befc06d6bc537387af21d7ce",
+      "description": "Polished gold circular rune seal on white, with intertwined hearts and G/J monogram."
+    }
+  ],
+  "scenes": [
+    {
+      "order": 1,
+      "id": "loading_experience",
+      "asset": {
+        "filename": "1.png",
+        "public_asset_path": "/journey/1.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2331157,
+        "sha256": "fb9467b2e8a3aae9455e1cfc2945b56cb8337709203f0ab47bd06d0912159dac"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "G&J",
+        "GLADIOLA & JORDI",
+        "EL CAMINO HACIA EL VÍNCULO ETERNO",
+        "CARGANDO EXPERIENCIA...",
+        "Toda gran historia comienza con un paso."
+      ],
+      "visual_structure": [
+        "full-height enchanted forest path",
+        "central G&J wreath monogram",
+        "loading progress bar",
+        "bottom parchment quote card",
+        "white and pink flowers framing the path"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        }
+      ],
+      "advance": {
+        "trigger": "loading_complete",
+        "destination_order": 2
+      },
+      "motion_3d": [
+        "slow camera push along the central path",
+        "foreground flower parallax",
+        "firefly particles at multiple depths",
+        "progress bar fills before transition"
+      ]
+    },
+    {
+      "order": 2,
+      "id": "home_cover",
+      "asset": {
+        "filename": "2.png",
+        "public_asset_path": "/journey/2.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2638428,
+        "sha256": "57caf388c0bcfea7ea7af9ba0b01ff58126514c56a42a4e37500c347d20ffeea"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "G&J",
+        "GLADIOLA & JORDI",
+        "EL CAMINO HACIA EL VÍNCULO ETERNO",
+        "Toda gran historia comienza con un paso.",
+        "COMENZAR EL CAMINO",
+        "DESLIZA PARA CONTINUAR"
+      ],
+      "visual_structure": [
+        "bright valley framed by dark trees",
+        "central G&J wreath monogram",
+        "distant fantasy church",
+        "stone path leading into the scene",
+        "large dark-green ornamental CTA plaque"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "start_journey",
+          "visible_label": "COMENZAR EL CAMINO",
+          "action": "go_to_step",
+          "destination_order": 3
+        }
+      ],
+      "gestures": [
+        {
+          "visible_label": "DESLIZA PARA CONTINUAR",
+          "gesture": "swipe_or_scroll_forward",
+          "destination_order": 3
+        }
+      ],
+      "motion_3d": [
+        "opening foliage parts subtly",
+        "camera begins forward travel after CTA or swipe",
+        "water and light glints animate in depth"
+      ]
+    },
+    {
+      "order": 3,
+      "id": "journey_begins",
+      "asset": {
+        "filename": "3.png",
+        "public_asset_path": "/journey/3.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2136234,
+        "sha256": "e1c55605f8883bda00133210e32f119e78b5364b0d604833a2b956396ed69a2d"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "CAPÍTULOS",
+        "PASO 3",
+        "EL VIAJE COMIENZA",
+        "Atravesarás bosques, descubrirás secretos y abrirás puertas que guardan nuestra historia.",
+        "Sigue el camino y déjate guiar por tu corazón.",
+        "CONTINUAR"
+      ],
+      "visual_structure": [
+        "three-dot progress indicator with first dot active",
+        "woman seen from behind walking into the forest",
+        "butterflies and fireflies",
+        "quote panel",
+        "large continue plaque"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "chapters_menu",
+          "visible_label": "CAPÍTULOS",
+          "action": "open_chapters"
+        },
+        {
+          "id": "continue",
+          "visible_label": "CONTINUAR",
+          "action": "go_to_step",
+          "destination_order": 4
+        }
+      ],
+      "motion_3d": [
+        "character walks forward on the stone path",
+        "camera follows at low steady speed",
+        "foreground leaves, dress and hair move independently",
+        "butterflies cross the camera plane"
+      ]
+    },
+    {
+      "order": 4,
+      "id": "secret_door",
+      "asset": {
+        "filename": "4.png",
+        "public_asset_path": "/journey/4.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2749684,
+        "sha256": "a8de1c3be1cfad3baf0aa2b53e848a0de95d5c6a79c4c2d1f5bf80e56a37e908"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "CAPÍTULOS",
+        "PASO 4",
+        "LA PUERTA SECRETA",
+        "Hay puertas que solo se abren para quienes conocen la palabra correcta.",
+        "EL ACERTIJO",
+        "“Di la palabra Amigo y entra”",
+        "DESCIFRAR LA PALABRA",
+        "PISTA: ESCUCHA, OBSERVA Y RECUERDA"
+      ],
+      "visual_structure": [
+        "frontal monumental stone portal",
+        "ivy and small white flowers",
+        "glowing circular runes and line art on the door",
+        "riddle panel",
+        "large dark-green decipher CTA"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "chapters_menu",
+          "visible_label": "CAPÍTULOS",
+          "action": "open_chapters"
+        },
+        {
+          "id": "decode_word",
+          "visible_label": "DESCIFRAR LA PALABRA",
+          "action": "open_secret_word_input",
+          "validation": {
+            "expected_normalized_value": "amigo",
+            "comparison": "existing_sha256_validator"
+          }
+        },
+        {
+          "id": "hint",
+          "visible_label": "PISTA: ESCUCHA, OBSERVA Y RECUERDA",
+          "action": "reveal_hint"
+        }
+      ],
+      "motion_3d": [
+        "camera settles directly in front of the door",
+        "runes illuminate in a circular sequence",
+        "door reacts to typing and rejects incorrect values",
+        "no side-angle portal composition"
+      ]
+    },
+    {
+      "order": 5,
+      "id": "correct_answer",
+      "asset": {
+        "filename": "5.png",
+        "public_asset_path": "/journey/5.png",
+        "width": 864,
+        "height": 1821,
+        "bytes": 2639740,
+        "sha256": "da6e729be02648786a35bde15b1132c8ddff23c75437642ee3b402c33e11fa5a"
+      },
+      "route": "/",
+      "entry_condition": "secret_word_validated",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "CAPÍTULOS",
+        "PASO 5",
+        "LA RESPUESTA CORRECTA",
+        "Las antiguas puertas se abren ante quienes conocen la palabra.",
+        "¡CORRECTO!",
+        "La puerta se abre ante ti.",
+        "LO QUE VIENE",
+        "Has cruzado el umbral. El siguiente capítulo revelará el comienzo de nuestra historia.",
+        "CONTINUAR",
+        "PISTA: ESCUCHA, OBSERVA Y RECUERDA"
+      ],
+      "visual_structure": [
+        "same frontal portal now physically open",
+        "intense golden light through the threshold",
+        "correct-state confirmation card",
+        "next-chapter preview card",
+        "large continue plaque"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "chapters_menu",
+          "visible_label": "CAPÍTULOS",
+          "action": "open_chapters"
+        },
+        {
+          "id": "continue",
+          "visible_label": "CONTINUAR",
+          "action": "go_to_step",
+          "destination_order": 6
+        },
+        {
+          "id": "hint",
+          "visible_label": "PISTA: ESCUCHA, OBSERVA Y RECUERDA",
+          "action": "replay_clue"
+        }
+      ],
+      "motion_3d": [
+        "both door leaves swing open from their hinges",
+        "golden bloom expands through the seam",
+        "particles cross toward the camera",
+        "camera passes through the doorway only after CONTINUAR"
+      ]
+    },
+    {
+      "order": 6,
+      "id": "save_the_date",
+      "asset": {
+        "filename": "6.png",
+        "public_asset_path": "/journey/6.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2448143,
+        "sha256": "c8ef78f299411258b30b4ce096dee179b114f699ec42c1adaac06e5a39cd8a14"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "CAPÍTULOS",
+        "PASO 6",
+        "RESERVA LA FECHA",
+        "La historia continúa... Acompáñanos en el día en que nuestro vínculo se hace eterno.",
+        "SÁBADO",
+        "29",
+        "MAYO",
+        "2027",
+        "GUARDA LA FECHA",
+        "EL COMIENZO DE NUESTRA HISTORIA",
+        "CEREMONIA",
+        "17:00 h",
+        "Iglesia de San Martín",
+        "RECEPCIÓN",
+        "19:00 h",
+        "Castell de Viladelvins",
+        "CELEBRACIÓN",
+        "21:00 h",
+        "Hasta que el corazón aguante",
+        "DRESS CODE",
+        "FORMAL",
+        "No es el destino, es el viaje. Y queremos que formes parte de él.",
+        "CONTINUAR",
+        "PISTA: ESCUCHA, OBSERVA Y RECUERDA"
+      ],
+      "visual_structure": [
+        "open rune gate framing a central date card",
+        "three-column schedule panel",
+        "dress-code panel",
+        "large continue plaque"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "chapters_menu",
+          "visible_label": "CAPÍTULOS",
+          "action": "open_chapters"
+        },
+        {
+          "id": "save_date",
+          "visible_label": "GUARDA LA FECHA",
+          "action": "download_calendar_event"
+        },
+        {
+          "id": "ceremony",
+          "visible_label": "CEREMONIA",
+          "action": "open_event_detail"
+        },
+        {
+          "id": "reception",
+          "visible_label": "RECEPCIÓN",
+          "action": "open_event_detail"
+        },
+        {
+          "id": "celebration",
+          "visible_label": "CELEBRACIÓN",
+          "action": "open_event_detail"
+        },
+        {
+          "id": "dress_code",
+          "visible_label": "DRESS CODE",
+          "action": "open_dress_code"
+        },
+        {
+          "id": "continue",
+          "visible_label": "CONTINUAR",
+          "action": "go_to_step",
+          "destination_order": 7
+        },
+        {
+          "id": "hint",
+          "visible_label": "PISTA: ESCUCHA, OBSERVA Y RECUERDA",
+          "action": "replay_clue"
+        }
+      ],
+      "motion_3d": [
+        "camera crosses the open portal into the sunlit grove",
+        "date card rises into place",
+        "schedule panels reveal sequentially",
+        "light travels across the engraved door lines"
+      ]
+    },
+    {
+      "order": 7,
+      "id": "journey_of_two_souls",
+      "asset": {
+        "filename": "7.png",
+        "public_asset_path": "/journey/7.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2585617,
+        "sha256": "ad52539e995ca0ae79e00db2d2c0c937f55f0deab66e3b5945893428be5f034d"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "CAPÍTULOS",
+        "PASO 7",
+        "CAPÍTULO II",
+        "EL VIAJE DE DOS ALMAS",
+        "Dos caminos comenzaron muy lejos el uno del otro.",
+        "Durante años caminaron sin saber que el destino preparaba un mismo sendero.",
+        "Un día sus pasos se encontraron.",
+        "Desde entonces, cada amanecer ha sido una nueva página de esta historia.",
+        "Hoy queremos invitarte a caminar con nosotros el primer tramo de nuestro Vínculo Eterno.",
+        "No es el destino, es el viaje. Y qué privilegio recorrerlo contigo.",
+        "CONTINUAR EL CAMINO",
+        "PISTA: ESCUCHA, OBSERVA Y RECUERDA"
+      ],
+      "visual_structure": [
+        "sunlit forest clearing",
+        "large central parchment with floral corners",
+        "white gladiolus framing the parchment",
+        "dark-green quote panel",
+        "large parchment CTA"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "chapters_menu",
+          "visible_label": "CAPÍTULOS",
+          "action": "open_chapters"
+        },
+        {
+          "id": "continue",
+          "visible_label": "CONTINUAR EL CAMINO",
+          "action": "go_to_step",
+          "destination_order": 8
+        },
+        {
+          "id": "hint",
+          "visible_label": "PISTA: ESCUCHA, OBSERVA Y RECUERDA",
+          "action": "replay_clue"
+        }
+      ],
+      "motion_3d": [
+        "parchment unfurls with visible depth and shadow",
+        "flowers sway at different depth layers",
+        "sun shafts shift slowly through the canopy",
+        "paragraph groups reveal in order"
+      ]
+    },
+    {
+      "order": 8,
+      "id": "eternal_bond_book",
+      "asset": {
+        "filename": "8.png",
+        "public_asset_path": "/journey/8.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2728297,
+        "sha256": "18b66cd13c7aea88d024acf2a8d9f9c7fff3b1f53dae64a839ab631a888a21d8"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "CAPÍTULOS",
+        "PASO FINAL",
+        "CAPÍTULO VIII",
+        "EL LIBRO DEL VÍNCULO ETERNO",
+        "Gracias por aceptar caminar con nosotros.",
+        "Desde hoy, vuestro nombre queda inscrito para siempre en el Libro del Vínculo Eterno.",
+        "El viaje apenas comienza...",
+        "VUESTRA PRESENCIA HA SIDO SELLADA",
+        "Que este sea el inicio de muchos capítulos juntos, llenos de amor, aventuras y luz."
+      ],
+      "visual_structure": [
+        "bright celestial garden and fantasy architecture",
+        "two crowned ceremonial cats",
+        "large G/J gold seal in the foreground",
+        "sealed-presence plaque",
+        "final dark-green message panel"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "chapters_menu",
+          "visible_label": "CAPÍTULOS",
+          "action": "open_chapters"
+        },
+        {
+          "id": "sealed_presence_panel",
+          "visible_label": "VUESTRA PRESENCIA HA SIDO SELLADA",
+          "action": "go_to_step",
+          "destination_order": 9,
+          "visual_rule": "the entire existing plaque is the button; do not add a new visible CTA"
+        }
+      ],
+      "motion_3d": [
+        "G/J seal rotates subtly and settles into the foreground",
+        "embossed seal catches moving highlights",
+        "cats and flowers retain restrained living-portrait motion",
+        "gold particles rise toward the architecture"
+      ],
+      "source_note": "The artwork says PASO FINAL but the locked filename sequence continues to 9.png."
+    },
+    {
+      "order": 9,
+      "id": "grand_celebration",
+      "asset": {
+        "filename": "9.png",
+        "public_asset_path": "/journey/9.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2735083,
+        "sha256": "c031a62dc6583c8d69957ba9927713fea3c759e56667b4a25b98de219da2b6ae"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "CAPÍTULOS",
+        "PASO 6",
+        "CAPÍTULO VI",
+        "LA GRAN CELEBRACIÓN",
+        "Hemos preparado un día inspirado en la belleza de la Tierra Media, lleno de detalles, magia y amor.",
+        "Rodeados de nuestros seres queridos, comenzaremos juntos el primer día de nuestro Vínculo Eterno.",
+        "Prepárate para vivir una experiencia inolvidable.",
+        "LO QUE TE ESPERA",
+        "CEREMONIA MÁGICA",
+        "CENA Y BRINDIS",
+        "MÚSICA Y ALEGRÍA",
+        "RECUERDOS PARA SIEMPRE",
+        "Cada detalle ha sido pensado con amor, para que solo tengas que preocuparte por disfrutar y celebrar con nosotros.",
+        "CONTINUAR EL VIAJE",
+        "PISTA: ESCUCHA, OBSERVA Y RECUERDA"
+      ],
+      "visual_structure": [
+        "bright fantasy celebration garden",
+        "large central parchment",
+        "four-column expectations panel",
+        "lantern detail panel",
+        "large parchment CTA"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "chapters_menu",
+          "visible_label": "CAPÍTULOS",
+          "action": "open_chapters"
+        },
+        {
+          "id": "magic_ceremony",
+          "visible_label": "CEREMONIA MÁGICA",
+          "action": "open_celebration_detail"
+        },
+        {
+          "id": "dinner_toast",
+          "visible_label": "CENA Y BRINDIS",
+          "action": "open_celebration_detail"
+        },
+        {
+          "id": "music_joy",
+          "visible_label": "MÚSICA Y ALEGRÍA",
+          "action": "open_celebration_detail"
+        },
+        {
+          "id": "lasting_memories",
+          "visible_label": "RECUERDOS PARA SIEMPRE",
+          "action": "open_celebration_detail"
+        },
+        {
+          "id": "continue",
+          "visible_label": "CONTINUAR EL VIAJE",
+          "action": "go_to_step",
+          "destination_order": 10
+        },
+        {
+          "id": "hint",
+          "visible_label": "PISTA: ESCUCHA, OBSERVA Y RECUERDA",
+          "action": "replay_clue"
+        }
+      ],
+      "motion_3d": [
+        "parchment rises from the path",
+        "four expectation icons reveal one by one",
+        "lantern emits animated warm light",
+        "waterfalls and sun rays move in the background"
+      ],
+      "source_note": "The artwork says PASO 6 and CAPÍTULO VI; filename order remains 9."
+    },
+    {
+      "order": 10,
+      "id": "journey_information",
+      "asset": {
+        "filename": "10.png",
+        "public_asset_path": "/journey/10.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2701029,
+        "sha256": "e0147f308e503fd847715cba334c9f9e354260f77497da43e79fc34357a42405"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "CAPÍTULOS",
+        "PASO 8",
+        "CAPÍTULO VIII",
+        "INFORMACIÓN DEL VIAJE",
+        "Cada detalle ha sido pensado para que vivamos juntos un día inolvidable.",
+        "SÁBADO 29 MAYO 2027",
+        "CEREMONIA",
+        "17:00 h",
+        "Iglesia de San Martín de Tours",
+        "C/ Mayor, 1 · 28013 Madrid",
+        "CELEBRACIÓN",
+        "19:30 h",
+        "Castillo de Viñuelas",
+        "Ctra. de M-106, Km 2 · Tres Cantos, Madrid",
+        "DRESS CODE",
+        "Etiqueta",
+        "Tonos elegantes y naturales",
+        "CÓMO LLEGAR",
+        "Hemos preparado rutas para que tu llegada sea mágica.",
+        "VER UBICACIÓN",
+        "¿NOS ACOMPAÑAS?",
+        "Tu presencia hará de este día una página inolvidable en nuestro VÍNCULO ETERNO.",
+        "CONFIRMAR MI ASISTENCIA",
+        "INSCRIBIR MI NOMBRE EN EL LIBRO DEL VÍNCULO ETERNO",
+        "PISTA: ESCUCHA, OBSERVA Y RECUERDA"
+      ],
+      "visual_structure": [
+        "bright fantasy valley with waterfalls",
+        "vertical event timeline",
+        "four dark-green information rows with chevrons",
+        "location CTA",
+        "large RSVP panel with G/J seal",
+        "large attendance confirmation CTA"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "chapters_menu",
+          "visible_label": "CAPÍTULOS",
+          "action": "open_chapters"
+        },
+        {
+          "id": "ceremony",
+          "visible_label": "CEREMONIA",
+          "action": "open_event_detail"
+        },
+        {
+          "id": "celebration",
+          "visible_label": "CELEBRACIÓN",
+          "action": "open_event_detail"
+        },
+        {
+          "id": "dress_code",
+          "visible_label": "DRESS CODE",
+          "action": "open_dress_code"
+        },
+        {
+          "id": "directions",
+          "visible_label": "CÓMO LLEGAR",
+          "action": "open_directions"
+        },
+        {
+          "id": "location",
+          "visible_label": "VER UBICACIÓN",
+          "action": "open_map"
+        },
+        {
+          "id": "rsvp",
+          "visible_label": "CONFIRMAR MI ASISTENCIA",
+          "secondary_label": "INSCRIBIR MI NOMBRE EN EL LIBRO DEL VÍNCULO ETERNO",
+          "action": "open_rsvp"
+        },
+        {
+          "id": "hint",
+          "visible_label": "PISTA: ESCUCHA, OBSERVA Y RECUERDA",
+          "action": "replay_clue"
+        }
+      ],
+      "advance": {
+        "trigger": "rsvp_completed_or_chapters_navigation",
+        "destination_order": 11
+      },
+      "motion_3d": [
+        "timeline line draws downward",
+        "event rows rise and lock into place in sequence",
+        "G/J seal receives a wax-and-metal depth treatment",
+        "RSVP confirmation animates the seal emboss"
+      ]
+    },
+    {
+      "order": 11,
+      "id": "treasure_chest",
+      "asset": {
+        "filename": "11.png",
+        "public_asset_path": "/journey/11.png",
+        "width": 853,
+        "height": 1844,
+        "bytes": 2725033,
+        "sha256": "cfad99aea32f41ea7327defbb9804052e3f75d6f71a733fa656c04c98a3e121e"
+      },
+      "route": "/",
+      "visible_copy": [
+        "MÚSICA OFF",
+        "CAPÍTULOS",
+        "PASO 9",
+        "CAPÍTULO IX",
+        "EL COFRE DEL TESORO",
+        "Dentro de este cofre encontrarás los detalles que guardamos con amor para nuestros invitados.",
+        "Explora y descubre cada regalo que hemos preparado para ti.",
+        "LISTA DE REGALOS",
+        "Nuestra lista de deseos para construir juntos nuestro futuro.",
+        "MENSAJE ESPECIAL",
+        "Un mensaje para ti, desde lo más profundo de nuestro corazón.",
+        "DETALLES IMPORTANTES",
+        "Información adicional para que disfrutes al máximo este día.",
+        "Lo más valioso para nosotros es compartir este día contigo.",
+        "Gracias por ser parte de nuestro viaje.",
+        "CONTINUAR EL CAMINO",
+        "PISTA: ESCUCHA, OBSERVA Y RECUERDA"
+      ],
+      "visual_structure": [
+        "open ornate treasure chest with internal golden glow",
+        "three parchment treasure cards",
+        "dark-green gratitude panel",
+        "large parchment CTA"
+      ],
+      "button_surfaces": [
+        {
+          "id": "music_toggle",
+          "visible_label": "MÚSICA OFF",
+          "action": "toggle_music"
+        },
+        {
+          "id": "chapters_menu",
+          "visible_label": "CAPÍTULOS",
+          "action": "open_chapters"
+        },
+        {
+          "id": "gift_list",
+          "visible_label": "LISTA DE REGALOS",
+          "action": "open_gift_list"
+        },
+        {
+          "id": "special_message",
+          "visible_label": "MENSAJE ESPECIAL",
+          "action": "open_special_message"
+        },
+        {
+          "id": "important_details",
+          "visible_label": "DETALLES IMPORTANTES",
+          "action": "open_important_details"
+        },
+        {
+          "id": "continue",
+          "visible_label": "CONTINUAR EL CAMINO",
+          "action": "complete_or_replay_journey"
+        },
+        {
+          "id": "hint",
+          "visible_label": "PISTA: ESCUCHA, OBSERVA Y RECUERDA",
+          "action": "replay_clue"
+        }
+      ],
+      "motion_3d": [
+        "treasure chest lid opens physically",
+        "gold particles and reflected light emerge from the chest",
+        "three treasure cards rise from the chest and become buttons",
+        "waterfalls and foliage continue subtle background motion"
+      ],
+      "source_note": "The artwork says PASO 9 and CAPÍTULO IX; filename order remains 11."
+    }
+  ],
+  "known_source_inconsistencies": [
+    {
+      "asset": "7.png",
+      "issue": "Visible label says CAPÍTULO II while the locked filename order is 7.",
+      "resolution": "Preserve the visible label and preserve numeric filename order."
+    },
+    {
+      "asset": "8.png",
+      "issue": "Visible label says PASO FINAL although 9.png, 10.png and 11.png follow.",
+      "resolution": "Preserve the visible label and use the sealed-presence plaque as the step-9 button surface."
+    },
+    {
+      "asset": "9.png",
+      "issue": "Visible label says PASO 6 and CAPÍTULO VI while the locked filename order is 9.",
+      "resolution": "Preserve the visible label and preserve numeric filename order."
+    },
+    {
+      "asset": "10.png",
+      "issue": "Visible label says PASO 8 and CAPÍTULO VIII while the locked filename order is 10.",
+      "resolution": "Preserve the visible label and preserve numeric filename order."
+    },
+    {
+      "asset": "11.png",
+      "issue": "Visible label says PASO 9 and CAPÍTULO IX while the locked filename order is 11.",
+      "resolution": "Preserve the visible label and preserve numeric filename order."
+    }
+  ],
+  "excluded_files": [
+    {
+      "filename": "DS_Store",
+      "source_origin": "user_download",
+      "reason": "macOS filesystem metadata; not a visual asset and not part of the journey"
+    }
+  ],
+  "next_task_constraints": [
+    "Do not reorder the 1.png through 11.png sequence.",
+    "Begin the full journey at /.",
+    "Do not use /experiencia as the initial route.",
+    "Treat each listed button surface as an actual semantic control.",
+    "Match the composition, copy, hierarchy, palette and visible ornamentation of each reference.",
+    "Build continuous animation and 3D transitions between the referenced states.",
+    "Keep the secret word amigo and the existing SHA-256 validation behavior.",
+    "Do not replace the references with a generic wedding template."
+  ]
+}

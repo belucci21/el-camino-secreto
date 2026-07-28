@@ -1,9 +1,5 @@
-import { HomeInvitation } from "../src/components/HomeInvitation";
+import { JourneyApp } from "../src/components/JourneyApp";
 
 export default function Home() {
-  return (
-    <main className="teaser-page ritual-page" id="main-content">
-      <HomeInvitation />
-    </main>
-  );
+  return <JourneyApp />;
 }
