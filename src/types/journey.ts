@@ -18,6 +18,18 @@ export type JourneyScene = {
     bytes: number;
     sha256: string;
   };
+  motion_asset?: {
+    filename: string;
+    source_filename: string;
+    public_asset_path: string;
+    width: number;
+    height: number;
+    bytes: number;
+    sha256: string;
+    duration_seconds: number;
+    loop: boolean;
+    muted: true;
+  };
   visible_copy: string[];
   button_surfaces: JourneyButtonSurface[];
   transition_to_next?: {

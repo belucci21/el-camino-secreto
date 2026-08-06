@@ -9,7 +9,7 @@ export function FinalMessage({ onReplay }: { onReplay: () => void }) {
       <button onClick={onReplay}>Volver a ver la apertura</button>
       <CalendarDownload />
       <p role="status">
-        Calendario, ubicación y WhatsApp se activarán al confirmar los datos.
+        El calendario y la ubicación ya están disponibles. La respuesta de asistencia se guarda en este dispositivo.
       </p>
     </footer>
   );

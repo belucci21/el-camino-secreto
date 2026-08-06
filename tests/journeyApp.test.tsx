@@ -38,6 +38,40 @@ afterEach(() => {
 });
 
 describe("JourneyApp", () => {
+  it("uses the numbered motion asset while preserving the approved image as its copy layer", () => {
+    render(<JourneyApp initialStep={4} />);
+
+    const video = screen.getByTestId("journey-motion-video");
+    const source = video.querySelector("source");
+    const sceneImage = screen.getByRole("img", { name: /LA PUERTA SECRETA/i });
+
+    expect(video).toHaveAttribute("autoplay");
+    expect(video).toHaveProperty("muted", true);
+    expect(video).toHaveAttribute("playsinline");
+    expect(source).toHaveAttribute("src", "/journey-video/4.mp4");
+    expect(sceneImage).toHaveAttribute("src", "/journey-hd/4.webp");
+  });
+
+  it("plays the opening once and keeps later chapters on their HD fallback", () => {
+    const { unmount } = render(<JourneyApp initialStep={5} />);
+
+    expect(screen.getByTestId("journey-motion-video")).not.toHaveAttribute("loop");
+
+    unmount();
+    render(<JourneyApp initialStep={8} />);
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+    expect(screen.getByRole("img")).toHaveAttribute("src", "/journey-hd/8.webp");
+  });
+
+  it("removes moving video when the visitor requests reduced motion", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={3} />);
+
+    expect(screen.getByTestId("journey-motion-video")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Reducir movimiento" }));
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+  });
+
   it("keeps the active scene eager and provides a 2x source for high-density screens", () => {
     render(<JourneyApp initialStep={5} />);
 
@@ -96,6 +130,19 @@ describe("JourneyApp", () => {
     expectedButtons.forEach((name) => {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
     });
+  });
+
+  it("reveals the confirmed ceremony details from the reference artwork", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={10} />);
+
+    await user.click(screen.getByRole("button", { name: "CEREMONIA" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Ceremonia" });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveTextContent(/Sábado 29 de mayo de 2027/i);
+    expect(dialog).toHaveTextContent(/Iglesia de San Martín de Tours/i);
+    expect(dialog).toHaveTextContent(/C\/ Mayor, 1 · 28013 Madrid/i);
   });
 
   it("opens chapter navigation without leaving the home journey", async () => {

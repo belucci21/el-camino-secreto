@@ -297,10 +297,13 @@ it("preserves external focus when reduced motion starts at arrival", () => {
   }
 });
 
-it("labels unconfirmed event values without fake links", () => {
+it("labels remaining placeholders and exposes the confirmed map", () => {
   render(<EventDetails />);
   expect(screen.getAllByText("Pendiente de confirmar").length).toBeGreaterThan(0);
-  expect(screen.queryByRole("link", { name: "Abrir ubicación" })).toBeNull();
+  expect(screen.getByRole("link", { name: "Abrir ubicación" })).toHaveAttribute(
+    "href",
+    expect.stringContaining("google.com/maps"),
+  );
 });
 
 it("renders every configurable event-detail field", () => {
@@ -398,11 +401,11 @@ it("secures a successfully opened WhatsApp window without copying", async () => 
   }
 });
 
-it("does not create a false calendar event from placeholders", () => {
+it("enables the calendar event when the image-defined data is confirmed", () => {
   render(<CalendarDownload />);
   expect(
     screen.getByRole("button", { name: "Añadir la fecha al calendario" }),
-  ).toBeDisabled();
+  ).toBeEnabled();
 });
 
 it("keeps the canonical wedding site URL in configuration", () => {
@@ -559,15 +562,18 @@ it("replays the opening from the final message", async () => {
   expect(onReplay).toHaveBeenCalledOnce();
 });
 
-it("renders the final message as an honest placeholder", () => {
+it("renders the final message confirmed by the reference artwork", () => {
   render(<FinalMessage onReplay={vi.fn()} />);
 
   expect(weddingConfig.finalMessage).toEqual({
-    value: "Mensaje final pendiente de confirmar",
-    status: "placeholder",
+    value:
+      "Lo más valioso para nosotros es compartir este día contigo. Gracias por ser parte de nuestro viaje.",
+    status: "confirmed",
   });
   expect(
-    screen.getByText("Mensaje final pendiente de confirmar"),
+    screen.getByText(
+      "Lo más valioso para nosotros es compartir este día contigo. Gracias por ser parte de nuestro viaje.",
+    ),
   ).toBeVisible();
 });
 

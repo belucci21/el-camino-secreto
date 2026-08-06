@@ -3,9 +3,11 @@ import { weddingConfig } from "../config/wedding";
 const rows = [
   ["Fecha", weddingConfig.event.date],
   ["Ceremonia", weddingConfig.event.ceremonyTime],
+  ["Lugar", weddingConfig.event.ceremonyVenue],
+  ["Dirección", weddingConfig.event.ceremonyAddress],
   ["Celebración", weddingConfig.event.celebrationTime],
-  ["Lugar", weddingConfig.event.venue],
-  ["Dirección", weddingConfig.event.address],
+  ["Lugar de celebración", weddingConfig.event.celebrationVenue],
+  ["Dirección de celebración", weddingConfig.event.celebrationAddress],
   ["Vestimenta", weddingConfig.dressCode],
   ["Transporte", weddingConfig.transport],
   ["Alojamiento", weddingConfig.accommodation],

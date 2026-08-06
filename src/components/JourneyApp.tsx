@@ -21,8 +21,10 @@ import type {
   JourneyReference,
   JourneyScene,
 } from "../types/journey";
+import { downloadICS } from "../utils/generateICS";
 import { validateSecretWord } from "../utils/secretWord";
 import { JourneyDialog } from "./JourneyDialog";
+import { JourneySceneMedia } from "./JourneySceneMedia";
 
 const reference = referenceJson as JourneyReference;
 const scenes = [...reference.scenes].sort((a, b) => a.order - b.order);
@@ -38,23 +40,23 @@ type DialogState =
 const detailCopy: Record<string, { title: string; body: string }> = {
   ceremony: {
     title: "Ceremonia",
-    body: "El lugar y la hora definitivos se revelarán aquí cuando Gladiola y Jordi confirmen todos los detalles.",
+    body: `${weddingConfig.event.date.value} · ${weddingConfig.event.ceremonyTime.value}. ${weddingConfig.event.ceremonyVenue.value}, ${weddingConfig.event.ceremonyAddress.value}.`,
   },
   reception: {
     title: "Recepción",
-    body: "Este tramo del viaje está reservado para los datos finales de la recepción.",
+    body: `${weddingConfig.event.celebrationTime.value}. ${weddingConfig.event.celebrationVenue.value}, ${weddingConfig.event.celebrationAddress.value}.`,
   },
   celebration: {
     title: "Celebración",
-    body: "Música, brindis y una noche para recordar. Los detalles definitivos llegarán muy pronto.",
+    body: `${weddingConfig.event.date.value} · ${weddingConfig.event.celebrationTime.value}. ${weddingConfig.event.celebrationVenue.value}, ${weddingConfig.event.celebrationAddress.value}.`,
   },
   dress_code: {
     title: "Código de vestimenta",
-    body: "Elegante y natural. La indicación definitiva permanece como placeholder hasta la confirmación de los novios.",
+    body: weddingConfig.dressCode.value,
   },
   directions: {
     title: "Cómo llegar",
-    body: "Las rutas y recomendaciones de transporte se añadirán cuando la ubicación quede confirmada.",
+    body: `Ceremonia: ${weddingConfig.event.ceremonyAddress.value}. Celebración: ${weddingConfig.event.celebrationAddress.value}.`,
   },
   magic_ceremony: {
     title: "Ceremonia mágica",
@@ -74,15 +76,15 @@ const detailCopy: Record<string, { title: string; body: string }> = {
   },
   gift_list: {
     title: "Lista de regalos",
-    body: "La información definitiva de la lista de deseos se publicará en este cofre cuando esté confirmada.",
+    body: "Nuestra lista de deseos para construir juntos nuestro futuro. Lo más valioso para nosotros es compartir este día contigo.",
   },
   special_message: {
     title: "Mensaje especial",
-    body: "Gracias por caminar con nosotros. Vuestra presencia es el regalo más valioso de este viaje.",
+    body: weddingConfig.finalMessage.value,
   },
   important_details: {
     title: "Detalles importantes",
-    body: "Aquí aparecerán recomendaciones, horarios y cualquier información adicional para disfrutar al máximo del día.",
+    body: `${weddingConfig.event.date.value}. Ceremonia a las ${weddingConfig.event.ceremonyTime.value}; celebración a las ${weddingConfig.event.celebrationTime.value}. ${weddingConfig.dressCode.value}.`,
   },
 };
 
@@ -138,6 +140,12 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       const image = new window.Image();
       image.src = `${reference.experience_contract.hd_asset_base_path}/${item.asset.filename.replace(/\.png$/i, ".webp")}`;
       void image.decode?.().catch(() => undefined);
+
+      if (item.motion_asset) {
+        const video = document.createElement("video");
+        video.preload = "metadata";
+        video.src = item.motion_asset.public_asset_path;
+      }
     });
   }, [step]);
 
@@ -147,7 +155,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     const startedAt = window.performance.now();
     const timer = window.setInterval(() => {
       const elapsed = window.performance.now() - startedAt;
-      const progress = Math.min(100, 8 + elapsed / 14);
+      const progress = Math.min(100, 8 + elapsed / (reducedMotion ? 5 : 38));
       setLoaderProgress(progress);
       if (progress >= 100) {
         window.clearInterval(timer);
@@ -270,7 +278,23 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           openMessage("hint");
           break;
         case "download_calendar_event":
-          openMessage("save_date");
+          try {
+            downloadICS({
+              title: `Boda de ${weddingConfig.couple.firstPerson} y ${weddingConfig.couple.secondPerson}`,
+              start: weddingConfig.event.calendarStart.value,
+              end: weddingConfig.event.calendarEnd.value,
+              location: `${weddingConfig.event.ceremonyVenue.value}, ${weddingConfig.event.ceremonyAddress.value}`,
+              description: `Ceremonia a las ${weddingConfig.event.ceremonyTime.value}. Celebración a las ${weddingConfig.event.celebrationTime.value} en ${weddingConfig.event.celebrationVenue.value}.`,
+              url: weddingConfig.siteUrl.value,
+            });
+          } catch {
+            setDialog({
+              kind: "message",
+              eyebrow: "Reserva la fecha",
+              title: weddingConfig.event.date.value,
+              body: `Ceremonia a las ${weddingConfig.event.ceremonyTime.value}. Celebración a las ${weddingConfig.event.celebrationTime.value}.`,
+            });
+          }
           break;
         case "open_event_detail":
         case "open_dress_code":
@@ -417,19 +441,13 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         onWheel={onWheel}
       >
         <div className="journey-scene-visual" ref={visualRef}>
-          {/* The portrait artwork is already authored at its exact delivery dimensions. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="journey-scene-image"
-            src={hdImagePath}
-            alt={`${reference.couple}. ${scene.visible_copy.slice(1, 6).join(". ")}`}
-            draggable={false}
-            width={scene.asset.width}
-            height={scene.asset.height}
-            loading="eager"
-            decoding="async"
-            srcSet={`${hdImagePath} 2x`}
-            fetchPriority={step <= 2 ? "high" : "auto"}
+          <JourneySceneMedia
+            key={scene.order}
+            scene={scene}
+            imagePath={hdImagePath}
+            couple={reference.couple}
+            reducedMotion={reducedMotion}
+            priority={step <= 2}
           />
         </div>
         <div className="journey-vignette" aria-hidden="true" />
