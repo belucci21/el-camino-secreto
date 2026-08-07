@@ -3546,6 +3546,22 @@ button:hover,
 }
 
 @media (max-width: 540px) {
+  /* On phones the artwork owns the viewport. Do not letterbox the portrait canvas
+     when a short mobile viewport triggers the aspect-ratio height rule above. */
+  .journey-app {
+    width: 100vw;
+    min-width: 100vw;
+  }
+
+  .journey-shell {
+    width: 100vw;
+    max-width: none;
+    height: 100svh;
+    max-height: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
   .journey-dialog-layer {
     align-items: end;
     padding: .65rem;
