@@ -15,7 +15,8 @@ type AudioTracks = {
 function createTracks(volume: number): AudioTracks {
   return {
     ambient: new Howl({
-      src: ["/audio/ambient-loop.wav"],
+      // The final 4-minute track is preferred; the WAV remains a safe local fallback.
+      src: ["/audio/ambient-final.mp3", "/audio/ambient-loop.wav"],
       loop: true,
       volume: volume * 0.48,
       html5: false,

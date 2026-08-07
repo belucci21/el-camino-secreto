@@ -668,6 +668,18 @@
         "bytes": 2728297,
         "sha256": "18b66cd13c7aea88d024acf2a8d9f9c7fff3b1f53dae64a839ab631a888a21d8"
       },
+      "motion_asset": {
+        "filename": "8.mp4",
+        "source_filename": "8.8_",
+        "public_asset_path": "/journey-video/8.mp4",
+        "width": 720,
+        "height": 1280,
+        "bytes": 3884544,
+        "sha256": "fc5c6b05a17e4b303ddb375b7a086f67f0a383887a79e06e222fa8fcc092abca",
+        "duration_seconds": 20.064,
+        "loop": true,
+        "muted": true
+      },
       "route": "/",
       "visible_copy": [
         "MÚSICA OFF",
@@ -725,6 +737,18 @@
         "height": 1844,
         "bytes": 2735083,
         "sha256": "c031a62dc6583c8d69957ba9927713fea3c759e56667b4a25b98de219da2b6ae"
+      },
+      "motion_asset": {
+        "filename": "9.mp4",
+        "source_filename": "9.9_",
+        "public_asset_path": "/journey-video/9.mp4",
+        "width": 720,
+        "height": 1280,
+        "bytes": 2969141,
+        "sha256": "1a9af0c468692ed8757edde403580ffb9bd68506f005ab5840e5f35471b22ed5",
+        "duration_seconds": 20.064,
+        "loop": true,
+        "muted": true
       },
       "route": "/",
       "visible_copy": [

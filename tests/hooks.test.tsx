@@ -153,6 +153,7 @@ describe("useAudio", () => {
     expect(result.current.enabled).toBe(true);
     expect(howlerMock.Howl).toHaveBeenCalledTimes(3);
     expect(howlerMock.instances[0].options.src).toEqual([
+      "/audio/ambient-final.mp3",
       "/audio/ambient-loop.wav",
     ]);
     expect(howlerMock.instances[0].play).toHaveBeenCalledOnce();

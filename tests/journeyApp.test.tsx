@@ -52,15 +52,16 @@ describe("JourneyApp", () => {
     expect(sceneImage).toHaveAttribute("src", "/journey-hd/4.webp");
   });
 
-  it("plays the opening once and keeps later chapters on their HD fallback", () => {
+  it("plays the opening once and keeps the final chapters on their motion assets", () => {
     const { unmount } = render(<JourneyApp initialStep={5} />);
 
     expect(screen.getByTestId("journey-motion-video")).not.toHaveAttribute("loop");
 
     unmount();
     render(<JourneyApp initialStep={8} />);
-    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/journey-hd/8.webp");
+    expect(screen.getByTestId("journey-motion-video")).toBeInTheDocument();
+    expect(screen.getByTestId("journey-motion-video").querySelector("source"))
+      .toHaveAttribute("src", "/journey-video/8.mp4");
   });
 
   it("removes moving video when the visitor requests reduced motion", async () => {
