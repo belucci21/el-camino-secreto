@@ -167,7 +167,7 @@ describe("useAudio", () => {
 
     expect(result.current.volume).toBe(0.4);
     expect(howlerMock.Howler.volume).toHaveBeenCalledWith(0.4);
-    expect(howlerMock.instances[0].volume).toHaveBeenCalledWith(0.192);
+    expect(howlerMock.instances[0].volume).toHaveBeenCalledWith(0.288);
     expect(howlerMock.instances[1].volume).toHaveBeenCalledWith(0.288);
     expect(howlerMock.instances[2].volume).toHaveBeenCalledWith(0.328);
 

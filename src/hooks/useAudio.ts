@@ -18,8 +18,9 @@ function createTracks(volume: number): AudioTracks {
       // The final 4-minute track is preferred; the WAV remains a safe local fallback.
       src: ["/audio/ambient-final.mp3", "/audio/ambient-loop.wav"],
       loop: true,
-      volume: volume * 0.48,
-      html5: false,
+      // Stream the long track through the media element for reliable mobile playback.
+      volume: volume * 0.72,
+      html5: true,
     }),
     unlock: new Howl({
       src: ["/audio/unlock-chime.wav"],
@@ -85,7 +86,7 @@ export function useAudio() {
 
     try {
       Howler.volume(next);
-      tracksRef.current?.ambient.volume(next * 0.48);
+      tracksRef.current?.ambient.volume(next * 0.72);
       tracksRef.current?.unlock.volume(next * 0.72);
       tracksRef.current?.opening.volume(next * 0.82);
     } catch {

@@ -3034,7 +3034,10 @@ button:hover,
   width: 100%;
   height: 100%;
   user-select: none;
-  object-fit: fill;
+  /* Preserve the approved artwork's proportions when the mobile canvas fills
+     a viewport whose ratio differs from the reference portrait. */
+  object-fit: cover;
+  object-position: center;
   pointer-events: none;
   filter:
     brightness(var(--journey-exposure))
