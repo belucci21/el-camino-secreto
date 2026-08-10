@@ -440,20 +440,24 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         onPointerLeave={resetParallax}
         onWheel={onWheel}
       >
-        <div className="journey-scene-visual" ref={visualRef}>
-          <JourneySceneMedia
-            key={scene.order}
-            scene={scene}
-            imagePath={hdImagePath}
-            couple={reference.couple}
-            reducedMotion={reducedMotion}
-            priority={step <= 2}
-          />
+        <div className="journey-reference-frame">
+          <div className="journey-reference-plane" ref={visualRef}>
+            <div className="journey-scene-visual">
+              <JourneySceneMedia
+                key={scene.order}
+                scene={scene}
+                imagePath={hdImagePath}
+                couple={reference.couple}
+                reducedMotion={reducedMotion}
+                priority={step <= 2}
+              />
+            </div>
+            <div className="journey-hotspots">{hotspotButtons}</div>
+          </div>
         </div>
         <div className="journey-vignette" aria-hidden="true" />
         <div className="journey-grain" aria-hidden="true" />
         {step === 5 && <div className="journey-threshold-flare" aria-hidden="true" />}
-        <div className="journey-hotspots">{hotspotButtons}</div>
 
         {step === 1 && (
           <div className="journey-loader" aria-live="polite">

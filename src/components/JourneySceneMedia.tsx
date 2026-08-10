@@ -23,6 +23,11 @@ export function JourneySceneMedia({
   const [videoEnded, setVideoEnded] = useState(false);
   const motionAsset = reducedMotion ? undefined : scene.motion_asset;
 
+  const completeMotion = () => {
+    videoRef.current?.pause();
+    setVideoEnded(true);
+  };
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -56,7 +61,7 @@ export function JourneySceneMedia({
           autoPlay
           muted
           playsInline
-          loop={motionAsset.loop}
+          loop={false}
           poster={imagePath}
           preload={priority || scene.order === 4 || scene.order === 5 ? "auto" : "metadata"}
           width={motionAsset.width}
@@ -64,7 +69,8 @@ export function JourneySceneMedia({
           onCanPlay={() => setVideoReady(true)}
           onLoadedData={() => setVideoReady(true)}
           onPlaying={() => setVideoReady(true)}
-          onEnded={() => setVideoEnded(true)}
+          onEnded={completeMotion}
+          onError={completeMotion}
         >
           <source src={motionAsset.public_asset_path} type="video/mp4" />
         </video>
@@ -84,6 +90,18 @@ export function JourneySceneMedia({
         srcSet={`${imagePath} 2x`}
         fetchPriority={priority ? "high" : "auto"}
       />
+
+      {motionAsset && videoReady && !videoEnded && (
+        <button
+          className="journey-skip-motion"
+          type="button"
+          onClick={completeMotion}
+          aria-label="Mostrar pantalla interactiva"
+        >
+          Entrar en la escena
+          <span aria-hidden="true">→</span>
+        </button>
+      )}
     </div>
   );
 }
