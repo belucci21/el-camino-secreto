@@ -110,6 +110,7 @@ function buttonLabel(surface: JourneyButtonSurface, audioEnabled: boolean) {
 
 export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const [step, setStep] = useState(Math.min(11, Math.max(1, initialStep)));
+  const [experienceStarted, setExperienceStarted] = useState(initialStep !== 1);
   const [dialog, setDialog] = useState<DialogState>(null);
   const [secretWord, setSecretWord] = useState("");
   const [secretStatus, setSecretStatus] = useState<"idle" | "checking" | "wrong">("idle");
@@ -150,7 +151,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   }, [step]);
 
   useEffect(() => {
-    if (step !== 1) return;
+    if (step !== 1 || !experienceStarted) return;
 
     const startedAt = window.performance.now();
     const timer = window.setInterval(() => {
@@ -164,7 +165,16 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     }, 40);
 
     return () => window.clearInterval(timer);
-  }, [goToStep, reducedMotion, step]);
+  }, [experienceStarted, goToStep, reducedMotion, step]);
+
+  const startWithMusic = useCallback(async () => {
+    await audio.start();
+    setExperienceStarted(true);
+  }, [audio]);
+
+  const startWithoutMusic = useCallback(() => {
+    setExperienceStarted(true);
+  }, []);
 
   useLayoutEffect(() => {
     const visual = visualRef.current;
@@ -396,11 +406,14 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           >
             <span className="sr-only">{buttonLabel(surface, audio.enabled)}</span>
             {surface.id === "music_toggle" && audio.enabled && (
-              <span className="journey-audio-live" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
+              <>
+                <span className="journey-audio-live" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <span className="journey-audio-status" aria-hidden="true">ON</span>
+              </>
             )}
           </button>
         );
@@ -440,6 +453,10 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         onPointerLeave={resetParallax}
         onWheel={onWheel}
       >
+        <div className="journey-scene-extension" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={hdImagePath} alt="" />
+        </div>
         <div className="journey-reference-frame">
           <div className="journey-reference-plane" ref={visualRef}>
             <div className="journey-scene-visual">
@@ -449,6 +466,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 imagePath={hdImagePath}
                 couple={reference.couple}
                 reducedMotion={reducedMotion}
+                motionEnabled={experienceStarted}
                 priority={step <= 2}
               />
             </div>
@@ -459,21 +477,44 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         <div className="journey-grain" aria-hidden="true" />
         {step === 5 && <div className="journey-threshold-flare" aria-hidden="true" />}
 
-        {step === 1 && (
+        {!experienceStarted && (
+          <div
+            className="journey-entry-gate"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Comenzar la experiencia"
+          >
+            <div className="journey-entry-gate__content">
+              <p>Gladiola &amp; Jordi</p>
+              <h1>{"El camino comienza aqu\u00ed"}</h1>
+              <button type="button" onClick={() => void startWithMusic()}>
+                <span aria-hidden="true">{"\u266a"}</span>
+                {"Entrar con m\u00fasica"}
+              </button>
+              <button type="button" className="journey-entry-gate__silent" onClick={startWithoutMusic}>
+                Continuar sin sonido
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 1 && experienceStarted && (
           <div className="journey-loader" aria-live="polite">
             <span style={{ width: `${loaderProgress}%` }} />
             <p>{Math.round(loaderProgress)}%</p>
           </div>
         )}
 
-        <button
-          className="journey-motion-control"
-          type="button"
-          aria-label={reducedMotion ? "Activar movimiento" : "Reducir movimiento"}
-          onClick={() => setReducedMotion(!reducedMotion)}
-        >
-          {reducedMotion ? "Movimiento reducido" : "Movimiento"}
-        </button>
+        {experienceStarted && (
+          <button
+            className="journey-motion-control"
+            type="button"
+            aria-label={reducedMotion ? "Activar movimiento" : "Reducir movimiento"}
+            onClick={() => setReducedMotion(!reducedMotion)}
+          >
+            {reducedMotion ? "Movimiento reducido" : "Movimiento"}
+          </button>
+        )}
 
         <p className="sr-only" aria-live="polite">
           {`Paso ${step}: ${scene.visible_copy.join(". ")}`}

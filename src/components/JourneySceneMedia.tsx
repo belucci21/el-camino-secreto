@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { JourneyScene } from "../types/journey";
 
 type JourneySceneMediaProps = {
@@ -8,6 +8,7 @@ type JourneySceneMediaProps = {
   imagePath: string;
   couple: string;
   reducedMotion: boolean;
+  motionEnabled: boolean;
   priority: boolean;
 };
 
@@ -16,17 +17,18 @@ export function JourneySceneMedia({
   imagePath,
   couple,
   reducedMotion,
+  motionEnabled,
   priority,
 }: JourneySceneMediaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
-  const motionAsset = reducedMotion ? undefined : scene.motion_asset;
+  const motionAsset = reducedMotion || !motionEnabled ? undefined : scene.motion_asset;
 
-  const completeMotion = () => {
+  const completeMotion = useCallback(() => {
     videoRef.current?.pause();
     setVideoEnded(true);
-  };
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -35,14 +37,23 @@ export function JourneySceneMedia({
     const pauseWhenHidden = () => {
       if (document.hidden) {
         video.pause();
-      } else {
+      } else if (!videoEnded) {
         void video.play().catch(() => undefined);
       }
     };
 
     document.addEventListener("visibilitychange", pauseWhenHidden);
     return () => document.removeEventListener("visibilitychange", pauseWhenHidden);
-  }, [motionAsset?.public_asset_path]);
+  }, [motionAsset?.public_asset_path, videoEnded]);
+
+  useEffect(() => {
+    if (!motionAsset || !videoReady || videoEnded) return;
+
+    // Each clip introduces the next chapter, then yields to the exact interactive
+    // artwork before a visitor can mistake the cinematic phase for a dead end.
+    const timer = window.setTimeout(completeMotion, 7000);
+    return () => window.clearTimeout(timer);
+  }, [completeMotion, motionAsset, videoEnded, videoReady]);
 
   return (
     <div

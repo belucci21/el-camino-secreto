@@ -23,12 +23,14 @@ vi.mock("gsap", () => ({
 }));
 
 vi.mock("howler", () => ({
-  Howl: vi.fn(() => ({
-    play: vi.fn(),
-    pause: vi.fn(),
-    playing: vi.fn(() => false),
-    volume: vi.fn(),
-  })),
+  Howl: vi.fn(function MockHowl() {
+    return {
+      play: vi.fn(),
+      pause: vi.fn(),
+      playing: vi.fn(() => false),
+      volume: vi.fn(),
+    };
+  }),
   Howler: { volume: vi.fn() },
 }));
 
@@ -38,6 +40,19 @@ afterEach(() => {
 });
 
 describe("JourneyApp", () => {
+  it("waits for a mobile-safe gesture and starts the journey with music", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp />);
+
+    expect(screen.getByRole("dialog", { name: "Comenzar la experiencia" })).toBeInTheDocument();
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Entrar con m.sica/i }));
+
+    expect(screen.queryByRole("dialog", { name: "Comenzar la experiencia" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Desactivar m.sica/i })).toBeInTheDocument();
+  });
+
   it("uses the numbered motion asset while preserving the approved image as its copy layer", () => {
     render(<JourneyApp initialStep={4} />);
 
