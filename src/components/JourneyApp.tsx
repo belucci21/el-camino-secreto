@@ -116,6 +116,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const [secretStatus, setSecretStatus] = useState<"idle" | "checking" | "wrong">("idle");
   const [loaderProgress, setLoaderProgress] = useState(8);
   const [rsvpSaved, setRsvpSaved] = useState(false);
+  const [playedMotionSteps, setPlayedMotionSteps] = useState<Set<number>>(() => new Set());
   const stageRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
@@ -134,6 +135,15 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     },
     [],
   );
+
+  const markMotionComplete = useCallback((sceneOrder: number) => {
+    setPlayedMotionSteps((current) => {
+      if (current.has(sceneOrder)) return current;
+      const next = new Set(current);
+      next.add(sceneOrder);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const next = scenes.slice(step, step + 2);
@@ -160,7 +170,12 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       setLoaderProgress(progress);
       if (progress >= 100) {
         window.clearInterval(timer);
-        window.setTimeout(() => goToStep(2), reducedMotion ? 80 : 380);
+        window.setTimeout(() => {
+          // The first film is the introduction. Step 2 is its static landing
+          // screen, so its ambient clip must not immediately repeat the arrival.
+          setPlayedMotionSteps((current) => new Set([...current, 1, 2]));
+          goToStep(2);
+        }, reducedMotion ? 80 : 380);
       }
     }, 40);
 
@@ -466,7 +481,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 imagePath={hdImagePath}
                 couple={reference.couple}
                 reducedMotion={reducedMotion}
-                motionEnabled={experienceStarted}
+                motionEnabled={experienceStarted && !playedMotionSteps.has(step)}
+                onMotionComplete={markMotionComplete}
                 priority={step <= 2}
               />
             </div>

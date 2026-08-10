@@ -3141,6 +3141,8 @@ button:hover,
   filter: brightness(1.05) contrast(1.035) saturate(1.08);
   transform: scale(1.012) translateZ(0);
   backface-visibility: hidden;
+  opacity: 0;
+  transition: opacity .45s ease;
 }
 
 .journey-scene-image {
@@ -3160,26 +3162,24 @@ button:hover,
   image-rendering: auto;
   transform: translateZ(0);
   backface-visibility: hidden;
+  opacity: 1;
 }
 
-.journey-scene-media[data-has-video="true"] .journey-scene-image {
+.journey-scene-media[data-media-phase="motion"] .journey-scene-image {
+  opacity: 0;
+  mix-blend-mode: normal;
+}
+
+.journey-scene-media[data-media-phase="motion"][data-video-ready="true"] .journey-scene-video {
+  opacity: 1;
+}
+
+.journey-scene-media[data-media-phase="interactive"] .journey-scene-image {
+  opacity: 1;
+  mix-blend-mode: normal;
   transition:
     opacity 1.25s var(--ease-cinematic),
     filter 1.25s var(--ease-cinematic);
-}
-
-.journey-scene-media[data-video-ready="true"][data-video-ended="false"] .journey-scene-image {
-  opacity: .06;
-  mix-blend-mode: screen;
-  filter:
-    brightness(1.08)
-    contrast(1.02)
-    saturate(.9);
-}
-
-.journey-scene-media[data-video-ended="true"] .journey-scene-image {
-  opacity: 1;
-  mix-blend-mode: normal;
 }
 
 .journey-skip-motion {
@@ -3239,7 +3239,7 @@ button:hover,
   pointer-events: none;
 }
 
-.journey-reference-plane:has(.journey-scene-media[data-video-ready="true"][data-video-ended="false"]) .journey-hotspots {
+.journey-reference-plane:has(.journey-scene-media[data-media-phase="motion"]) .journey-hotspots {
   opacity: 0;
   visibility: hidden;
 }

@@ -9,6 +9,7 @@ type JourneySceneMediaProps = {
   couple: string;
   reducedMotion: boolean;
   motionEnabled: boolean;
+  onMotionComplete: (sceneOrder: number) => void;
   priority: boolean;
 };
 
@@ -18,6 +19,7 @@ export function JourneySceneMedia({
   couple,
   reducedMotion,
   motionEnabled,
+  onMotionComplete,
   priority,
 }: JourneySceneMediaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -28,6 +30,11 @@ export function JourneySceneMedia({
   const completeMotion = useCallback(() => {
     videoRef.current?.pause();
     setVideoEnded(true);
+    onMotionComplete(scene.order);
+  }, [onMotionComplete, scene.order]);
+
+  const revealMotion = useCallback(() => {
+    setVideoReady(true);
   }, []);
 
   useEffect(() => {
@@ -61,6 +68,7 @@ export function JourneySceneMedia({
       data-has-video={Boolean(motionAsset)}
       data-video-ready={videoReady}
       data-video-ended={videoEnded}
+      data-media-phase={motionAsset && !videoEnded ? "motion" : "interactive"}
       data-opening={scene.order === 5}
     >
       {motionAsset && (
@@ -73,13 +81,12 @@ export function JourneySceneMedia({
           muted
           playsInline
           loop={false}
-          poster={imagePath}
           preload={priority || scene.order === 4 || scene.order === 5 ? "auto" : "metadata"}
           width={motionAsset.width}
           height={motionAsset.height}
-          onCanPlay={() => setVideoReady(true)}
-          onLoadedData={() => setVideoReady(true)}
-          onPlaying={() => setVideoReady(true)}
+          onCanPlay={revealMotion}
+          onLoadedData={revealMotion}
+          onPlaying={revealMotion}
           onEnded={completeMotion}
           onError={completeMotion}
         >

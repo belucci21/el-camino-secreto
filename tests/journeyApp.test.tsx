@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { JourneyApp } from "../src/components/JourneyApp";
@@ -57,14 +57,31 @@ describe("JourneyApp", () => {
     render(<JourneyApp initialStep={4} />);
 
     const video = screen.getByTestId("journey-motion-video");
+    const media = video.closest(".journey-scene-media");
     const source = video.querySelector("source");
     const sceneImage = screen.getByRole("img", { name: /LA PUERTA SECRETA/i });
 
     expect(video).toHaveAttribute("autoplay");
     expect(video).toHaveProperty("muted", true);
     expect(video).toHaveAttribute("playsinline");
+    expect(video).not.toHaveAttribute("poster");
     expect(source).toHaveAttribute("src", "/journey-video/4.mp4");
     expect(sceneImage).toHaveAttribute("src", "/journey-hd/4.webp");
+    expect(media).toHaveAttribute("data-media-phase", "motion");
+
+    fireEvent.ended(video);
+
+    expect(media).toHaveAttribute("data-media-phase", "interactive");
+  });
+
+  it("does not replay a chapter film after it has already resolved to its image", () => {
+    const { rerender } = render(<JourneyApp initialStep={4} />);
+    fireEvent.ended(screen.getByTestId("journey-motion-video"));
+
+    rerender(<JourneyApp initialStep={4} />);
+
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /LA PUERTA SECRETA/i })).toBeInTheDocument();
   });
 
   it("plays the opening once and keeps the final chapters on their motion assets", () => {
