@@ -1,12 +1,14 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { JourneySceneMedia } from "../src/components/JourneySceneMedia";
+import { finalJourneyScenes } from "../src/config/finalJourney";
 
 const props = {
   sceneOrder: 12, title: "El cofre del tesoro", couple: "Gladiola & Jordi",
   videoPath: "/journey-final/12-treasure.mp4", frozenFramePath: "/journey-final/12-treasure-final.png",
   firstFramePath: "/journey-final/12-treasure-first.png", previousFramePath: "/journey-final/11-rsvp-final.png",
   holdFrameAt: 25.866667, hasNarration: true, audioEnabled: true, paused: false,
+  interactionReadyAt: 16.433333, narrationWindows: [[0.414, 18.005], [22.862, 40.472]] as [number, number][],
   reducedMotion: false, motionEnabled: true, onMotionComplete: vi.fn(),
   onNarrationChange: vi.fn(), onSceneReady: vi.fn(), priority: false,
 };
@@ -17,6 +19,40 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.clearAllMocks(); });
 
 describe("cinematic scene playback", () => {
+  it.each(finalJourneyScenes)("unlocks scene $order at its measured visual endpoint, not at file end", (scene) => {
+    const { container } = render(<JourneySceneMedia {...props} {...scene} />);
+    const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
+    video.currentTime = scene.interactionReadyAt - 0.1;
+    fireEvent.timeUpdate(video);
+    expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "motion");
+    video.currentTime = scene.interactionReadyAt + 0.01;
+    fireEvent.timeUpdate(video);
+    expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "interactive");
+    expect(video).toBeInTheDocument();
+  });
+  it("reveals the still and controls without waiting for the audio tail", () => {
+    const { container } = render(<JourneySceneMedia {...props} />);
+    const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
+    video.currentTime = 16.5;
+    fireEvent.timeUpdate(video);
+    expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "interactive");
+    expect(video).toBeInTheDocument();
+    expect(props.onMotionComplete).not.toHaveBeenCalled();
+  });
+  it("restores the music during the long pause between narration sections", () => {
+    render(<JourneySceneMedia {...props} />);
+    const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
+    video.currentTime = 12;
+    fireEvent.playing(video);
+    fireEvent.timeUpdate(video);
+    expect(props.onNarrationChange).toHaveBeenLastCalledWith(true);
+    video.currentTime = 20;
+    fireEvent.timeUpdate(video);
+    expect(props.onNarrationChange).toHaveBeenLastCalledWith(false);
+    video.currentTime = 24;
+    fireEvent.timeUpdate(video);
+    expect(props.onNarrationChange).toHaveBeenLastCalledWith(true);
+  });
   it("lets the original synchronized soundtrack follow the user's sound choice", () => {
     const { rerender } = render(<JourneySceneMedia {...props} />);
     const video = screen.getByTestId("journey-motion-video");

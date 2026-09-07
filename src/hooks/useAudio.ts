@@ -74,10 +74,11 @@ export function useAudio() {
   const setNarrationActive = useCallback((active: boolean) => {
     if (narrationRef.current === active) return;
     narrationRef.current = active;
-    const target = volumeRef.current * (active ? 0.16 : 0.72);
+    const target = volumeRef.current * (active ? 0.32 : 0.72);
     const ambient = tracksRef.current?.ambient;
     if (ambient) {
-      if (enabledRef.current && !document.hidden) ambient.fade(ambientLevelRef.current, target, 450);
+      const current = ambient.volume();
+      if (enabledRef.current && !document.hidden) ambient.fade(typeof current === "number" ? current : ambientLevelRef.current, target, 450);
       else ambient.volume(target);
     }
     ambientLevelRef.current = target;
@@ -90,9 +91,9 @@ export function useAudio() {
       }
 
       tracksRef.current ??= createTracks(volume);
-      Howler.volume(volume);
+      Howler.volume(1);
       const ambient = tracksRef.current.ambient;
-      ambientLevelRef.current = volume * (narrationRef.current ? 0.16 : 0.72);
+      ambientLevelRef.current = volume * (narrationRef.current ? 0.32 : 0.72);
       ambient.volume(ambientLevelRef.current);
       if (!ambient.playing()) ambient.play();
       enabledRef.current = true;
@@ -110,8 +111,8 @@ export function useAudio() {
     volumeRef.current = next;
 
     try {
-      Howler.volume(next);
-      ambientLevelRef.current = next * (narrationRef.current ? 0.16 : 0.72);
+      Howler.volume(1);
+      ambientLevelRef.current = next * (narrationRef.current ? 0.32 : 0.72);
       tracksRef.current?.ambient.volume(ambientLevelRef.current);
       tracksRef.current?.unlock.volume(next * 0.72);
       tracksRef.current?.opening.volume(next * 0.82);

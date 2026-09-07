@@ -147,13 +147,21 @@ describe("browser capability hooks", () => {
 });
 
 describe("useAudio", () => {
+  it("changes the mix from its current level without jumping during an unfinished fade", async () => {
+    const { result } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+    act(() => result.current.setNarrationActive(true));
+    howlerMock.instances[0].volume.mockReturnValue(0.27);
+    act(() => result.current.setNarrationActive(false));
+    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.27, 0.65 * 0.72, 450);
+  });
   it("ducks music under narration and restores it after the voice ends", async () => {
     const { result } = renderHook(() => useAudio());
     await act(async () => result.current.start());
     act(() => result.current.setNarrationActive(true));
-    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.72, 0.65 * 0.16, 450);
+    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.72, 0.65 * 0.32, 450);
     act(() => result.current.setNarrationActive(false));
-    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.16, 0.65 * 0.72, 450);
+    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.32, 0.65 * 0.72, 450);
   });
   it("mutes every cue and releases owned audio resources on unmount", async () => {
     const { result, unmount } = renderHook(() => useAudio());
@@ -188,7 +196,7 @@ describe("useAudio", () => {
     act(() => result.current.setVolume(0.4));
 
     expect(result.current.volume).toBe(0.4);
-    expect(howlerMock.Howler.volume).toHaveBeenCalledWith(0.4);
+    expect(howlerMock.Howler.volume).toHaveBeenLastCalledWith(1);
     expect(howlerMock.instances[0].volume).toHaveBeenCalledWith(0.288);
     expect(howlerMock.instances[1].volume).toHaveBeenCalledWith(0.288);
     expect(howlerMock.instances[2].volume).toHaveBeenCalledWith(0.328);

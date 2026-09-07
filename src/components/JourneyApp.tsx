@@ -367,6 +367,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 previousFramePath={previousFramePath}
                 holdFrameAt={scene.holdFrameAt}
                 hasNarration={scene.hasNarration}
+                interactionReadyAt={scene.interactionReadyAt}
+                narrationWindows={scene.narrationWindows}
                 audioEnabled={audio.enabled}
                 paused={dialog !== null}
                 onNarrationChange={audio.setNarrationActive}
