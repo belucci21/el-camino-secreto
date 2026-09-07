@@ -3251,7 +3251,7 @@ button:hover,
 .journey-hotspot[data-control="true"] {
   display: grid;
   place-items: center;
-  min-width: 3.4rem;
+  min-width: 2.75rem;
   color: #f8e1a1;
   border-color: rgba(233, 195, 93, .74);
   background: rgba(3, 13, 7, .64);

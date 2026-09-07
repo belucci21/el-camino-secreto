@@ -1,7 +1,9 @@
 import type { JourneyHotspot } from "../types/journey";
 
-const music = { x: 5, y: 3.5, width: 16, height: 8, radius: 50 };
-const chapters = { x: 78, y: 3.5, width: 17, height: 8, radius: 50 };
+// Keep the utility controls deliberately quiet: the scene stays the focal point.
+// At 9:16, 11% × 6% renders as a compact, near-square touch target.
+const music = { x: 5, y: 3.5, width: 11, height: 6, radius: 50 };
+const chapters = { x: 84, y: 3.5, width: 11, height: 6, radius: 50 };
 const continueButton = { x: 12, y: 84, width: 76, height: 8, radius: 4 };
 
 export const journeyHotspots: Record<number, Record<string, JourneyHotspot>> = {
