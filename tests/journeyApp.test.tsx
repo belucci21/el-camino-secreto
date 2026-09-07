@@ -53,25 +53,34 @@ describe("JourneyApp", () => {
     expect(screen.getByRole("button", { name: /Desactivar m.sica/i })).toBeInTheDocument();
   });
 
-  it("uses the numbered motion asset while preserving the approved image as its copy layer", () => {
+  it("uses the definitive film and its exact frozen frame for the secret door", () => {
     render(<JourneyApp initialStep={4} />);
 
     const video = screen.getByTestId("journey-motion-video");
     const media = video.closest(".journey-scene-media");
     const source = video.querySelector("source");
-    const sceneImage = screen.getByRole("img", { name: /LA PUERTA SECRETA/i });
+    const sceneImage = screen.getByRole("img", { name: /La puerta secreta/i });
 
     expect(video).toHaveAttribute("autoplay");
     expect(video).toHaveProperty("muted", true);
     expect(video).toHaveAttribute("playsinline");
     expect(video).not.toHaveAttribute("poster");
-    expect(source).toHaveAttribute("src", "/journey-video/4.mp4");
-    expect(sceneImage).toHaveAttribute("src", "/journey-hd/4.webp");
+    expect(source).toHaveAttribute("src", "/journey-final/04-secret-door.mp4");
+    expect(sceneImage).toHaveAttribute("src", "/journey-final/04-secret-door-final.png");
     expect(media).toHaveAttribute("data-media-phase", "motion");
 
     fireEvent.ended(video);
 
     expect(media).toHaveAttribute("data-media-phase", "interactive");
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+  });
+
+  it("does not offer a control that bypasses a scene film before it ends", () => {
+    render(<JourneyApp initialStep={4} />);
+
+    fireEvent.canPlay(screen.getByTestId("journey-motion-video"));
+
+    expect(screen.queryByRole("button", { name: "Mostrar pantalla interactiva" })).not.toBeInTheDocument();
   });
 
   it("does not replay a chapter film after it has already resolved to its image", () => {
@@ -84,16 +93,16 @@ describe("JourneyApp", () => {
     expect(screen.getByRole("img", { name: /LA PUERTA SECRETA/i })).toBeInTheDocument();
   });
 
-  it("plays the opening once and keeps the final chapters on their motion assets", () => {
+  it("plays the opening once and keeps the definitive chapter films in order", () => {
     const { unmount } = render(<JourneyApp initialStep={5} />);
 
     expect(screen.getByTestId("journey-motion-video")).not.toHaveAttribute("loop");
 
     unmount();
-    render(<JourneyApp initialStep={8} />);
+    render(<JourneyApp initialStep={10} />);
     expect(screen.getByTestId("journey-motion-video")).toBeInTheDocument();
     expect(screen.getByTestId("journey-motion-video").querySelector("source"))
-      .toHaveAttribute("src", "/journey-video/8.mp4");
+      .toHaveAttribute("src", "/journey-final/10-dress-code.mp4");
   });
 
   it("removes moving video when the visitor requests reduced motion", async () => {
@@ -105,16 +114,16 @@ describe("JourneyApp", () => {
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
   });
 
-  it("keeps the active scene eager and provides a 2x source for high-density screens", () => {
+  it("keeps the final frozen frame eager and preserves its original file", () => {
     render(<JourneyApp initialStep={5} />);
 
     const sceneImage = screen.getByRole("img", {
-      name: /LA RESPUESTA CORRECTA/i,
+      name: /La respuesta correcta/i,
     });
 
     expect(sceneImage).toHaveAttribute("loading", "eager");
-    expect(sceneImage).toHaveAttribute("src", "/journey-hd/5.webp");
-    expect(sceneImage).toHaveAttribute("srcset", "/journey-hd/5.webp 2x");
+    expect(sceneImage).toHaveAttribute("src", "/journey-final/05-open-door-final.png");
+    expect(sceneImage).not.toHaveAttribute("srcset");
   });
 
   it("starts the approved journey from the home cover", async () => {
@@ -128,6 +137,13 @@ describe("JourneyApp", () => {
     expect(
       screen.getByRole("region", { name: /Paso 3 de 11/i }),
     ).toBeInTheDocument();
+  });
+
+  it("renders the current scene action as a visible in-frame control", () => {
+    render(<JourneyApp initialStep={1} />);
+
+    expect(screen.getByRole("button", { name: "COMENZAR EL CAMINO" }))
+      .toHaveClass("journey-primary-action");
   });
 
   it("keeps the secret door in the 1–11 flow and accepts amigo", async () => {
@@ -145,37 +161,34 @@ describe("JourneyApp", () => {
     });
   });
 
-  it("renders every referenced surface on the information scene as a semantic button", () => {
-    render(<JourneyApp initialStep={10} />);
+  it("renders the dress-code and RSVP scenes as semantic controls", () => {
+    const { unmount } = render(<JourneyApp initialStep={10} />);
 
     const expectedButtons = [
       "Activar música",
       "CAPÍTULOS",
-      "CEREMONIA",
-      "CELEBRACIÓN",
-      "DRESS CODE",
-      "CÓMO LLEGAR",
-      "VER UBICACIÓN",
-      "CONFIRMAR MI ASISTENCIA",
-      "PISTA: ESCUCHA, OBSERVA Y RECUERDA",
+      "CÓDIGO DE VESTIMENTA",
+      "Continuar",
     ];
 
     expectedButtons.forEach((name) => {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
     });
+
+    unmount();
+    render(<JourneyApp initialStep={11} />);
+    expect(screen.getByRole("button", { name: "INSCRIBIR MI RESPUESTA" })).toBeInTheDocument();
   });
 
-  it("reveals the confirmed ceremony details from the reference artwork", async () => {
+  it("reveals the defined dress code from the final reference artwork", async () => {
     const user = userEvent.setup();
     render(<JourneyApp initialStep={10} />);
 
-    await user.click(screen.getByRole("button", { name: "CEREMONIA" }));
+    await user.click(screen.getByRole("button", { name: "CÓDIGO DE VESTIMENTA" }));
 
-    const dialog = screen.getByRole("dialog", { name: "Ceremonia" });
+    const dialog = screen.getByRole("dialog", { name: "Código de vestimenta" });
     expect(dialog).toBeInTheDocument();
-    expect(dialog).toHaveTextContent(/Sábado 29 de mayo de 2027/i);
-    expect(dialog).toHaveTextContent(/Iglesia de San Martín de Tours/i);
-    expect(dialog).toHaveTextContent(/C\/ Mayor, 1 · 28013 Madrid/i);
+    expect(dialog).toHaveTextContent(/Formal elegante/i);
   });
 
   it("opens chapter navigation without leaving the home journey", async () => {
@@ -184,9 +197,48 @@ describe("JourneyApp", () => {
 
     await user.click(screen.getByRole("button", { name: "CAPÍTULOS" }));
     expect(screen.getByRole("dialog", { name: "Capítulos" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /11.*EL COFRE DEL TESORO/i }));
+    await user.click(screen.getByRole("button", { name: /11.*CONFIRMA TU ASISTENCIA/i }));
     expect(
       screen.getByRole("region", { name: /Paso 11 de 11/i }),
     ).toBeInTheDocument();
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+  });
+
+  it("keeps scene two on screen when the visitor scrolls or swipes", () => {
+    const { container } = render(<JourneyApp initialStep={2} />);
+    const stage = container.querySelector(".journey-shell");
+
+    fireEvent.wheel(stage!, { deltaY: 96 });
+    fireEvent.pointerDown(stage!, { clientX: 240, clientY: 650 });
+    fireEvent.pointerUp(stage!, { clientX: 240, clientY: 520 });
+
+    expect(screen.getByRole("region", { name: /Paso 2 de 11/i })).toBeInTheDocument();
+  });
+
+  it("uses the supplied scene-eleven RSVP background and attendance artwork", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={11} />);
+
+    await user.click(screen.getByRole("button", { name: "INSCRIBIR MI RESPUESTA" }));
+
+    expect(screen.getByTestId("journey-rsvp-background").querySelector("source")).toHaveAttribute(
+      "src",
+      "/journey-final/11-rsvp-background.mp4",
+    );
+    expect(screen.getByRole("img", { name: "Arte de asistencia" })).toHaveAttribute(
+      "src",
+      "/journey-final/11-rsvp-panel.png",
+    );
+  });
+
+  it("keeps RSVP artwork available without its looping background in reduced-motion mode", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={11} />);
+
+    await user.click(screen.getByRole("button", { name: "Reducir movimiento" }));
+    await user.click(screen.getByRole("button", { name: "INSCRIBIR MI RESPUESTA" }));
+
+    expect(screen.queryByTestId("journey-rsvp-background")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Arte de asistencia" })).toBeInTheDocument();
   });
 });

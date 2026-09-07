@@ -11,23 +11,19 @@ import {
   useRef,
   useState,
 } from "react";
-import referenceJson from "../content/journey-reference.json";
+import { finalJourneyScenes, type FinalJourneyScene } from "../config/finalJourney";
 import { journeyHotspots } from "../config/journeyInteractions";
 import { weddingConfig } from "../config/wedding";
 import { useAudio } from "../hooks/useAudio";
 import { useReducedMotion } from "../hooks/useReducedMotion";
-import type {
-  JourneyButtonSurface,
-  JourneyReference,
-  JourneyScene,
-} from "../types/journey";
+import type { JourneyButtonSurface } from "../types/journey";
 import { downloadICS } from "../utils/generateICS";
 import { validateSecretWord } from "../utils/secretWord";
 import { JourneyDialog } from "./JourneyDialog";
 import { JourneySceneMedia } from "./JourneySceneMedia";
 
-const reference = referenceJson as JourneyReference;
-const scenes = [...reference.scenes].sort((a, b) => a.order - b.order);
+const scenes = finalJourneyScenes;
+const couple = "Gladiola & Jordi";
 
 type DialogState =
   | { kind: "chapters" }
@@ -88,17 +84,8 @@ const detailCopy: Record<string, { title: string; body: string }> = {
   },
 };
 
-function chapterName(scene: JourneyScene) {
-  return (
-    scene.visible_copy.find(
-      (line) =>
-        line.length > 7 &&
-        !line.includes("MÚSICA") &&
-        !line.includes("CAPÍTULOS") &&
-        !line.startsWith("CAPÍTULO") &&
-        !line.startsWith("PASO"),
-    ) ?? `Paso ${scene.order}`
-  );
+function chapterName(scene: FinalJourneyScene) {
+  return scene.title;
 }
 
 function buttonLabel(surface: JourneyButtonSurface, audioEnabled: boolean) {
@@ -114,24 +101,28 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const [dialog, setDialog] = useState<DialogState>(null);
   const [secretWord, setSecretWord] = useState("");
   const [secretStatus, setSecretStatus] = useState<"idle" | "checking" | "wrong">("idle");
-  const [loaderProgress, setLoaderProgress] = useState(8);
   const [rsvpSaved, setRsvpSaved] = useState(false);
   const [playedMotionSteps, setPlayedMotionSteps] = useState<Set<number>>(() => new Set());
   const stageRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
-  const pointerStart = useRef<{ x: number; y: number } | null>(null);
-  const wheelLock = useRef(false);
   const scene = scenes[step - 1];
   const audio = useAudio();
   const { reducedMotion, setReducedMotion } = useReducedMotion();
-  const imagePath = `${reference.experience_contract.asset_base_path}/${scene.asset.filename}`;
-  const hdImagePath = `${reference.experience_contract.hd_asset_base_path}/${scene.asset.filename.replace(/\.png$/i, ".webp")}`;
+  const imagePath = scene.frozenFramePath;
   const hotspots = useMemo(() => journeyHotspots[step] ?? {}, [step]);
+  const primarySurface = useMemo(
+    () => scene.surfaces.find((surface) => ["start_journey", "continue", "decode_word", "rsvp"].includes(surface.id)),
+    [scene.surfaces],
+  );
 
   const goToStep = useCallback(
-    (nextStep: number) => {
+    (nextStep: number, showFrozenFrame = false) => {
+      const boundedStep = Math.min(scenes.length, Math.max(1, nextStep));
       setDialog(null);
-      setStep(Math.min(scenes.length, Math.max(1, nextStep)));
+      if (showFrozenFrame) {
+        setPlayedMotionSteps((current) => new Set(current).add(boundedStep));
+      }
+      setStep(boundedStep);
     },
     [],
   );
@@ -149,38 +140,14 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     const next = scenes.slice(step, step + 2);
     next.forEach((item) => {
       const image = new window.Image();
-      image.src = `${reference.experience_contract.hd_asset_base_path}/${item.asset.filename.replace(/\.png$/i, ".webp")}`;
+      image.src = item.frozenFramePath;
       void image.decode?.().catch(() => undefined);
 
-      if (item.motion_asset) {
-        const video = document.createElement("video");
-        video.preload = "metadata";
-        video.src = item.motion_asset.public_asset_path;
-      }
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.src = item.videoPath;
     });
   }, [step]);
-
-  useEffect(() => {
-    if (step !== 1 || !experienceStarted) return;
-
-    const startedAt = window.performance.now();
-    const timer = window.setInterval(() => {
-      const elapsed = window.performance.now() - startedAt;
-      const progress = Math.min(100, 8 + elapsed / (reducedMotion ? 5 : 38));
-      setLoaderProgress(progress);
-      if (progress >= 100) {
-        window.clearInterval(timer);
-        window.setTimeout(() => {
-          // The first film is the introduction. Step 2 is its static landing
-          // screen, so its ambient clip must not immediately repeat the arrival.
-          setPlayedMotionSteps((current) => new Set([...current, 1, 2]));
-          goToStep(2);
-        }, reducedMotion ? 80 : 380);
-      }
-    }, 40);
-
-    return () => window.clearInterval(timer);
-  }, [experienceStarted, goToStep, reducedMotion, step]);
 
   const startWithMusic = useCallback(async () => {
     await audio.start();
@@ -211,8 +178,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         visual,
         {
           autoAlpha: step === 5 ? 0.88 : 0.92,
-          scale: step === 5 ? 1.045 : 1.018,
-          y: step === 5 ? 12 : 20,
+          scale: 1,
+          y: 0,
         },
         {
           autoAlpha: 1,
@@ -235,36 +202,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
 
     return () => context.revert();
   }, [reducedMotion, step]);
-
-  const onPointerMove = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (reducedMotion || !visualRef.current || event.pointerType === "touch") return;
-      const rect = event.currentTarget.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width - 0.5;
-      const y = (event.clientY - rect.top) / rect.height - 0.5;
-      gsap.to(visualRef.current, {
-        x: x * -8,
-        y: y * -6,
-        scale: 1.012,
-        duration: 0.8,
-        ease: "power2.out",
-        overwrite: true,
-      });
-    },
-    [reducedMotion],
-  );
-
-  const resetParallax = useCallback(() => {
-    if (!visualRef.current || reducedMotion) return;
-    gsap.to(visualRef.current, {
-      x: 0,
-      y: 0,
-      scale: 1,
-      duration: 0.8,
-      ease: "power2.out",
-      overwrite: true,
-    });
-  }, [reducedMotion]);
 
   const openMessage = useCallback((id: string) => {
     const content = detailCopy[id] ?? {
@@ -383,21 +320,10 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     [],
   );
 
-  const onWheel = useCallback(
-    (event: React.WheelEvent<HTMLDivElement>) => {
-      if (step !== 2 || event.deltaY < 48 || wheelLock.current) return;
-      wheelLock.current = true;
-      goToStep(3);
-      window.setTimeout(() => {
-        wheelLock.current = false;
-      }, 800);
-    },
-    [goToStep, step],
-  );
-
   const hotspotButtons = useMemo(
     () =>
-      scene.button_surfaces.map((surface) => {
+      scene.surfaces.map((surface) => {
+        if (surface.id === primarySurface?.id) return null;
         const bounds = hotspots[surface.id];
         if (!bounds) return null;
         const style = {
@@ -419,7 +345,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             aria-label={buttonLabel(surface, audio.enabled)}
             onClick={() => void handleSurface(surface)}
           >
-            <span className="sr-only">{buttonLabel(surface, audio.enabled)}</span>
+            <span className={surface.id === "music_toggle" || surface.id === "chapters_menu" ? "journey-hotspot-label" : "sr-only"}>
+              {surface.id === "music_toggle" ? "Música" : buttonLabel(surface, audio.enabled)}
+            </span>
             {surface.id === "music_toggle" && audio.enabled && (
               <>
                 <span className="journey-audio-live" aria-hidden="true">
@@ -433,7 +361,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           </button>
         );
       }),
-    [audio.enabled, handleSurface, hotspots, scene.button_surfaces, step],
+    [audio.enabled, handleSurface, hotspots, primarySurface?.id, scene.surfaces, step],
   );
 
   return (
@@ -454,32 +382,21 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         className="journey-shell"
         aria-label={`Paso ${step} de ${scenes.length}: ${chapterName(scene)}`}
         ref={stageRef}
-        onPointerDown={(event) => {
-          pointerStart.current = { x: event.clientX, y: event.clientY };
-        }}
-        onPointerUp={(event) => {
-          if (step !== 2 || !pointerStart.current) return;
-          const distanceY = pointerStart.current.y - event.clientY;
-          const distanceX = pointerStart.current.x - event.clientX;
-          if (distanceY > 45 || distanceX > 65) goToStep(3);
-          pointerStart.current = null;
-        }}
-        onPointerMove={onPointerMove}
-        onPointerLeave={resetParallax}
-        onWheel={onWheel}
       >
         <div className="journey-scene-extension" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={hdImagePath} alt="" />
+          <img src={imagePath} alt="" />
         </div>
         <div className="journey-reference-frame">
           <div className="journey-reference-plane" ref={visualRef}>
             <div className="journey-scene-visual">
               <JourneySceneMedia
                 key={scene.order}
-                scene={scene}
-                imagePath={hdImagePath}
-                couple={reference.couple}
+                sceneOrder={scene.order}
+                title={scene.title}
+                videoPath={scene.videoPath}
+                frozenFramePath={scene.frozenFramePath}
+                couple={couple}
                 reducedMotion={reducedMotion}
                 motionEnabled={experienceStarted && !playedMotionSteps.has(step)}
                 onMotionComplete={markMotionComplete}
@@ -487,6 +404,16 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               />
             </div>
             <div className="journey-hotspots">{hotspotButtons}</div>
+            {primarySurface && (
+              <button
+                className="journey-primary-action"
+                type="button"
+                onClick={() => void handleSurface(primarySurface)}
+              >
+                <span>{primarySurface.visible_label}</span>
+                <b aria-hidden="true">→</b>
+              </button>
+            )}
           </div>
         </div>
         <div className="journey-vignette" aria-hidden="true" />
@@ -514,13 +441,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           </div>
         )}
 
-        {step === 1 && experienceStarted && (
-          <div className="journey-loader" aria-live="polite">
-            <span style={{ width: `${loaderProgress}%` }} />
-            <p>{Math.round(loaderProgress)}%</p>
-          </div>
-        )}
-
         {experienceStarted && (
           <button
             className="journey-motion-control"
@@ -533,7 +453,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         )}
 
         <p className="sr-only" aria-live="polite">
-          {`Paso ${step}: ${scene.visible_copy.join(". ")}`}
+          {`Paso ${step}: ${scene.title}`}
         </p>
       </section>
 
@@ -545,7 +465,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 key={item.id}
                 type="button"
                 data-current={item.order === step}
-                onClick={() => goToStep(item.order)}
+                onClick={() => goToStep(item.order, true)}
               >
                 <span>{String(item.order).padStart(2, "0")}</span>
                 {chapterName(item)}
@@ -599,7 +519,12 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       )}
 
       {dialog?.kind === "rsvp" && (
-        <JourneyDialog title="Confirma tu asistencia" eyebrow="El Libro del Vínculo Eterno" onClose={() => setDialog(null)}>
+        <JourneyDialog
+          title="Confirma tu asistencia"
+          eyebrow="El Libro del Vínculo Eterno"
+          onClose={() => setDialog(null)}
+          variant="rsvp"
+        >
           {rsvpSaved ? (
             <>
               <p className="journey-dialog-copy">
@@ -611,21 +536,43 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               </button>
             </>
           ) : (
-            <form className="journey-rsvp-form" onSubmit={submitRsvp}>
-              <label htmlFor="guest-name">Nombre</label>
-              <input id="guest-name" name="name" required />
-              <fieldset>
-                <legend>¿Nos acompañas?</legend>
-                <label>
-                  <input type="radio" name="attendance" value="yes" required /> Sí, caminaré con
-                  vosotros
-                </label>
-                <label>
-                  <input type="radio" name="attendance" value="no" /> No podré acompañaros
-                </label>
-              </fieldset>
-              <button type="submit">Inscribir mi respuesta</button>
-            </form>
+            <div className="journey-rsvp-artwork">
+              {!reducedMotion && (
+                <video
+                  aria-hidden="true"
+                  autoPlay
+                  className="journey-rsvp-artwork__background"
+                  data-testid="journey-rsvp-background"
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                >
+                  <source src={scene.rsvpMedia?.backgroundVideoPath} type="video/mp4" />
+                </video>
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt="Arte de asistencia"
+                className="journey-rsvp-artwork__panel"
+                src={scene.rsvpMedia?.attendanceArtworkPath}
+              />
+              <form className="journey-rsvp-form" onSubmit={submitRsvp}>
+                <label htmlFor="guest-name">Nombre</label>
+                <input id="guest-name" name="name" required />
+                <fieldset>
+                  <legend>¿Nos acompañas?</legend>
+                  <label>
+                    <input type="radio" name="attendance" value="yes" required /> Sí, caminaré con
+                    vosotros
+                  </label>
+                  <label>
+                    <input type="radio" name="attendance" value="no" /> No podré acompañaros
+                  </label>
+                </fieldset>
+                <button type="submit">Inscribir mi respuesta</button>
+              </form>
+            </div>
           )}
         </JourneyDialog>
       )}

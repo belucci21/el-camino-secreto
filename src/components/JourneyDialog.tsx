@@ -8,6 +8,7 @@ type JourneyDialogProps = {
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  variant?: "default" | "rsvp";
 };
 
 export function JourneyDialog({
@@ -16,6 +17,7 @@ export function JourneyDialog({
   children,
   onClose,
   wide = false,
+  variant = "default",
 }: JourneyDialogProps) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -32,6 +34,7 @@ export function JourneyDialog({
         aria-modal="true"
         className="journey-dialog"
         data-wide={wide}
+        data-variant={variant}
         role="dialog"
         aria-labelledby="journey-dialog-title"
         onMouseDown={(event) => event.stopPropagation()}
