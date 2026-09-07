@@ -3146,7 +3146,7 @@ button:hover,
   mix-blend-mode: normal;
 }
 
-.journey-scene-media[data-media-phase="motion"][data-video-ready="true"] .journey-scene-video {
+.journey-scene-media[data-visual-phase="motion"][data-video-ready="true"] .journey-scene-video {
   opacity: 1;
 }
 
@@ -3172,6 +3172,27 @@ button:hover,
 .journey-scene-media[data-video-ready="true"] .journey-scene-transition {
   opacity: 0;
   transition: opacity 380ms ease-out;
+}
+
+/* A control becoming available must never cut a still-moving film. */
+.journey-primary-action {
+  transition: opacity 160ms ease-out;
+}
+
+.journey-backdrop img,
+.journey-scene-extension img {
+  position: absolute;
+  inset: 0;
+}
+
+.journey-backdrop img:last-child,
+.journey-scene-extension img:last-child {
+  animation: journey-background-reveal 380ms ease-out both;
+}
+
+@keyframes journey-background-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .journey-media-retry,

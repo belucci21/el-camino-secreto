@@ -114,9 +114,15 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const { reducedMotion, setReducedMotion } = useReducedMotion();
   const [previousFramePath, setPreviousFramePath] = useState<string>();
   const [imagePath, setImagePath] = useState(scene.frozenFramePath);
-  const sceneReady = useCallback((order: number) => {
+  const [backgroundBefore, setBackgroundBefore] = useState(scene.frozenFramePath);
+  const backgroundRef = useRef(scene.frozenFramePath);
+  const sceneReady = useCallback((order: number, final: boolean) => {
     const current = scenes[order - 1];
-    setImagePath(current.frozenFramePath);
+    const next = final ? current.frozenFramePath : current.firstFramePath;
+    if (backgroundRef.current === next) return;
+    setBackgroundBefore(backgroundRef.current);
+    backgroundRef.current = next;
+    setImagePath(next);
   }, []);
   const hotspots = useMemo(() => journeyHotspots[step] ?? {}, [step]);
   const primarySurface = useMemo(
@@ -131,7 +137,24 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       if (showFrozenFrame) {
         setPlayedMotionSteps((current) => new Set(current).add(boundedStep));
       }
-      setPreviousFramePath(showFrozenFrame ? undefined : scene.frozenFramePath);
+      let outgoingFrame = scene.frozenFramePath;
+      const video = visualRef.current?.querySelector("video");
+      const media = visualRef.current?.querySelector<HTMLElement>(".journey-scene-media");
+      if (!showFrozenFrame && video?.readyState && media?.dataset.visualPhase === "motion") {
+        // Capture only on navigation, never every frame. Preserve the actual
+        // outgoing composition when the guest advances before the film ends.
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const context = canvas.getContext("2d");
+          if (context && canvas.width && canvas.height) {
+            context.drawImage(video, 0, 0);
+            outgoingFrame = canvas.toDataURL("image/png");
+          }
+        } catch { /* The delivered still remains a safe fallback. */ }
+      }
+      setPreviousFramePath(showFrozenFrame ? undefined : outgoingFrame);
       setStep(boundedStep);
     },
     [scene.frozenFramePath],
@@ -287,9 +310,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     [],
   );
 
-  const hotspotButtons = useMemo(
-    () =>
-      scene.surfaces.map((surface) => {
+  const hotspotButtons = scene.surfaces.map((surface) => {
         if (surface.id === primarySurface?.id) return null;
         const bounds = hotspots[surface.id];
         if (!bounds) return null;
@@ -327,9 +348,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             )}
           </button>
         );
-      }),
-    [audio.enabled, handleSurface, hotspots, primarySurface?.id, scene.surfaces, step],
-  );
+      });
 
   return (
     <main
@@ -341,7 +360,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       <div className="journey-backdrop" aria-hidden="true">
         {/* The accepted artwork must be served byte-for-byte without an image optimizer. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imagePath} alt="" />
+        <img src={backgroundBefore} alt="" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img key={imagePath} src={imagePath} alt="" />
       </div>
       <div className="journey-ambient-glow" aria-hidden="true" />
 
@@ -352,7 +373,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       >
         <div className="journey-scene-extension" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imagePath} alt="" />
+          <img src={backgroundBefore} alt="" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img key={imagePath} src={imagePath} alt="" />
         </div>
         <div className="journey-reference-frame">
           <div className="journey-reference-plane" ref={visualRef}>

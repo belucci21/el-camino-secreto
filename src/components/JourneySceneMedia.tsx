@@ -69,7 +69,7 @@ export function JourneySceneMedia({
 
   const revealMotion = useCallback(() => {
     playing.current = true;
-    setVideoReady(true);
+    if (!videoRef.current?.requestVideoFrameCallback) setVideoReady(true);
     setNeedsGesture(false);
     onSceneReady(sceneOrder, reducedMotion);
     updateNarration((videoRef.current ?? audioRef.current)?.currentTime ?? playhead.current);
@@ -83,7 +83,6 @@ export function JourneySceneMedia({
     if (!ready.current && media.currentTime >= interactionReadyAt) {
       ready.current = true;
       setControlsReady(true);
-      onSceneReady(sceneOrder, true);
     }
     const fallbackLead = videoRef.current?.requestVideoFrameCallback ? 0 : 0.25;
     if (holdFrameAt !== undefined && media.currentTime >= holdFrameAt - fallbackLead) {
@@ -126,6 +125,7 @@ export function JourneySceneMedia({
     if (!video || !video.requestVideoFrameCallback) return;
     let callbackId: number;
     const frame = (_now: number, metadata: VideoFrameCallbackMetadata) => {
+      setVideoReady(true);
       trackProgress();
       if (holdFrameAt !== undefined && metadata.mediaTime >= holdFrameAt) {
         setHoldingFrame(true);
@@ -153,6 +153,7 @@ export function JourneySceneMedia({
   return (
     <div className="journey-scene-media" data-has-video={motionActive}
       data-video-ready={videoReady} data-video-ended={videoEnded}
+      data-visual-phase={motionActive && !holdingFrame ? "motion" : "still"}
       data-hold-frame={holdingFrame} data-media-phase={playbackActive && !controlsReady && !reducedMotion ? "motion" : "interactive"}
       data-opening={sceneOrder === 5}>
       {motionActive && (

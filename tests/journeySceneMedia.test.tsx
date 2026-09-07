@@ -19,6 +19,23 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.clearAllMocks(); });
 
 describe("cinematic scene playback", () => {
+  it("waits for a presented frame before dissolving the outgoing image", () => {
+    let present: VideoFrameRequestCallback | undefined;
+    Object.defineProperty(HTMLVideoElement.prototype, "requestVideoFrameCallback", {
+      configurable: true, value: (callback: VideoFrameRequestCallback) => { present = callback; return 1; },
+    });
+    Object.defineProperty(HTMLVideoElement.prototype, "cancelVideoFrameCallback", { configurable: true, value: vi.fn() });
+    try {
+      const { container, unmount } = render(<JourneySceneMedia {...props} />);
+      fireEvent.playing(screen.getByTestId("journey-motion-video"));
+      expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-video-ready", "false");
+      expect(present).toBeDefined();
+      unmount();
+    } finally {
+      Reflect.deleteProperty(HTMLVideoElement.prototype, "requestVideoFrameCallback");
+      Reflect.deleteProperty(HTMLVideoElement.prototype, "cancelVideoFrameCallback");
+    }
+  });
   it.each(finalJourneyScenes)("unlocks scene $order at its measured visual endpoint, not at file end", (scene) => {
     const { container } = render(<JourneySceneMedia {...props} {...scene} />);
     const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
@@ -29,14 +46,16 @@ describe("cinematic scene playback", () => {
     fireEvent.timeUpdate(video);
     expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "interactive");
     expect(video).toBeInTheDocument();
+    expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-visual-phase", "motion");
   });
-  it("reveals the still and controls without waiting for the audio tail", () => {
+  it("reveals controls without replacing a moving frame with the final still", () => {
     const { container } = render(<JourneySceneMedia {...props} />);
     const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
     video.currentTime = 16.5;
     fireEvent.timeUpdate(video);
     expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "interactive");
     expect(video).toBeInTheDocument();
+    expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-visual-phase", "motion");
     expect(props.onMotionComplete).not.toHaveBeenCalled();
   });
   it("restores the music during the long pause between narration sections", () => {
