@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     url: "/",
     title: seoConfig.title,
     description: seoConfig.description,
-    images: [{ url: seoConfig.image, width: seoConfig.imageWidth, height: seoConfig.imageHeight, alt: "El Camino del Vínculo — Gladiola & Jordi" }],
+    images: [{ url: seoConfig.image, type: "image/jpeg", width: seoConfig.imageWidth, height: seoConfig.imageHeight, alt: "El Camino del Vínculo — Gladiola & Jordi" }],
   },
   twitter: {
     card: "summary_large_image",

@@ -8,7 +8,7 @@ import { useVisibilityPause } from "../src/hooks/useVisibilityPause";
 
 const howlerMock = vi.hoisted(() => {
   const instances: Array<{
-    options: { src: string[]; loop?: boolean; volume?: number };
+    options: { src: string[]; loop?: boolean; volume?: number; html5?: boolean };
     play: ReturnType<typeof vi.fn>;
     pause: ReturnType<typeof vi.fn>;
     playing: ReturnType<typeof vi.fn<() => boolean>>;
@@ -159,9 +159,11 @@ describe("useAudio", () => {
     const { result } = renderHook(() => useAudio());
     await act(async () => result.current.start());
     act(() => result.current.setNarrationActive(true));
-    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.72, 0.65 * 0.32, 450);
+    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.72, 0.65 * 0.56, 450);
+    expect(howlerMock.instances[0].playing()).toBe(true);
+    expect(howlerMock.instances[0].pause).not.toHaveBeenCalled();
     act(() => result.current.setNarrationActive(false));
-    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.32, 0.65 * 0.72, 450);
+    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.56, 0.65 * 0.72, 450);
   });
   it("mutes every cue and releases owned audio resources on unmount", async () => {
     const { result, unmount } = renderHook(() => useAudio());
@@ -187,6 +189,9 @@ describe("useAudio", () => {
       "/audio/ambient-loop.wav",
     ]);
     expect(howlerMock.instances[0].play).toHaveBeenCalledOnce();
+    // Native iOS media volume is not a programmable mixer. The ambient
+    // track must use Web Audio so it can duck without replacing the video.
+    expect(howlerMock.instances[0].options.html5).toBe(false);
   });
 
   it("supports clamped volume changes", async () => {

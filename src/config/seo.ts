@@ -3,7 +3,7 @@ export const seoConfig = {
   title: "El Camino Secreto | Gladiola & Jordi",
   description:
     "Recorre El Camino del Vínculo: la invitación de boda de Gladiola y Jordi, una historia para vivir y celebrar juntos.",
-  image: "/og-invitacion-20260907.png",
+  image: "/og-vinculo-20260907.jpg",
   imageWidth: 1640,
   imageHeight: 959,
 } as const;

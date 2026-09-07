@@ -18,9 +18,10 @@ function createTracks(volume: number): AudioTracks {
       // The final 4-minute track is preferred; the WAV remains a safe local fallback.
       src: ["/audio/ambient-final.mp3", "/audio/ambient-loop.wav"],
       loop: true,
-      // Stream the long track through the media element for reliable mobile playback.
+      // Use a GainNode mixer: iOS HTMLMediaElement volume is not software
+      // controllable and a second native audio stream can interrupt video audio.
       volume: volume * 0.72,
-      html5: true,
+      html5: false,
     }),
     unlock: new Howl({
       src: ["/audio/unlock-chime.wav"],
@@ -74,7 +75,7 @@ export function useAudio() {
   const setNarrationActive = useCallback((active: boolean) => {
     if (narrationRef.current === active) return;
     narrationRef.current = active;
-    const target = volumeRef.current * (active ? 0.32 : 0.72);
+    const target = volumeRef.current * (active ? 0.56 : 0.72);
     const ambient = tracksRef.current?.ambient;
     if (ambient) {
       const current = ambient.volume();
@@ -93,7 +94,7 @@ export function useAudio() {
       tracksRef.current ??= createTracks(volume);
       Howler.volume(1);
       const ambient = tracksRef.current.ambient;
-      ambientLevelRef.current = volume * (narrationRef.current ? 0.32 : 0.72);
+      ambientLevelRef.current = volume * (narrationRef.current ? 0.56 : 0.72);
       ambient.volume(ambientLevelRef.current);
       if (!ambient.playing()) ambient.play();
       enabledRef.current = true;
@@ -112,7 +113,7 @@ export function useAudio() {
 
     try {
       Howler.volume(1);
-      ambientLevelRef.current = next * (narrationRef.current ? 0.32 : 0.72);
+      ambientLevelRef.current = next * (narrationRef.current ? 0.56 : 0.72);
       tracksRef.current?.ambient.volume(ambientLevelRef.current);
       tracksRef.current?.unlock.volume(next * 0.72);
       tracksRef.current?.opening.volume(next * 0.82);

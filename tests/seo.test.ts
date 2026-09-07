@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { seoConfig } from "../src/config/seo";
 
 describe("delivered social preview", () => {
-  it("references the new artwork with its actual dimensions", () => {
-    const png = readFileSync(`public${seoConfig.image}`);
-    expect(png.subarray(1, 4).toString()).toBe("PNG");
-    expect(png.readUInt32BE(16)).toBe(seoConfig.imageWidth);
-    expect(png.readUInt32BE(20)).toBe(seoConfig.imageHeight);
+  it("serves the exact lightweight JPEG approved for sharing", () => {
+    const artwork = readFileSync(`public${seoConfig.image}`);
+    expect(artwork.length).toBeLessThan(500_000);
+    expect(createHash("sha256").update(artwork).digest("hex")).toBe("e5374bc56bad3f039b2f5c3e9c71aa54600c79430287b3dd57ea736796285200");
     expect(seoConfig.description).not.toContain("Coming Soon");
   });
   it("uses one source for Open Graph and Twitter", () => {
