@@ -6,6 +6,10 @@ export type FinalJourneyScene = {
   title: string;
   videoPath: string;
   frozenFramePath: string;
+  firstFramePath: string;
+  hasNarration: boolean;
+  /** Last visible source frame; the original audio continues over this still. */
+  holdFrameAt?: number;
   rsvpMedia?: {
     backgroundVideoPath: string;
     attendanceArtworkPath: string;
@@ -25,7 +29,7 @@ const continueTo = (destination_order: number): JourneyButtonSurface => ({
   destination_order,
 });
 
-export const finalJourneyScenes: FinalJourneyScene[] = [
+const deliveredScenes: Omit<FinalJourneyScene, "firstFramePath" | "hasNarration">[] = [
   {
     order: 1,
     id: "opening",
@@ -134,9 +138,28 @@ export const finalJourneyScenes: FinalJourneyScene[] = [
     },
     surfaces: [
       ...controls(),
-      { id: "rsvp", visible_label: "INSCRIBIR MI RESPUESTA", action: "open_rsvp" },
+      { id: "rsvp", visible_label: "INSCRIBIR MI RESPUESTA", action: "open_rsvp", destination_order: 12 },
     ],
   },
 ];
+
+// The supplied MP4s already contain the synchronized voice. 10 and 11 have silent audio tracks.
+export const finalJourneyScenes: FinalJourneyScene[] = [...deliveredScenes, {
+  order: 12, id: "treasure", title: "El cofre del tesoro",
+  videoPath: "/journey-final/12-treasure.mp4",
+  frozenFramePath: "/journey-final/12-treasure-final.png",
+  holdFrameAt: 776 / 30,
+  surfaces: [...controls(), continueTo(13)],
+}, {
+  order: 13, id: "eternal-bond", title: "Un vínculo eterno",
+  videoPath: "/journey-final/13-eternal-bond.mp4",
+  frozenFramePath: "/journey-final/13-eternal-bond-final.png",
+  holdFrameAt: 597 / 30,
+  surfaces: [...controls(), { id: "finish", visible_label: "Ver capítulos", action: "open_chapters" as const }],
+}].map((scene) => ({
+  ...scene,
+  firstFramePath: scene.videoPath.replace(/\.mp4$/, "-first.png"),
+  hasNarration: scene.order !== 10 && scene.order !== 11,
+}));
 
 export const finalJourneyByOrder = new Map(finalJourneyScenes.map((scene) => [scene.order, scene]));

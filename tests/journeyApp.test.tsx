@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderToString } from "react-dom/server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { JourneyApp } from "../src/components/JourneyApp";
 
 vi.mock("gsap", () => ({
@@ -29,17 +30,46 @@ vi.mock("howler", () => ({
       pause: vi.fn(),
       playing: vi.fn(() => false),
       volume: vi.fn(),
+      fade: vi.fn(),
+      unload: vi.fn(),
     };
   }),
   Howler: { volume: vi.fn() },
 }));
 
+beforeEach(() => {
+  vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+  vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+});
+
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   window.localStorage.clear();
 });
 
 describe("JourneyApp", () => {
+  it("does not offer entry buttons before their client handlers are ready", () => {
+    const document = new DOMParser().parseFromString(renderToString(<JourneyApp />), "text/html");
+    document.querySelectorAll(".journey-entry-gate button").forEach((button) => {
+      expect(button.hasAttribute("disabled")).toBe(true);
+    });
+  });
+  it("continues from RSVP through the treasure to the final chapter", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={11} />);
+    fireEvent.ended(screen.getByTestId("journey-motion-video"));
+    await user.click(screen.getByRole("button", { name: "INSCRIBIR MI RESPUESTA" }));
+    await user.type(screen.getByLabelText("Nombre"), "Invitado de prueba");
+    await user.click(screen.getByLabelText(/Sí, caminaré/));
+    await user.click(screen.getByRole("button", { name: "Inscribir mi respuesta" }));
+    expect(JSON.parse(localStorage.getItem("gj-rsvp-draft")!)).toEqual({ name: "Invitado de prueba", attendance: "yes" });
+    await user.click(screen.getByRole("button", { name: "Continuar al cofre" }));
+    expect(screen.getByRole("region", { name: /Paso 12 de 13/ })).toBeInTheDocument();
+    fireEvent.ended(screen.getByTestId("journey-motion-video"));
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("region", { name: /Paso 13 de 13/ })).toBeInTheDocument();
+  });
   it("waits for a mobile-safe gesture and starts the journey with music", async () => {
     const user = userEvent.setup();
     render(<JourneyApp />);
@@ -51,6 +81,7 @@ describe("JourneyApp", () => {
 
     expect(screen.queryByRole("dialog", { name: "Comenzar la experiencia" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Desactivar m.sica/i })).toBeInTheDocument();
+    expect(screen.getByTestId("journey-motion-video")).toHaveProperty("muted", false);
   });
 
   it("uses the definitive film and its exact frozen frame for the secret door", () => {
@@ -131,11 +162,11 @@ describe("JourneyApp", () => {
     render(<JourneyApp initialStep={2} />);
 
     expect(
-      screen.getByRole("region", { name: /Paso 2 de 11/i }),
+      screen.getByRole("region", { name: /Paso 2 de 13/i }),
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "COMENZAR EL CAMINO" }));
     expect(
-      screen.getByRole("region", { name: /Paso 3 de 11/i }),
+      screen.getByRole("region", { name: /Paso 3 de 13/i }),
     ).toBeInTheDocument();
   });
 
@@ -146,7 +177,7 @@ describe("JourneyApp", () => {
       .toHaveClass("journey-primary-action");
   });
 
-  it("keeps the secret door in the 1–11 flow and accepts amigo", async () => {
+  it("keeps the secret door in the 1–13 flow and accepts amigo", async () => {
     const user = userEvent.setup();
     render(<JourneyApp initialStep={4} />);
 
@@ -156,7 +187,7 @@ describe("JourneyApp", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("region", { name: /Paso 5 de 11/i }),
+        screen.getByRole("region", { name: /Paso 5 de 13/i }),
       ).toBeInTheDocument();
     });
   });
@@ -199,7 +230,7 @@ describe("JourneyApp", () => {
     expect(screen.getByRole("dialog", { name: "Capítulos" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /11.*CONFIRMA TU ASISTENCIA/i }));
     expect(
-      screen.getByRole("region", { name: /Paso 11 de 11/i }),
+      screen.getByRole("region", { name: /Paso 11 de 13/i }),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
   });
@@ -212,7 +243,7 @@ describe("JourneyApp", () => {
     fireEvent.pointerDown(stage!, { clientX: 240, clientY: 650 });
     fireEvent.pointerUp(stage!, { clientX: 240, clientY: 520 });
 
-    expect(screen.getByRole("region", { name: /Paso 2 de 11/i })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 2 de 13/i })).toBeInTheDocument();
   });
 
   it("uses the supplied scene-eleven RSVP background and attendance artwork", async () => {

@@ -1,15 +1,14 @@
 "use client";
 
-import gsap from "gsap";
 import {
   type CSSProperties,
   type FormEvent,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { finalJourneyScenes, type FinalJourneyScene } from "../config/finalJourney";
 import { journeyHotspots } from "../config/journeyInteractions";
@@ -24,6 +23,10 @@ import { JourneySceneMedia } from "./JourneySceneMedia";
 
 const scenes = finalJourneyScenes;
 const couple = "Gladiola & Jordi";
+// The server renders inert entry controls; hydration enables their real handlers.
+const subscribeToClient = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 
 type DialogState =
   | { kind: "chapters" }
@@ -96,7 +99,8 @@ function buttonLabel(surface: JourneyButtonSurface, audioEnabled: boolean) {
 }
 
 export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
-  const [step, setStep] = useState(Math.min(11, Math.max(1, initialStep)));
+  const entryReady = useSyncExternalStore(subscribeToClient, clientReady, serverReady);
+  const [step, setStep] = useState(Math.min(scenes.length, Math.max(1, initialStep)));
   const [experienceStarted, setExperienceStarted] = useState(initialStep !== 1);
   const [dialog, setDialog] = useState<DialogState>(null);
   const [secretWord, setSecretWord] = useState("");
@@ -108,10 +112,15 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const scene = scenes[step - 1];
   const audio = useAudio();
   const { reducedMotion, setReducedMotion } = useReducedMotion();
-  const imagePath = scene.frozenFramePath;
+  const [previousFramePath, setPreviousFramePath] = useState<string>();
+  const [imagePath, setImagePath] = useState(scene.frozenFramePath);
+  const sceneReady = useCallback((order: number) => {
+    const current = scenes[order - 1];
+    setImagePath(current.frozenFramePath);
+  }, []);
   const hotspots = useMemo(() => journeyHotspots[step] ?? {}, [step]);
   const primarySurface = useMemo(
-    () => scene.surfaces.find((surface) => ["start_journey", "continue", "decode_word", "rsvp"].includes(surface.id)),
+    () => scene.surfaces.find((surface) => ["start_journey", "continue", "decode_word", "rsvp", "finish"].includes(surface.id)),
     [scene.surfaces],
   );
 
@@ -122,9 +131,10 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       if (showFrozenFrame) {
         setPlayedMotionSteps((current) => new Set(current).add(boundedStep));
       }
+      setPreviousFramePath(showFrozenFrame ? undefined : scene.frozenFramePath);
       setStep(boundedStep);
     },
-    [],
+    [scene.frozenFramePath],
   );
 
   const markMotionComplete = useCallback((sceneOrder: number) => {
@@ -142,6 +152,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       const image = new window.Image();
       image.src = item.frozenFramePath;
       void image.decode?.().catch(() => undefined);
+      const firstFrame = new window.Image();
+      firstFrame.src = item.firstFramePath;
 
       const video = document.createElement("video");
       video.preload = "metadata";
@@ -157,51 +169,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const startWithoutMusic = useCallback(() => {
     setExperienceStarted(true);
   }, []);
-
-  useLayoutEffect(() => {
-    const visual = visualRef.current;
-    if (!visual) return;
-
-    if (reducedMotion) {
-      gsap.set(visual, { autoAlpha: 1, scale: 1, y: 0 });
-      return;
-    }
-
-    const context = gsap.context(() => {
-      const timeline = gsap.timeline({
-        defaults: {
-          ease: step === 5 ? "power3.inOut" : "power2.out",
-        },
-      });
-
-      timeline.fromTo(
-        visual,
-        {
-          autoAlpha: step === 5 ? 0.88 : 0.92,
-          scale: 1,
-          y: 0,
-        },
-        {
-          autoAlpha: 1,
-          scale: 1,
-          y: 0,
-          duration: step === 5 ? 1.55 : 0.9,
-        },
-        0,
-      );
-
-      if (step === 5) {
-        timeline.fromTo(
-          ".journey-threshold-flare",
-          { opacity: 0.95, scale: 0.4 },
-          { opacity: 0, scale: 2.2, duration: 2, ease: "power2.out" },
-          0,
-        );
-      }
-    }, stageRef);
-
-    return () => context.revert();
-  }, [reducedMotion, step]);
 
   const openMessage = useCallback((id: string) => {
     const content = detailCopy[id] ?? {
@@ -396,6 +363,14 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 title={scene.title}
                 videoPath={scene.videoPath}
                 frozenFramePath={scene.frozenFramePath}
+                firstFramePath={scene.firstFramePath}
+                previousFramePath={previousFramePath}
+                holdFrameAt={scene.holdFrameAt}
+                hasNarration={scene.hasNarration}
+                audioEnabled={audio.enabled}
+                paused={dialog !== null}
+                onNarrationChange={audio.setNarrationActive}
+                onSceneReady={sceneReady}
                 couple={couple}
                 reducedMotion={reducedMotion}
                 motionEnabled={experienceStarted && !playedMotionSteps.has(step)}
@@ -418,7 +393,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         </div>
         <div className="journey-vignette" aria-hidden="true" />
         <div className="journey-grain" aria-hidden="true" />
-        {step === 5 && <div className="journey-threshold-flare" aria-hidden="true" />}
+
 
         {!experienceStarted && (
           <div
@@ -430,11 +405,11 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             <div className="journey-entry-gate__content">
               <p>Gladiola &amp; Jordi</p>
               <h1>{"El camino comienza aqu\u00ed"}</h1>
-              <button type="button" onClick={() => void startWithMusic()}>
+              <button type="button" disabled={!entryReady} onClick={() => void startWithMusic()}>
                 <span aria-hidden="true">{"\u266a"}</span>
                 {"Entrar con m\u00fasica"}
               </button>
-              <button type="button" className="journey-entry-gate__silent" onClick={startWithoutMusic}>
+              <button type="button" disabled={!entryReady} className="journey-entry-gate__silent" onClick={startWithoutMusic}>
                 Continuar sin sonido
               </button>
             </div>
@@ -531,7 +506,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 Tu respuesta se ha guardado en este dispositivo. El envío definitivo se activará
                 cuando los novios confirmen el canal de RSVP.
               </p>
-              <button className="journey-dialog-primary" type="button" onClick={() => goToStep(11)}>
+              <button className="journey-dialog-primary" type="button" onClick={() => goToStep(primarySurface?.destination_order ?? step + 1)}>
                 Continuar al cofre
               </button>
             </>
@@ -574,13 +549,18 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               </form>
             </div>
           )}
+          {!rsvpSaved && (
+            <button className="journey-dialog-secondary" type="button" onClick={() => goToStep(primarySurface?.destination_order ?? step + 1)}>
+              Continuar al cofre sin responder
+            </button>
+          )}
         </JourneyDialog>
       )}
 
       {dialog?.kind === "complete" && (
         <JourneyDialog title="El viaje apenas comienza" eyebrow="Gladiola & Jordi" onClose={() => setDialog(null)}>
           <p className="journey-dialog-copy">
-            Gracias por recorrer este camino. Los próximos capítulos aparecerán aquí muy pronto.
+            Gracias por recorrer este camino y formar parte de nuestra historia.
           </p>
           <button className="journey-dialog-primary" type="button" onClick={() => goToStep(2)}>
             Recorrer de nuevo

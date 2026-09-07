@@ -11,8 +11,10 @@ const howlerMock = vi.hoisted(() => {
     options: { src: string[]; loop?: boolean; volume?: number };
     play: ReturnType<typeof vi.fn>;
     pause: ReturnType<typeof vi.fn>;
-    playing: ReturnType<typeof vi.fn>;
+    playing: ReturnType<typeof vi.fn<() => boolean>>;
     volume: ReturnType<typeof vi.fn>;
+    fade: ReturnType<typeof vi.fn>;
+    unload: ReturnType<typeof vi.fn>;
   }> = [];
   const Howler = { volume: vi.fn() };
   const Howl = vi.fn(function MockHowl(options) {
@@ -28,6 +30,8 @@ const howlerMock = vi.hoisted(() => {
       }),
       playing: vi.fn(() => isPlaying),
       volume: vi.fn(),
+      fade: vi.fn(),
+      unload: vi.fn(),
     };
     instances.push(instance);
     return instance;
@@ -143,6 +147,24 @@ describe("browser capability hooks", () => {
 });
 
 describe("useAudio", () => {
+  it("ducks music under narration and restores it after the voice ends", async () => {
+    const { result } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+    act(() => result.current.setNarrationActive(true));
+    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.72, 0.65 * 0.16, 450);
+    act(() => result.current.setNarrationActive(false));
+    expect(howlerMock.instances[0].fade).toHaveBeenLastCalledWith(0.65 * 0.16, 0.65 * 0.72, 450);
+  });
+  it("mutes every cue and releases owned audio resources on unmount", async () => {
+    const { result, unmount } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+    act(() => result.current.playCue("unlock"));
+    act(() => result.current.mute());
+    expect(howlerMock.instances[1].playing()).toBe(false);
+    expect(howlerMock.instances[2].pause).toHaveBeenCalled();
+    unmount();
+    howlerMock.instances.forEach((track) => expect(track.unload).toHaveBeenCalledOnce());
+  });
   it("starts audio only after the explicit start action", async () => {
     const { result } = renderHook(() => useAudio());
     expect(result.current.enabled).toBe(false);

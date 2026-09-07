@@ -18,4 +18,6 @@ export const journeyHotspots: Record<number, Record<string, JourneyHotspot>> = {
   9: { music_toggle: music, chapters_menu: chapters, location: { x: 18, y: 72, width: 64, height: 7, radius: 4 }, continue: continueButton },
   10: { music_toggle: music, chapters_menu: chapters, dress_code: { x: 13, y: 63, width: 74, height: 8, radius: 4 }, continue: continueButton },
   11: { music_toggle: music, chapters_menu: chapters, rsvp: { x: 12, y: 73, width: 76, height: 12, radius: 4 } },
+  12: { music_toggle: music, chapters_menu: chapters, continue: continueButton },
+  13: { music_toggle: music, chapters_menu: chapters },
 };

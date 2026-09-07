@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Howl, Howler } from "howler";
 import { useVisibilityPause } from "./useVisibilityPause";
 
@@ -40,10 +40,14 @@ export function useAudio() {
   const [enabled, setEnabled] = useState(false);
   const [available, setAvailable] = useState(true);
   const [volume, setVolumeState] = useState(0.65);
+  const narrationRef = useRef(false);
+  const volumeRef = useRef(volume);
+  const ambientLevelRef = useRef(volume * 0.72);
+  const enabledRef = useRef(false);
 
   const stop = useCallback(() => {
     try {
-      tracksRef.current?.ambient.pause();
+      if (tracksRef.current) Object.values(tracksRef.current).forEach((track) => track.pause());
     } catch {
       // Browsers may reject audio operations as their lifecycle changes.
     }
@@ -62,6 +66,23 @@ export function useAudio() {
 
   useVisibilityPause(stop, resume);
 
+  useEffect(() => () => {
+    if (tracksRef.current) Object.values(tracksRef.current).forEach((track) => track.unload());
+    tracksRef.current = null;
+  }, []);
+
+  const setNarrationActive = useCallback((active: boolean) => {
+    if (narrationRef.current === active) return;
+    narrationRef.current = active;
+    const target = volumeRef.current * (active ? 0.16 : 0.72);
+    const ambient = tracksRef.current?.ambient;
+    if (ambient) {
+      if (enabledRef.current && !document.hidden) ambient.fade(ambientLevelRef.current, target, 450);
+      else ambient.volume(target);
+    }
+    ambientLevelRef.current = target;
+  }, []);
+
   const start = useCallback(async () => {
     try {
       if (typeof window === "undefined") {
@@ -71,7 +92,10 @@ export function useAudio() {
       tracksRef.current ??= createTracks(volume);
       Howler.volume(volume);
       const ambient = tracksRef.current.ambient;
+      ambientLevelRef.current = volume * (narrationRef.current ? 0.16 : 0.72);
+      ambient.volume(ambientLevelRef.current);
       if (!ambient.playing()) ambient.play();
+      enabledRef.current = true;
       setEnabled(true);
       setAvailable(true);
     } catch {
@@ -83,10 +107,12 @@ export function useAudio() {
   const setVolume = useCallback((value: number) => {
     const next = Math.min(1, Math.max(0, value));
     setVolumeState(next);
+    volumeRef.current = next;
 
     try {
       Howler.volume(next);
-      tracksRef.current?.ambient.volume(next * 0.72);
+      ambientLevelRef.current = next * (narrationRef.current ? 0.16 : 0.72);
+      tracksRef.current?.ambient.volume(ambientLevelRef.current);
       tracksRef.current?.unlock.volume(next * 0.72);
       tracksRef.current?.opening.volume(next * 0.82);
     } catch {
@@ -95,13 +121,14 @@ export function useAudio() {
   }, []);
 
   const mute = useCallback(() => {
+    enabledRef.current = false;
     setEnabled(false);
     stop();
   }, [stop]);
 
   const playCue = useCallback(
     (cue: AudioCue) => {
-      if (!enabled) return;
+      if (!enabledRef.current || document.hidden) return;
 
       try {
         tracksRef.current?.[cue].play();
@@ -109,8 +136,8 @@ export function useAudio() {
         setAvailable(false);
       }
     },
-    [enabled],
+    [],
   );
 
-  return { enabled, available, volume, setVolume, start, mute, playCue };
+  return { enabled, available, volume, setVolume, start, mute, playCue, setNarrationActive };
 }
