@@ -65,7 +65,7 @@ const deliveredScenes: Omit<FinalJourneyScene, "firstFramePath" | "hasNarration"
     surfaces: [
       ...controls(),
       { id: "decode_word", visible_label: "DESCIFRAR LA PALABRA", action: "open_secret_word_input" },
-      { id: "hint", visible_label: "ACERTIJO 1: \u201cDI LA PALABRA AMIGO\u201d", action: "reveal_hint" },
+      { id: "hint", visible_label: "¿ESTÁS PERDIDO?", action: "reveal_hint" },
     ],
   },
   {

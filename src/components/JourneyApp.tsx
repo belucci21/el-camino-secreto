@@ -37,6 +37,10 @@ type DialogState =
   | null;
 
 const detailCopy: Record<string, { title: string; body: string }> = {
+  hint: {
+    title: "Pista del camino",
+    body: "Di la palabra amigo.",
+  },
   ceremony: {
     title: "Ceremonia",
     body: `${weddingConfig.event.date.value} · ${weddingConfig.event.ceremonyTime.value}. ${weddingConfig.event.ceremonyVenue.value}, ${weddingConfig.event.ceremonyAddress.value}.`,
@@ -324,10 +328,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         if (surface.id === primarySurface?.id) return null;
         const bounds = hotspots[surface.id];
         if (!bounds) return null;
-        const displayLabel = surface.id === "hint";
-        const [displayLabelHeading, displayLabelCopy] = displayLabel
-          ? surface.visible_label.split(": ", 2)
-          : [];
         const style = {
           "--hotspot-x": `${bounds.x}%`,
           "--hotspot-y": `${bounds.y}%`,
@@ -340,8 +340,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           <button
             className="journey-hotspot"
             data-control={surface.id === "music_toggle" || surface.id === "chapters_menu"}
-            data-display-label={displayLabel || undefined}
             data-action={surface.action}
+            data-surface={surface.id}
             key={`${step}-${surface.id}`}
             style={style}
             type="button"
@@ -351,21 +351,15 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             <span className="sr-only">
               {surface.id === "music_toggle" ? "Música" : buttonLabel(surface, audio.enabled)}
             </span>
-            {displayLabel && (
-              <span className="journey-hotspot-label" aria-hidden="true">
-                <span>{displayLabelHeading}:</span>{" "}
-                <span>{displayLabelCopy}</span>
-              </span>
+            {surface.id === "music_toggle" && (
+              <span className="journey-audio-off-mask" aria-hidden="true" />
             )}
             {surface.id === "music_toggle" && audio.enabled && (
-              <>
-                <span className="journey-audio-live" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <span className="journey-audio-status" aria-hidden="true">ON</span>
-              </>
+              <span className="journey-audio-live" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
             )}
           </button>
         );

@@ -229,11 +229,30 @@ describe("JourneyApp", () => {
       "--hotspot-height": "7%",
     });
 
-    const riddle = screen.getByRole("button", { name: "ACERTIJO 1: \u201cDI LA PALABRA AMIGO\u201d" });
-    expect(riddle).toHaveAttribute("data-display-label", "true");
-    expect(riddle.querySelector(".journey-hotspot-label")).toHaveTextContent(
-      "ACERTIJO 1: \u201cDI LA PALABRA AMIGO\u201d",
-    );
+    const riddle = screen.getByRole("button", { name: "¿ESTÁS PERDIDO?" });
+    expect(riddle).not.toHaveAttribute("data-display-label");
+    expect(riddle.querySelector(".journey-hotspot-label")).toBeNull();
+  });
+
+  it("keeps the music label state-neutral and reveals the clue from the lost button", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={4} />);
+
+    const music = screen.getByRole("button", { name: "Activar música" });
+    expect(music).toHaveAttribute("data-surface", "music_toggle");
+    expect(music.querySelector(".journey-audio-off-mask")).toBeInTheDocument();
+    expect(music.querySelector(".journey-audio-label")).toBeNull();
+    expect(music.querySelector(".journey-audio-status")).toBeNull();
+
+    await user.click(music);
+    const activeMusic = await screen.findByRole("button", { name: "Desactivar música" });
+    expect(activeMusic.querySelector(".journey-audio-off-mask")).toBeInTheDocument();
+    expect(activeMusic.querySelector(".journey-audio-status")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "¿ESTÁS PERDIDO?" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Pista del camino" });
+    expect(dialog).toHaveTextContent("Di la palabra amigo.");
   });
 
   it("keeps the secret door in the 1–13 flow and accepts amigo", async () => {
