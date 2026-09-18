@@ -688,12 +688,12 @@ it("supports the complete Enter and Tab journey through reveal and replay", asyn
     await tabTo(user, secretWord);
     await user.type(secretWord, "amigo");
     await user.keyboard("{Enter}");
-    await waitFor(() =>
+    await waitFor(() => {
       expect(screen.getByTestId("scene-focus-target")).toHaveTextContent(
         "Apertura de la puerta",
-      ),
-    );
-    expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+      );
+      expect(screen.getByTestId("scene-focus-target")).toHaveFocus();
+    });
 
     const skipOpening = await screen.findByRole("button", {
       name: "Saltar apertura",
