@@ -129,6 +129,16 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     () => scene.surfaces.find((surface) => ["start_journey", "continue", "decode_word", "rsvp", "finish"].includes(surface.id)),
     [scene.surfaces],
   );
+  const primaryBounds = primarySurface ? hotspots[primarySurface.id] : undefined;
+  const primaryStyle = primaryBounds
+    ? {
+        "--hotspot-x": `${primaryBounds.x}%`,
+        "--hotspot-y": `${primaryBounds.y}%`,
+        "--hotspot-width": `${primaryBounds.width}%`,
+        "--hotspot-height": `${primaryBounds.height}%`,
+        "--hotspot-radius": `${primaryBounds.radius ?? 2}rem`,
+      } as CSSProperties
+    : undefined;
 
   const goToStep = useCallback(
     (nextStep: number, showFrozenFrame = false) => {
@@ -333,7 +343,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             aria-label={buttonLabel(surface, audio.enabled)}
             onClick={() => void handleSurface(surface)}
           >
-            <span className={surface.id === "music_toggle" || surface.id === "chapters_menu" ? "journey-hotspot-label" : "sr-only"}>
+            <span className="sr-only">
               {surface.id === "music_toggle" ? "Música" : buttonLabel(surface, audio.enabled)}
             </span>
             {surface.id === "music_toggle" && audio.enabled && (
@@ -404,14 +414,14 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               />
             </div>
             <div className="journey-hotspots">{hotspotButtons}</div>
-            {primarySurface && (
+            {primarySurface && primaryBounds && (
               <button
                 className="journey-primary-action"
+                style={primaryStyle}
                 type="button"
                 onClick={() => void handleSurface(primarySurface)}
               >
-                <span>{primarySurface.visible_label}</span>
-                <b aria-hidden="true">→</b>
+                <span className="sr-only">{primarySurface.visible_label}</span>
               </button>
             )}
           </div>

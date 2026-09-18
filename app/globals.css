@@ -3324,57 +3324,30 @@ button:hover,
   place-items: center;
   min-width: 2.75rem;
   min-height: 2.75rem;
-  color: #f8e1a1;
-  border-color: rgba(233, 195, 93, .74);
-  background: rgba(3, 13, 7, .64);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .34), inset 0 0 16px rgba(221, 175, 63, .08);
-  font-family: var(--serif-display);
-  backdrop-filter: blur(8px);
-}
-
-.journey-hotspot-label {
-  max-width: 90%;
-  overflow: hidden;
-  font-size: clamp(.36rem, 1.5cqw, .58rem);
-  letter-spacing: .08em;
-  line-height: 1.08;
-  text-align: center;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
+  color: inherit;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .journey-primary-action {
   position: absolute;
   z-index: 8;
-  right: 10%;
-  bottom: 7%;
-  left: 10%;
-  display: flex;
-  min-height: clamp(3.25rem, 12cqw, 4.7rem);
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: .75rem 1rem;
+  top: var(--hotspot-y);
+  left: var(--hotspot-x);
+  width: var(--hotspot-width);
+  height: var(--hotspot-height);
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  pointer-events: auto;
   cursor: pointer;
-  color: #102013;
-  border: 1px solid #f2d77c;
-  border-radius: .35rem;
-  background:
-    linear-gradient(135deg, transparent 8px, rgba(255, 247, 206, .46) 8px) top left / 14px 14px no-repeat,
-    linear-gradient(315deg, transparent 8px, rgba(255, 247, 206, .46) 8px) bottom right / 14px 14px no-repeat,
-    linear-gradient(180deg, #f4dfa0, #c99736);
-  box-shadow: 0 12px 34px rgba(0, 0, 0, .46), inset 0 0 0 3px rgba(98, 70, 16, .16);
-  font-family: var(--serif-display);
-  font-size: clamp(.68rem, 3.15cqw, 1.08rem);
-  letter-spacing: .08em;
-  line-height: 1.12;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.journey-primary-action:hover {
-  filter: brightness(1.08);
-  transform: translateY(-2px);
+  border: 1px solid transparent;
+  border-radius: var(--hotspot-radius);
+  background: transparent;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .journey-primary-action:focus-visible {
