@@ -177,6 +177,30 @@ describe("JourneyApp", () => {
       .toHaveClass("journey-primary-action");
   });
 
+  it("keeps the scene three and four primary actions accessible inside their approved hotspots", () => {
+    const { rerender } = render(<JourneyApp initialStep={3} />);
+
+    const sceneThreeAction = screen.getByRole("button", { name: "Continuar" });
+    expect(sceneThreeAction.querySelector(".sr-only")?.textContent).toBe("Continuar");
+    expect(sceneThreeAction).toHaveStyle({
+      "--hotspot-x": "12%",
+      "--hotspot-y": "91%",
+      "--hotspot-width": "76%",
+      "--hotspot-height": "7%",
+    });
+
+    rerender(<JourneyApp initialStep={4} />);
+
+    const sceneFourAction = screen.getByRole("button", { name: "DESCIFRAR LA PALABRA" });
+    expect(sceneFourAction.querySelector(".sr-only")?.textContent).toBe("DESCIFRAR LA PALABRA");
+    expect(sceneFourAction).toHaveStyle({
+      "--hotspot-x": "20%",
+      "--hotspot-y": "79%",
+      "--hotspot-width": "60%",
+      "--hotspot-height": "7%",
+    });
+  });
+
   it("keeps the secret door in the 1–13 flow and accepts amigo", async () => {
     const user = userEvent.setup();
     render(<JourneyApp initialStep={4} />);

@@ -4,6 +4,10 @@ import { describe, expect, it } from "vitest";
 import { seoConfig } from "../src/config/seo";
 
 describe("delivered social preview", () => {
+  it("uses the approved wedding-journey title", () => {
+    expect(seoConfig.title).toBe("El camino del vinculo eterno | Gladiola & Jordi");
+  });
+
   it("serves the exact lightweight JPEG approved for sharing", () => {
     const artwork = readFileSync(`public${seoConfig.image}`);
     expect(artwork.length).toBeLessThan(500_000);
