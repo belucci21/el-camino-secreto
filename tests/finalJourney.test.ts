@@ -48,12 +48,12 @@ describe("final journey manifest", () => {
     }
   });
 
-  it("uses the approved interaction and narration timing for scenes one through four", () => {
+  it("unlocks the approved scene actions when their baked controls become visible", () => {
     const approvedTiming = [
-      { order: 1, interactionReadyAt: 548 / 30, narrationWindows: [[1.303, 17.207]] },
-      { order: 2, interactionReadyAt: 558 / 30, narrationWindows: [[1.267, 17.785]] },
-      { order: 3, interactionReadyAt: 297 / 30, narrationWindows: [[1.832, 6.481]] },
-      { order: 4, interactionReadyAt: 500 / 30, narrationWindows: [[1.323, 15.626]] },
+      { order: 1, interactionReadyAt: 285 / 30, narrationWindows: [[1.303, 17.207]] },
+      { order: 2, interactionReadyAt: 3 / 30, narrationWindows: [[1.267, 17.785]] },
+      { order: 3, interactionReadyAt: 3 / 30, narrationWindows: [[1.832, 6.481]] },
+      { order: 4, interactionReadyAt: 3 / 30, narrationWindows: [[1.323, 15.626]] },
     ];
 
     for (const expected of approvedTiming) {

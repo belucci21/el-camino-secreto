@@ -149,10 +149,10 @@ const deliveredScenes: Omit<FinalJourneyScene, "firstFramePath" | "hasNarration"
 // Showing controls must not stop the soundtrack. Long speech pauses restore the music;
 // short breaths remain inside each window to avoid pumping the mix.
 const timing: Record<number, Pick<FinalJourneyScene, "interactionReadyAt" | "narrationWindows">> = {
-  1: { interactionReadyAt: 548 / 30, narrationWindows: [[1.303, 17.207]] },
-  2: { interactionReadyAt: 558 / 30, narrationWindows: [[1.267, 17.785]] },
-  3: { interactionReadyAt: 297 / 30, narrationWindows: [[1.832, 6.481]] },
-  4: { interactionReadyAt: 500 / 30, narrationWindows: [[1.323, 15.626]] },
+  1: { interactionReadyAt: 285 / 30, narrationWindows: [[1.303, 17.207]] },
+  2: { interactionReadyAt: 3 / 30, narrationWindows: [[1.267, 17.785]] },
+  3: { interactionReadyAt: 3 / 30, narrationWindows: [[1.832, 6.481]] },
+  4: { interactionReadyAt: 3 / 30, narrationWindows: [[1.323, 15.626]] },
   5: { interactionReadyAt: 10, narrationWindows: [[1.213, 10.581]] },
   6: { interactionReadyAt: 10.867, narrationWindows: [[0.779, 12.806]] },
   7: { interactionReadyAt: 9.267, narrationWindows: [[0.692, 25.371]] },

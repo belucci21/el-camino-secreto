@@ -108,6 +108,25 @@ describe("JourneyApp", () => {
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
   });
 
+  it("lets the visitor use a visible scene action while its film is still moving", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<JourneyApp initialStep={4} />);
+    const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
+    const media = container.querySelector(".journey-scene-media");
+
+    video.currentTime = 0.11;
+    fireEvent.timeUpdate(video);
+
+    expect(media).toHaveAttribute("data-media-phase", "interactive");
+    expect(media).toHaveAttribute("data-visual-phase", "motion");
+    expect(video).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "DESCIFRAR LA PALABRA" }));
+
+    expect(screen.getByRole("dialog", { name: "La palabra del umbral" })).toBeInTheDocument();
+    expect(screen.getByTestId("journey-motion-video")).toBeInTheDocument();
+  });
+
   it("does not offer a control that bypasses a scene film before it ends", () => {
     render(<JourneyApp initialStep={4} />);
 
