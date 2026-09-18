@@ -228,6 +228,12 @@ describe("JourneyApp", () => {
       "--hotspot-width": "60%",
       "--hotspot-height": "7%",
     });
+
+    const riddle = screen.getByRole("button", { name: "ACERTIJO 1: \u201cDI LA PALABRA AMIGO\u201d" });
+    expect(riddle).toHaveAttribute("data-display-label", "true");
+    expect(riddle.querySelector(".journey-hotspot-label")).toHaveTextContent(
+      "ACERTIJO 1: \u201cDI LA PALABRA AMIGO\u201d",
+    );
   });
 
   it("keeps the secret door in the 1–13 flow and accepts amigo", async () => {

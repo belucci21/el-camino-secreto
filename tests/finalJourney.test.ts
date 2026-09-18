@@ -22,6 +22,8 @@ describe("final journey manifest", () => {
 
   it("keeps the secret word and RSVP as actual visitor actions", () => {
     expect(finalJourneyScenes[3].surfaces.map((surface) => surface.id)).toContain("decode_word");
+    expect(finalJourneyScenes[3].surfaces.find((surface) => surface.id === "hint")?.visible_label)
+      .toBe("ACERTIJO 1: \u201cDI LA PALABRA AMIGO\u201d");
     expect(finalJourneyScenes[10].surfaces.map((surface) => surface.id)).toContain("rsvp");
   });
 

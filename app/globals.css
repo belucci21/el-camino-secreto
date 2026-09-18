@@ -3339,6 +3339,56 @@ button:hover,
   box-shadow: 0 0 0 2px rgba(250, 202, 75, .18), 0 0 22px rgba(250, 202, 75, .2);
 }
 
+.journey-hotspot[data-display-label="true"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #f7e8b8;
+  border: 1px solid rgba(231, 200, 123, .92);
+  background:
+    linear-gradient(180deg, rgba(19, 57, 40, .99), rgba(7, 35, 25, .99));
+  box-shadow:
+    0 0 0 1px rgba(21, 12, 2, .85),
+    inset 0 0 0 1px rgba(255, 230, 157, .24),
+    0 4px 12px rgba(8, 5, 1, .34);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
+}
+
+.journey-hotspot[data-display-label="true"]:hover,
+.journey-hotspot[data-display-label="true"]:focus-visible {
+  border-color: #ffe49b;
+  background:
+    linear-gradient(180deg, rgba(26, 72, 50, .99), rgba(9, 42, 29, .99));
+  box-shadow:
+    0 0 0 1px rgba(33, 19, 3, .88),
+    inset 0 0 0 1px rgba(255, 236, 178, .34),
+    0 0 22px rgba(250, 202, 75, .24);
+}
+
+.journey-hotspot-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .08rem;
+  max-width: calc(100% - .75rem);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(.5rem, 1.15vw, .72rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: .075em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.journey-hotspot-label > span:first-child {
+  font-size: .78em;
+  letter-spacing: .16em;
+  opacity: .88;
+}
+
 .journey-primary-action {
   position: absolute;
   z-index: 8;

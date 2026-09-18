@@ -324,6 +324,10 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         if (surface.id === primarySurface?.id) return null;
         const bounds = hotspots[surface.id];
         if (!bounds) return null;
+        const displayLabel = surface.id === "hint";
+        const [displayLabelHeading, displayLabelCopy] = displayLabel
+          ? surface.visible_label.split(": ", 2)
+          : [];
         const style = {
           "--hotspot-x": `${bounds.x}%`,
           "--hotspot-y": `${bounds.y}%`,
@@ -336,6 +340,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           <button
             className="journey-hotspot"
             data-control={surface.id === "music_toggle" || surface.id === "chapters_menu"}
+            data-display-label={displayLabel || undefined}
             data-action={surface.action}
             key={`${step}-${surface.id}`}
             style={style}
@@ -346,6 +351,12 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             <span className="sr-only">
               {surface.id === "music_toggle" ? "Música" : buttonLabel(surface, audio.enabled)}
             </span>
+            {displayLabel && (
+              <span className="journey-hotspot-label" aria-hidden="true">
+                <span>{displayLabelHeading}:</span>{" "}
+                <span>{displayLabelCopy}</span>
+              </span>
+            )}
             {surface.id === "music_toggle" && audio.enabled && (
               <>
                 <span className="journey-audio-live" aria-hidden="true">
