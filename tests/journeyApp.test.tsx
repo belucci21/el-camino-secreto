@@ -178,7 +178,7 @@ describe("JourneyApp", () => {
   });
 
   it("keeps the scene three and four primary actions accessible inside their approved hotspots", () => {
-    const { rerender } = render(<JourneyApp initialStep={3} />);
+    const { unmount } = render(<JourneyApp initialStep={3} />);
 
     const sceneThreeAction = screen.getByRole("button", { name: "Continuar" });
     expect(sceneThreeAction.querySelector(".sr-only")?.textContent).toBe("Continuar");
@@ -189,7 +189,8 @@ describe("JourneyApp", () => {
       "--hotspot-height": "7%",
     });
 
-    rerender(<JourneyApp initialStep={4} />);
+    unmount();
+    render(<JourneyApp initialStep={4} />);
 
     const sceneFourAction = screen.getByRole("button", { name: "DESCIFRAR LA PALABRA" });
     expect(sceneFourAction.querySelector(".sr-only")?.textContent).toBe("DESCIFRAR LA PALABRA");
