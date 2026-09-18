@@ -1,4 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import userEvent from "@testing-library/user-event";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -175,6 +177,13 @@ describe("JourneyApp", () => {
 
     expect(screen.getByRole("button", { name: "COMENZAR EL CAMINO" }))
       .toHaveClass("journey-primary-action");
+  });
+
+  it("keeps utility controls visibly discoverable on hover without restoring a filled overlay", () => {
+    const styles = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+
+    expect(styles).toMatch(/\.journey-hotspot\[data-control="true"\]:hover\s*\{[^}]*outline:/s);
+    expect(styles).toMatch(/\.journey-hotspot\[data-control="true"\]:hover\s*\{[^}]*background:\s*radial-gradient/s);
   });
 
   it("keeps the scene three and four primary actions accessible inside their approved hotspots", () => {

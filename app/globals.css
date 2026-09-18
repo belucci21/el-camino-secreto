@@ -3331,6 +3331,14 @@ button:hover,
   backdrop-filter: none;
 }
 
+.journey-hotspot[data-control="true"]:hover {
+  border-color: transparent;
+  outline: 1px solid rgba(255, 225, 134, .76);
+  outline-offset: 3px;
+  background: radial-gradient(circle at 50% 50%, rgba(253, 211, 93, .14), transparent 72%);
+  box-shadow: 0 0 0 2px rgba(250, 202, 75, .18), 0 0 22px rgba(250, 202, 75, .2);
+}
+
 .journey-primary-action {
   position: absolute;
   z-index: 8;
