@@ -16,7 +16,11 @@ const howlerMock = vi.hoisted(() => {
     fade: ReturnType<typeof vi.fn>;
     unload: ReturnType<typeof vi.fn>;
   }> = [];
-  const Howler = { volume: vi.fn() };
+  const audioContext = {
+    state: "running",
+    resume: vi.fn(() => Promise.resolve()),
+  };
+  const Howler = { volume: vi.fn(), ctx: audioContext };
   const Howl = vi.fn(function MockHowl(options) {
     let isPlaying = false;
     const instance = {
@@ -37,7 +41,7 @@ const howlerMock = vi.hoisted(() => {
     return instance;
   });
 
-  return { instances, Howl, Howler };
+  return { instances, Howl, Howler, audioContext };
 });
 
 vi.mock("howler", () => ({
@@ -50,6 +54,8 @@ afterEach(() => {
   howlerMock.instances.length = 0;
   howlerMock.Howl.mockClear();
   howlerMock.Howler.volume.mockClear();
+  howlerMock.audioContext.state = "running";
+  howlerMock.audioContext.resume.mockClear();
   Object.defineProperty(document, "hidden", {
     configurable: true,
     value: false,
@@ -192,6 +198,20 @@ describe("useAudio", () => {
     // Native iOS media volume is not a programmable mixer. The ambient
     // track must use Web Audio so it can duck without replacing the video.
     expect(howlerMock.instances[0].options.html5).toBe(false);
+  });
+
+  it("restores an iOS-interrupted audio context without restarting the ambient track", async () => {
+    const { result } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+    const ambient = howlerMock.instances[0];
+    ambient.play.mockClear();
+    howlerMock.audioContext.state = "interrupted";
+
+    await act(async () => result.current.ensureContinuity());
+
+    expect(howlerMock.audioContext.resume).toHaveBeenCalledOnce();
+    expect(ambient.play).not.toHaveBeenCalled();
+    expect(ambient.pause).not.toHaveBeenCalled();
   });
 
   it("supports clamped volume changes", async () => {

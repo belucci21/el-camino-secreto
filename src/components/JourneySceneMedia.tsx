@@ -20,6 +20,7 @@ type JourneySceneMediaProps = {
   motionEnabled: boolean;
   onMotionComplete: (sceneOrder: number) => void;
   onNarrationChange: (active: boolean) => void;
+  onPlaybackStart: () => void;
   onSceneReady: (sceneOrder: number, final: boolean) => void;
   priority: boolean;
 };
@@ -28,7 +29,7 @@ export function JourneySceneMedia({
   sceneOrder, title, videoPath, frozenFramePath, firstFramePath, previousFramePath,
   holdFrameAt, hasNarration, audioEnabled, paused, couple, reducedMotion,
   interactionReadyAt, narrationWindows,
-  motionEnabled, onMotionComplete, onNarrationChange, onSceneReady, priority,
+  motionEnabled, onMotionComplete, onNarrationChange, onPlaybackStart, onSceneReady, priority,
 }: JourneySceneMediaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -69,11 +70,12 @@ export function JourneySceneMedia({
 
   const revealMotion = useCallback(() => {
     playing.current = true;
+    onPlaybackStart();
     if (!videoRef.current?.requestVideoFrameCallback) setVideoReady(true);
     setNeedsGesture(false);
     onSceneReady(sceneOrder, reducedMotion);
     updateNarration((videoRef.current ?? audioRef.current)?.currentTime ?? playhead.current);
-  }, [onSceneReady, reducedMotion, sceneOrder, updateNarration]);
+  }, [onPlaybackStart, onSceneReady, reducedMotion, sceneOrder, updateNarration]);
 
   const trackProgress = useCallback(() => {
     const media = videoRef.current ?? audioRef.current;

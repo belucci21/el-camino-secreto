@@ -54,8 +54,20 @@ export function useAudio() {
     }
   }, []);
 
-  const resume = useCallback(() => {
-    if (!enabled) return;
+  const ensureContinuity = useCallback(async () => {
+    if (!enabledRef.current || document.hidden) return;
+
+    // Safari on iOS can interrupt the Web Audio context when one native
+    // video-with-audio is replaced by the next. Howler still reports the
+    // ambient Howl as playing, so resume the context itself without touching
+    // the Howl/playhead. Only call play when the track was genuinely paused.
+    try {
+      if (Howler.ctx && Howler.ctx.state !== "running") {
+        await Howler.ctx.resume();
+      }
+    } catch {
+      // A later media or user-gesture event gets another recovery attempt.
+    }
 
     try {
       const ambient = tracksRef.current?.ambient;
@@ -63,7 +75,11 @@ export function useAudio() {
     } catch {
       // Browsers may reject audio operations as their lifecycle changes.
     }
-  }, [enabled]);
+  }, []);
+
+  const resume = useCallback(() => {
+    void ensureContinuity();
+  }, [ensureContinuity]);
 
   useVisibilityPause(stop, resume);
 
@@ -141,5 +157,5 @@ export function useAudio() {
     [],
   );
 
-  return { enabled, available, volume, setVolume, start, mute, playCue, setNarrationActive };
+  return { enabled, available, volume, setVolume, start, mute, playCue, setNarrationActive, ensureContinuity };
 }

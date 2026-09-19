@@ -10,7 +10,7 @@ const props = {
   holdFrameAt: 25.866667, hasNarration: true, audioEnabled: true, paused: false,
   interactionReadyAt: 16.433333, narrationWindows: [[0.414, 18.005], [22.862, 40.472]] as [number, number][],
   reducedMotion: false, motionEnabled: true, onMotionComplete: vi.fn(),
-  onNarrationChange: vi.fn(), onSceneReady: vi.fn(), priority: false,
+  onNarrationChange: vi.fn(), onPlaybackStart: vi.fn(), onSceneReady: vi.fn(), priority: false,
 };
 beforeEach(() => {
   vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
@@ -19,6 +19,13 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.clearAllMocks(); });
 
 describe("cinematic scene playback", () => {
+  it("asks the ambient soundtrack to recover when each new film starts", () => {
+    render(<JourneySceneMedia {...props} />);
+
+    fireEvent.playing(screen.getByTestId("journey-motion-video"));
+
+    expect(props.onPlaybackStart).toHaveBeenCalledOnce();
+  });
   it("waits for a presented frame before dissolving the outgoing image", () => {
     let present: VideoFrameRequestCallback | undefined;
     Object.defineProperty(HTMLVideoElement.prototype, "requestVideoFrameCallback", {

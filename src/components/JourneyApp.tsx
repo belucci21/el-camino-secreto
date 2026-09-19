@@ -115,6 +115,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const visualRef = useRef<HTMLDivElement>(null);
   const scene = scenes[step - 1];
   const audio = useAudio();
+  const { ensureContinuity } = audio;
   const { reducedMotion, setReducedMotion } = useReducedMotion();
   const [previousFramePath, setPreviousFramePath] = useState<string>();
   const [imagePath, setImagePath] = useState(scene.frozenFramePath);
@@ -146,6 +147,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
 
   const goToStep = useCallback(
     (nextStep: number, showFrozenFrame = false) => {
+      // Keep the already-running ambient track alive while iOS swaps the
+      // native video element for the next scene. This never resets its seek.
+      void ensureContinuity();
       const boundedStep = Math.min(scenes.length, Math.max(1, nextStep));
       setDialog(null);
       if (showFrozenFrame) {
@@ -171,7 +175,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       setPreviousFramePath(showFrozenFrame ? undefined : outgoingFrame);
       setStep(boundedStep);
     },
-    [scene.frozenFramePath],
+    [ensureContinuity, scene.frozenFramePath],
   );
 
   const markMotionComplete = useCallback((sceneOrder: number) => {
@@ -410,6 +414,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 audioEnabled={audio.enabled}
                 paused={dialog !== null}
                 onNarrationChange={audio.setNarrationActive}
+                onPlaybackStart={ensureContinuity}
                 onSceneReady={sceneReady}
                 couple={couple}
                 reducedMotion={reducedMotion}
