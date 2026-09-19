@@ -27,6 +27,18 @@ describe("final journey manifest", () => {
     expect(finalJourneyScenes[10].surfaces.map((surface) => surface.id)).toContain("rsvp");
   });
 
+  it("routes every voiced scene through its extracted shared-mixer track", () => {
+    finalJourneyScenes.forEach((scene) => {
+      if (!scene.hasNarration) {
+        expect(scene.narrationPath).toBeUndefined();
+        return;
+      }
+
+      expect(scene.narrationPath).toBe(scene.videoPath.replace(/\.mp4$/, "-voice.m4a"));
+      expect(existsSync(join(process.cwd(), "public", scene.narrationPath!)), scene.narrationPath).toBe(true);
+    });
+  });
+
   it("serves the approved scene one through four films and frozen source frames byte-for-byte", () => {
     const approvedMedia = [
       { order: 1, video: "4bea127c9afdf014d5c21ef7f7f4efc9b1b006c5f47a9a8b4f49fac1defeff3a", first: "0f88edd0d0ef1d0977a283b4c942964f3722964c2a22bdfa1d8283c7f411f4ee", final: "1c597c185ba87d477443b84ec1a1ea694347f7e0aea2508cb61842319fece508" },

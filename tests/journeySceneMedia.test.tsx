@@ -6,11 +6,12 @@ import { finalJourneyScenes } from "../src/config/finalJourney";
 const props = {
   sceneOrder: 12, title: "El cofre del tesoro", couple: "Gladiola & Jordi",
   videoPath: "/journey-final/12-treasure.mp4", frozenFramePath: "/journey-final/12-treasure-final.png",
+  narrationPath: "/journey-final/12-treasure-voice.m4a",
   firstFramePath: "/journey-final/12-treasure-first.png", previousFramePath: "/journey-final/11-rsvp-final.png",
   holdFrameAt: 25.866667, hasNarration: true, audioEnabled: true, paused: false,
   interactionReadyAt: 16.433333, narrationWindows: [[0.414, 18.005], [22.862, 40.472]] as [number, number][],
   reducedMotion: false, motionEnabled: true, onMotionComplete: vi.fn(),
-  onNarrationChange: vi.fn(), onPlaybackStart: vi.fn(), onSceneReady: vi.fn(), priority: false,
+  onNarrationChange: vi.fn(), onNarrationSync: vi.fn(), onPlaybackStart: vi.fn(), onSceneReady: vi.fn(), priority: false,
 };
 beforeEach(() => {
   vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
@@ -79,12 +80,16 @@ describe("cinematic scene playback", () => {
     fireEvent.timeUpdate(video);
     expect(props.onNarrationChange).toHaveBeenLastCalledWith(true);
   });
-  it("lets the original synchronized soundtrack follow the user's sound choice", () => {
-    const { rerender } = render(<JourneySceneMedia {...props} />);
-    const video = screen.getByTestId("journey-motion-video");
-    expect(video).toHaveProperty("muted", false);
-    rerender(<JourneySceneMedia {...props} audioEnabled={false} />);
+  it("keeps native media muted and sends synchronized voice timing to the shared mixer", () => {
+    render(<JourneySceneMedia {...props} />);
+    const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
+    video.currentTime = 3.25;
+
     expect(video).toHaveProperty("muted", true);
+    fireEvent.playing(video);
+    expect(props.onNarrationSync).toHaveBeenLastCalledWith(props.narrationPath, 3.25, true);
+    fireEvent.pause(video);
+    expect(props.onNarrationSync).toHaveBeenLastCalledWith(props.narrationPath, 3.25, false);
   });
   it("holds the outgoing frame until the next film actually plays", () => {
     const { container } = render(<JourneySceneMedia {...props} />);

@@ -11,6 +11,7 @@ type JourneySceneMediaProps = {
   previousFramePath?: string;
   holdFrameAt?: number;
   hasNarration: boolean;
+  narrationPath?: string;
   interactionReadyAt: number;
   narrationWindows: readonly (readonly [number, number])[];
   audioEnabled: boolean;
@@ -20,6 +21,7 @@ type JourneySceneMediaProps = {
   motionEnabled: boolean;
   onMotionComplete: (sceneOrder: number) => void;
   onNarrationChange: (active: boolean) => void;
+  onNarrationSync: (path: string | undefined, time: number, playing: boolean) => void;
   onPlaybackStart: () => void;
   onSceneReady: (sceneOrder: number, final: boolean) => void;
   priority: boolean;
@@ -27,9 +29,9 @@ type JourneySceneMediaProps = {
 
 export function JourneySceneMedia({
   sceneOrder, title, videoPath, frozenFramePath, firstFramePath, previousFramePath,
-  holdFrameAt, hasNarration, audioEnabled, paused, couple, reducedMotion,
+  holdFrameAt, hasNarration, narrationPath, audioEnabled, paused, couple, reducedMotion,
   interactionReadyAt, narrationWindows,
-  motionEnabled, onMotionComplete, onNarrationChange, onPlaybackStart, onSceneReady, priority,
+  motionEnabled, onMotionComplete, onNarrationChange, onNarrationSync, onPlaybackStart, onSceneReady, priority,
 }: JourneySceneMediaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -46,19 +48,27 @@ export function JourneySceneMedia({
   const playbackActive = motionEnabled && !videoEnded && (!reducedMotion || (audioEnabled && hasNarration));
   const motionActive = playbackActive && !reducedMotion;
   const updateNarration = useCallback((time: number) => {
+    const voicePlaying = playing.current && audioEnabled && hasNarration && !paused && !document.hidden;
     const speaking = narrationWindows.some(([start, end]) => time >= start - 0.15 && time <= end + 0.2);
-    onNarrationChange(playing.current && audioEnabled && hasNarration && !paused && !document.hidden && speaking);
-  }, [audioEnabled, hasNarration, narrationWindows, onNarrationChange, paused]);
+    onNarrationSync(narrationPath, time, voicePlaying);
+    onNarrationChange(voicePlaying && speaking);
+  }, [audioEnabled, hasNarration, narrationPath, narrationWindows, onNarrationChange, onNarrationSync, paused]);
+
+  const pauseNarration = useCallback(() => {
+    const time = (videoRef.current ?? audioRef.current)?.currentTime ?? playhead.current;
+    onNarrationSync(narrationPath, time, false);
+    onNarrationChange(false);
+  }, [narrationPath, onNarrationChange, onNarrationSync]);
 
   const completeMotion = useCallback(() => {
     if (completed.current) return;
     completed.current = true;
     playing.current = false;
     setVideoEnded(true);
-    onNarrationChange(false);
+    pauseNarration();
     onSceneReady(sceneOrder, true);
     onMotionComplete(sceneOrder);
-  }, [onMotionComplete, onNarrationChange, onSceneReady, sceneOrder]);
+  }, [onMotionComplete, onSceneReady, pauseNarration, sceneOrder]);
 
   const play = useCallback(() => {
     const media = videoRef.current ?? audioRef.current;
@@ -95,7 +105,7 @@ export function JourneySceneMedia({
 
   useEffect(() => {
     if (!playbackActive) {
-      onNarrationChange(false);
+      pauseNarration();
       onSceneReady(sceneOrder, true);
       return;
     }
@@ -104,7 +114,7 @@ export function JourneySceneMedia({
     const syncPlayback = () => {
       if (document.hidden || paused) {
         media.pause();
-        onNarrationChange(false);
+        pauseNarration();
       } else {
         play();
         updateNarration(media.currentTime);
@@ -115,10 +125,10 @@ export function JourneySceneMedia({
     return () => {
       playhead.current = media.currentTime;
       media.pause();
-      onNarrationChange(false);
+      pauseNarration();
       document.removeEventListener("visibilitychange", syncPlayback);
     };
-  }, [onNarrationChange, onSceneReady, paused, play, playbackActive, reducedMotion, sceneOrder, updateNarration]);
+  }, [onSceneReady, pauseNarration, paused, play, playbackActive, reducedMotion, sceneOrder, updateNarration]);
 
   // Align controls with the presented frame, not a late ended event or timer.
   // timeupdate remains the older-browser fallback.
@@ -146,8 +156,8 @@ export function JourneySceneMedia({
       const media = videoRef.current ?? audioRef.current;
       if (media && playhead.current > 0) media.currentTime = playhead.current;
     },
-    onPause: () => { playing.current = false; onNarrationChange(false); },
-    onWaiting: () => { playing.current = false; onNarrationChange(false); },
+    onPause: () => { playing.current = false; pauseNarration(); },
+    onWaiting: () => { playing.current = false; pauseNarration(); },
     onEnded: completeMotion,
     onError: () => { setMediaError(true); completeMotion(); },
   };
@@ -160,13 +170,13 @@ export function JourneySceneMedia({
       data-opening={sceneOrder === 5}>
       {motionActive && (
         <video ref={videoRef} className="journey-scene-video" data-testid="journey-motion-video"
-          aria-hidden="true" autoPlay muted={!audioEnabled} playsInline loop={false}
+          aria-hidden="true" autoPlay muted playsInline loop={false}
           preload="auto" width={720} height={1280} {...mediaEvents}>
           <source src={videoPath} type="video/mp4" />
         </video>
       )}
       {playbackActive && reducedMotion && (
-        <audio ref={audioRef} src={videoPath} autoPlay preload="auto" {...mediaEvents} />
+        <audio ref={audioRef} src={videoPath} autoPlay muted preload="auto" {...mediaEvents} />
       )}
       {/* The film and its still use identical dimensions: no reframe at the end. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}

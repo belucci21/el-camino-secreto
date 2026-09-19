@@ -115,7 +115,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const visualRef = useRef<HTMLDivElement>(null);
   const scene = scenes[step - 1];
   const audio = useAudio();
-  const { ensureContinuity } = audio;
+  const { ensureContinuity, preloadNarration, syncNarration } = audio;
   const { reducedMotion, setReducedMotion } = useReducedMotion();
   const [previousFramePath, setPreviousFramePath] = useState<string>();
   const [imagePath, setImagePath] = useState(scene.frozenFramePath);
@@ -188,7 +188,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   }, []);
 
   useEffect(() => {
-    const next = scenes.slice(step, step + 2);
+    const next = scenes.slice(step - 1, step + 2);
+    preloadNarration(next.flatMap((item) => item.narrationPath ? [item.narrationPath] : []));
     next.forEach((item) => {
       const image = new window.Image();
       image.src = item.frozenFramePath;
@@ -200,7 +201,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       video.preload = "metadata";
       video.src = item.videoPath;
     });
-  }, [step]);
+  }, [preloadNarration, step]);
 
   const startWithMusic = useCallback(async () => {
     await audio.start();
@@ -409,11 +410,13 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 previousFramePath={previousFramePath}
                 holdFrameAt={scene.holdFrameAt}
                 hasNarration={scene.hasNarration}
+                narrationPath={scene.narrationPath}
                 interactionReadyAt={scene.interactionReadyAt}
                 narrationWindows={scene.narrationWindows}
                 audioEnabled={audio.enabled}
                 paused={dialog !== null}
                 onNarrationChange={audio.setNarrationActive}
+                onNarrationSync={syncNarration}
                 onPlaybackStart={ensureContinuity}
                 onSceneReady={sceneReady}
                 couple={couple}

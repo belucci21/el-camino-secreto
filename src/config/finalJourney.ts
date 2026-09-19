@@ -8,6 +8,7 @@ export type FinalJourneyScene = {
   frozenFramePath: string;
   firstFramePath: string;
   hasNarration: boolean;
+  narrationPath?: string;
   interactionReadyAt: number;
   narrationWindows: readonly (readonly [number, number])[];
   /** Last visible source frame; the original audio continues over this still. */
@@ -164,7 +165,8 @@ const timing: Record<number, Pick<FinalJourneyScene, "interactionReadyAt" | "nar
   13: { interactionReadyAt: 16.834, narrationWindows: [[2.875, 15.626], [22.863, 40.472]] },
 };
 
-// The supplied MP4s already contain the synchronized voice. 10 and 11 have silent audio tracks.
+// Voice is copied losslessly out of the supplied MP4s so it can share one
+// uninterrupted Web Audio mixer with the music. Scenes 10 and 11 are silent.
 export const finalJourneyScenes: FinalJourneyScene[] = [...deliveredScenes, {
   order: 12, id: "treasure", title: "El cofre del tesoro",
   videoPath: "/journey-final/12-treasure.mp4",
@@ -177,11 +179,15 @@ export const finalJourneyScenes: FinalJourneyScene[] = [...deliveredScenes, {
   frozenFramePath: "/journey-final/13-eternal-bond-final.png",
   holdFrameAt: 597 / 30,
   surfaces: [...controls(), { id: "finish", visible_label: "Ver capítulos", action: "open_chapters" as const }],
-}].map((scene) => ({
-  ...scene,
-  ...timing[scene.order],
-  firstFramePath: scene.videoPath.replace(/\.mp4$/, "-first.png"),
-  hasNarration: scene.order !== 10 && scene.order !== 11,
-}));
+}].map((scene) => {
+  const hasNarration = scene.order !== 10 && scene.order !== 11;
+  return {
+    ...scene,
+    ...timing[scene.order],
+    firstFramePath: scene.videoPath.replace(/\.mp4$/, "-first.png"),
+    hasNarration,
+    narrationPath: hasNarration ? scene.videoPath.replace(/\.mp4$/, "-voice.m4a") : undefined,
+  };
+});
 
 export const finalJourneyByOrder = new Map(finalJourneyScenes.map((scene) => [scene.order, scene]));

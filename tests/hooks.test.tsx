@@ -11,7 +11,10 @@ const howlerMock = vi.hoisted(() => {
     options: { src: string[]; loop?: boolean; volume?: number; html5?: boolean };
     play: ReturnType<typeof vi.fn>;
     pause: ReturnType<typeof vi.fn>;
+    stop: ReturnType<typeof vi.fn>;
     playing: ReturnType<typeof vi.fn<() => boolean>>;
+    seek: ReturnType<typeof vi.fn>;
+    state: ReturnType<typeof vi.fn>;
     volume: ReturnType<typeof vi.fn>;
     fade: ReturnType<typeof vi.fn>;
     unload: ReturnType<typeof vi.fn>;
@@ -23,6 +26,7 @@ const howlerMock = vi.hoisted(() => {
   const Howler = { volume: vi.fn(), ctx: audioContext };
   const Howl = vi.fn(function MockHowl(options) {
     let isPlaying = false;
+    let position = 0;
     const instance = {
       options,
       play: vi.fn(() => {
@@ -32,7 +36,16 @@ const howlerMock = vi.hoisted(() => {
       pause: vi.fn(() => {
         isPlaying = false;
       }),
+      stop: vi.fn(() => {
+        isPlaying = false;
+        position = 0;
+      }),
       playing: vi.fn(() => isPlaying),
+      seek: vi.fn((next?: number) => {
+        if (typeof next === "number") position = next;
+        return position;
+      }),
+      state: vi.fn(() => "loaded"),
       volume: vi.fn(),
       fade: vi.fn(),
       unload: vi.fn(),
@@ -211,6 +224,28 @@ describe("useAudio", () => {
 
     expect(howlerMock.audioContext.resume).toHaveBeenCalledOnce();
     expect(ambient.play).not.toHaveBeenCalled();
+    expect(ambient.pause).not.toHaveBeenCalled();
+  });
+
+  it("keeps ambient music playing while scene voices switch inside the shared Web Audio mixer", async () => {
+    const firstVoice = "/journey-final/01-opening-voice.m4a";
+    const secondVoice = "/journey-final/02-invitation-voice.m4a";
+    const { result } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+
+    act(() => result.current.preloadNarration([firstVoice, secondVoice]));
+    act(() => result.current.syncNarration(firstVoice, 1.25, true));
+    act(() => result.current.syncNarration(firstVoice, 2, false));
+    act(() => result.current.syncNarration(secondVoice, 0, true));
+
+    const ambient = howlerMock.instances[0];
+    const first = howlerMock.instances[3];
+    const second = howlerMock.instances[4];
+    expect(first.options).toMatchObject({ src: [firstVoice], html5: false });
+    expect(second.options).toMatchObject({ src: [secondVoice], html5: false });
+    expect(first.pause).toHaveBeenCalled();
+    expect(second.play).toHaveBeenCalledOnce();
+    expect(ambient.play).toHaveBeenCalledOnce();
     expect(ambient.pause).not.toHaveBeenCalled();
   });
 

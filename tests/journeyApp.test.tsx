@@ -30,7 +30,10 @@ vi.mock("howler", () => ({
     return {
       play: vi.fn(),
       pause: vi.fn(),
+      stop: vi.fn(),
       playing: vi.fn(() => false),
+      seek: vi.fn(() => 0),
+      state: vi.fn(() => "loaded"),
       volume: vi.fn(),
       fade: vi.fn(),
       unload: vi.fn(),
@@ -83,7 +86,7 @@ describe("JourneyApp", () => {
 
     expect(screen.queryByRole("dialog", { name: "Comenzar la experiencia" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Desactivar m.sica/i })).toBeInTheDocument();
-    expect(screen.getByTestId("journey-motion-video")).toHaveProperty("muted", false);
+    expect(screen.getByTestId("journey-motion-video")).toHaveProperty("muted", true);
   });
 
   it("uses the definitive film and its exact frozen frame for the secret door", () => {

@@ -38,6 +38,8 @@ function createTracks(volume: number): AudioTracks {
 
 export function useAudio() {
   const tracksRef = useRef<AudioTracks | null>(null);
+  const narrationTracksRef = useRef<Map<string, Howl>>(new Map());
+  const activeNarrationRef = useRef<{ path: string; track: Howl } | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [available, setAvailable] = useState(true);
   const [volume, setVolumeState] = useState(0.65);
@@ -49,6 +51,7 @@ export function useAudio() {
   const stop = useCallback(() => {
     try {
       if (tracksRef.current) Object.values(tracksRef.current).forEach((track) => track.pause());
+      activeNarrationRef.current?.track.pause();
     } catch {
       // Browsers may reject audio operations as their lifecycle changes.
     }
@@ -85,8 +88,69 @@ export function useAudio() {
 
   useEffect(() => () => {
     if (tracksRef.current) Object.values(tracksRef.current).forEach((track) => track.unload());
+    narrationTracksRef.current.forEach((track) => track.unload());
+    narrationTracksRef.current.clear();
+    activeNarrationRef.current = null;
     tracksRef.current = null;
   }, []);
+
+  const getNarrationTrack = useCallback((path: string) => {
+    const existing = narrationTracksRef.current.get(path);
+    if (existing) return existing;
+
+    const track = new Howl({
+      src: [path],
+      preload: true,
+      volume: 1,
+      // Music and narration must share one software mixer. Keeping both out
+      // of HTMLMediaElement audio prevents iOS from changing audio sessions
+      // when the muted scene video is replaced.
+      html5: false,
+    });
+    narrationTracksRef.current.set(path, track);
+    return track;
+  }, []);
+
+  const preloadNarration = useCallback((paths: readonly string[]) => {
+    try {
+      paths.forEach((path) => {
+        if (path) getNarrationTrack(path);
+      });
+    } catch {
+      setAvailable(false);
+    }
+  }, [getNarrationTrack]);
+
+  const syncNarration = useCallback((path: string | undefined, time: number, shouldPlay: boolean) => {
+    try {
+      const active = activeNarrationRef.current;
+      if (!path || !enabledRef.current || document.hidden || !shouldPlay) {
+        if (active?.track.playing()) active.track.pause();
+        return;
+      }
+
+      const track = getNarrationTrack(path);
+      if (active && active.path !== path) {
+        if (active.track.playing()) active.track.pause();
+      }
+      activeNarrationRef.current = { path, track };
+      void ensureContinuity();
+
+      const target = Math.max(0, time);
+      if (!track.playing()) {
+        track.seek(target);
+        track.play();
+        return;
+      }
+
+      const current = track.seek();
+      if (typeof current === "number" && Math.abs(current - target) > 0.35) {
+        track.seek(target);
+      }
+    } catch {
+      setAvailable(false);
+    }
+  }, [ensureContinuity, getNarrationTrack]);
 
   const setNarrationActive = useCallback((active: boolean) => {
     if (narrationRef.current === active) return;
@@ -157,5 +221,8 @@ export function useAudio() {
     [],
   );
 
-  return { enabled, available, volume, setVolume, start, mute, playCue, setNarrationActive, ensureContinuity };
+  return {
+    enabled, available, volume, setVolume, start, mute, playCue,
+    setNarrationActive, ensureContinuity, preloadNarration, syncNarration,
+  };
 }
