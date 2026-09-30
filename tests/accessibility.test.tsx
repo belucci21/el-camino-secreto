@@ -343,12 +343,10 @@ it("keeps a confirmed map link inside a valid detail group", () => {
   }
 });
 
-it("disables RSVP until the WhatsApp number is confirmed", () => {
+it("enables RSVP with the contact number supplied in the final artwork", () => {
   render(<RSVPWhatsApp />);
-  expect(screen.getByRole("button", { name: "Sí, estaré allí" })).toBeDisabled();
-  expect(
-    screen.getByText("Número de WhatsApp pendiente de confirmar."),
-  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "Sí, estaré allí" })).toBeEnabled();
+  expect(screen.queryByText("Número de WhatsApp pendiente de confirmar.")).toBeNull();
 });
 
 it("copies the RSVP message when WhatsApp cannot open", async () => {

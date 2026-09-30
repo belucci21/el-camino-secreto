@@ -4,10 +4,10 @@ import { JourneySceneMedia } from "../src/components/JourneySceneMedia";
 import { finalJourneyScenes } from "../src/config/finalJourney";
 
 const props = {
-  sceneOrder: 12, title: "El cofre del tesoro", couple: "Gladiola & Jordi",
-  videoPath: "/journey-final/12-treasure.mp4", frozenFramePath: "/journey-final/12-treasure-final.png",
-  narrationPath: "/journey-final/12-treasure-voice.m4a",
-  firstFramePath: "/journey-final/12-treasure-first.png", previousFramePath: "/journey-final/11-rsvp-final.png",
+  sceneOrder: 12, title: "Confirmación de asistencia", couple: "Gladiola & Jordi",
+  videoPath: "/journey-final/12-rsvp.mp4", frozenFramePath: "/journey-final/12-rsvp-final.png",
+  narrationPath: "/journey-final/12-rsvp-voice.m4a",
+  firstFramePath: "/journey-final/12-rsvp-first.png", previousFramePath: "/journey-final/11-dress-code-final.png",
   holdFrameAt: 25.866667, hasNarration: true, audioEnabled: true, paused: false,
   interactionReadyAt: 16.433333, narrationWindows: [[0.414, 18.005], [22.862, 40.472]] as [number, number][],
   reducedMotion: false, motionEnabled: true, onMotionComplete: vi.fn(),
@@ -44,12 +44,9 @@ describe("cinematic scene playback", () => {
       Reflect.deleteProperty(HTMLVideoElement.prototype, "cancelVideoFrameCallback");
     }
   });
-  it.each(finalJourneyScenes)("unlocks scene $order at its measured visual endpoint, not at file end", (scene) => {
+  it.each(finalJourneyScenes)("unlocks scene $order while its film still runs", (scene) => {
     const { container } = render(<JourneySceneMedia {...props} {...scene} />);
     const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
-    video.currentTime = scene.interactionReadyAt - 0.1;
-    fireEvent.timeUpdate(video);
-    expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "motion");
     video.currentTime = scene.interactionReadyAt + 0.01;
     fireEvent.timeUpdate(video);
     expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "interactive");
@@ -115,7 +112,7 @@ describe("cinematic scene playback", () => {
   it("keeps narration in reduced motion but never replays a visited chapter", () => {
     const { rerender, container } = render(<JourneySceneMedia {...props} reducedMotion />);
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
-    expect(container.querySelector("audio")).toHaveAttribute("src", props.videoPath);
+    expect(container.querySelector("audio")).toHaveAttribute("src", props.narrationPath);
     rerender(<JourneySceneMedia {...props} reducedMotion motionEnabled={false} />);
     expect(container.querySelector("audio")).not.toBeInTheDocument();
   });

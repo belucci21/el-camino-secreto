@@ -2900,7 +2900,7 @@ button:hover,
   transform: none;
 }
 
-/* Manifest-driven journey — the complete 1–13 artwork is the active interface. */
+/* Manifest-driven journey — the complete 1–16 artwork is the active interface. */
 .sr-only {
   position: absolute !important;
   width: 1px !important;
@@ -3390,18 +3390,28 @@ button:hover,
 }
 
 .journey-audio-off-mask {
+  display: none;
+}
+
+.journey-hotspot[data-surface="music_toggle"]::after {
   position: absolute;
   z-index: 2;
-  top: 136%;
-  left: 50%;
-  width: 68%;
-  height: 34%;
-  transform: translateX(-50%);
-  border-radius: 999px;
+  top: 104%;
+  left: 6%;
+  display: grid;
+  place-items: center;
+  width: 165%;
+  height: 87%;
+  content: "MÚSICA";
   pointer-events: none;
-  background: rgba(12, 16, 6, .08);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
+  color: #f8e9c5;
+  border: 1px solid rgba(219, 181, 90, .65);
+  border-radius: 999px;
+  background: #0c2718;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .32);
+  font-family: var(--serif-display);
+  font-size: clamp(.48rem, 1.7vw, .64rem);
+  letter-spacing: .04em;
 }
 
 .journey-audio-live i:nth-child(3) {
@@ -3928,6 +3938,257 @@ button:hover,
     width: calc(100svh * var(--journey-ratio));
     height: 100svh;
   }
+}
+
+/* Final delivery: scene 15 has no baked forward control. Keep reading time in
+   the visitor's hands instead of auto-advancing a dense page after ten seconds. */
+.journey-primary-action--visible {
+  display: grid;
+  place-items: center;
+  color: #f8e6b5;
+  border: 1px solid #d8aa45;
+  background: linear-gradient(180deg, rgba(13, 48, 30, .96), rgba(3, 24, 14, .98));
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .42), inset 0 0 0 3px rgba(205, 160, 58, .28);
+  font-family: var(--serif-display);
+  font-size: clamp(.72rem, 2.8vw, 1.05rem);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.journey-hotspot[data-surface="save_date"] {
+  display: grid;
+  place-items: center;
+  border-color: rgba(220, 179, 76, .9);
+  background: rgba(9, 44, 25, .94);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .4);
+}
+
+.journey-save-date-label {
+  color: #f6e5b8;
+  font-family: var(--serif-display);
+  font-size: clamp(.6rem, 2vw, .84rem);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.journey-dialog[data-variant="rsvp"] {
+  max-height: 92svh;
+  overflow: auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  background: #15271b;
+}
+
+.journey-dialog[data-variant="rsvp"] .journey-dialog-ornament,
+.journey-dialog[data-variant="rsvp"] .journey-dialog-eyebrow,
+.journey-dialog[data-variant="rsvp"] h2 {
+  position: relative;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+.journey-rsvp-decor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .11;
+  pointer-events: none;
+}
+
+.journey-rsvp-form-final {
+  position: relative;
+  display: grid;
+  gap: .55rem;
+  text-align: left;
+}
+
+.journey-rsvp-form-final p {
+  margin: 0 0 .5rem;
+  color: #ead9aa;
+  font-size: .9rem;
+  text-align: center;
+}
+
+.journey-rsvp-form-final > label,
+.journey-rsvp-form-final legend {
+  color: #e8c56b;
+  font-family: var(--serif-display);
+  font-size: .75rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.journey-rsvp-form-final > input,
+.journey-rsvp-form-final > select,
+.journey-rsvp-form-final > textarea {
+  width: 100%;
+  min-height: 2.65rem;
+  padding: .65rem .75rem;
+  color: #183022;
+  border: 1px solid #b98c42;
+  border-radius: .25rem;
+  background: rgba(255, 248, 226, .96);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.journey-rsvp-form-final fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .8rem;
+  margin: .15rem 0;
+  padding: .5rem .65rem;
+  border: 1px solid rgba(222, 184, 93, .6);
+  text-align: left;
+}
+
+.journey-rsvp-form-final fieldset label {
+  color: #f8ebc8;
+  font-size: .88rem;
+}
+
+.journey-rsvp-form-final fieldset input {
+  accent-color: #d8aa45;
+}
+
+.journey-rsvp-form-final > button {
+  min-height: 3.25rem;
+  margin-top: .55rem;
+  cursor: pointer;
+  color: #f9e7af;
+  border: 1px solid #d8aa45;
+  background: #123b26;
+  font-family: var(--serif-display);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.journey-dialog[data-variant="rsvp"] .journey-dialog-primary,
+.journey-dialog[data-variant="rsvp"] .journey-dialog-secondary {
+  position: relative;
+  margin-top: .6rem;
+  text-decoration: none;
+}
+
+.journey-detail-layer {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 8, 3, .84);
+  backdrop-filter: blur(14px);
+}
+
+.journey-detail-panel {
+  position: relative;
+  width: min(92vw, 88svh, 620px);
+  aspect-ratio: 1;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .6);
+}
+
+.journey-detail-panel > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.journey-detail-close,
+.journey-detail-hotspot,
+.journey-song-form > button {
+  position: absolute;
+  z-index: 2;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.journey-detail-close {
+  top: 2.5%;
+  right: 2.5%;
+  width: 10%;
+  height: 10%;
+  color: transparent;
+  font-size: 0;
+}
+
+.journey-detail-hotspot--bottom {
+  top: 78%;
+  left: 8.5%;
+  width: 83%;
+  height: 14%;
+}
+
+.journey-detail-hotspot--email {
+  top: 46%;
+  left: 14%;
+  width: 34%;
+  height: 19%;
+}
+
+.journey-detail-hotspot--whatsapp {
+  top: 46%;
+  left: 54%;
+  width: 34%;
+  height: 19%;
+}
+
+.journey-song-form > input {
+  position: absolute;
+  z-index: 2;
+  top: 68%;
+  left: 10%;
+  width: 80%;
+  height: 9%;
+  padding: 0 1rem;
+  color: #f7ead0;
+  border: 0;
+  background: #103422;
+  font: inherit;
+  font-size: clamp(.78rem, 2.5vw, 1rem);
+}
+
+.journey-song-form > button {
+  top: 80%;
+  left: 9%;
+  width: 82%;
+  height: 12%;
+}
+
+.journey-song-status {
+  position: absolute;
+  z-index: 3;
+  top: 79%;
+  left: 9%;
+  display: grid;
+  place-items: center;
+  width: 82%;
+  height: 14%;
+  padding: .3rem;
+  color: #fff1c9;
+  border: 1px solid #d6ae58;
+  background: #123a26;
+  font-size: clamp(.58rem, 2vw, .78rem);
+  text-align: center;
+}
+
+.journey-song-status a {
+  color: #ffda74;
+  text-decoration: underline;
+}
+
+.journey-detail-close:focus-visible,
+.journey-detail-hotspot:focus-visible,
+.journey-song-form > button:focus-visible,
+.journey-song-form > input:focus-visible,
+.journey-rsvp-form-final :focus-visible {
+  outline: 2px solid #fff0ad;
+  outline-offset: 2px;
 }
 
 @media (min-width: 720px) {

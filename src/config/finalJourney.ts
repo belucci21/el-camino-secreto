@@ -11,11 +11,14 @@ export type FinalJourneyScene = {
   narrationPath?: string;
   interactionReadyAt: number;
   narrationWindows: readonly (readonly [number, number])[];
-  /** Last visible source frame; the original audio continues over this still. */
   holdFrameAt?: number;
-  rsvpMedia?: {
-    backgroundVideoPath: string;
-    attendanceArtworkPath: string;
+  rsvpArtworkPath?: string;
+  detailArtwork?: {
+    music: string;
+    song: string;
+    thanks: string;
+    memories: string;
+    contact: string;
   };
   surfaces: JourneyButtonSurface[];
 };
@@ -32,161 +35,58 @@ const continueTo = (destination_order: number): JourneyButtonSurface => ({
   destination_order,
 });
 
-const deliveredScenes: Omit<FinalJourneyScene, "firstFramePath" | "hasNarration" | "interactionReadyAt" | "narrationWindows">[] = [
-  {
-    order: 1,
-    id: "opening",
-    title: "El camino comienza aquí",
-    videoPath: "/journey-final/01-opening.mp4",
-    frozenFramePath: "/journey-final/01-opening-final.png",
-    surfaces: [...controls(), { id: "start_journey", visible_label: "COMENZAR EL CAMINO", action: "go_to_step", destination_order: 2 }],
-  },
-  {
-    order: 2,
-    id: "invitation",
-    title: "Gladiola & Jordi",
-    videoPath: "/journey-final/02-invitation.mp4",
-    frozenFramePath: "/journey-final/02-invitation-final.png",
-    surfaces: [...controls(), { id: "start_journey", visible_label: "COMENZAR EL CAMINO", action: "go_to_step", destination_order: 3 }],
-  },
-  {
-    order: 3,
-    id: "journey-begins",
-    title: "El viaje comienza",
-    videoPath: "/journey-final/03-journey-begins.mp4",
-    frozenFramePath: "/journey-final/03-journey-begins-final.png",
-    surfaces: [...controls(), continueTo(4)],
-  },
-  {
-    order: 4,
-    id: "secret-door",
-    title: "La puerta secreta",
-    videoPath: "/journey-final/04-secret-door.mp4",
-    frozenFramePath: "/journey-final/04-secret-door-final.png",
-    surfaces: [
-      ...controls(),
-      { id: "decode_word", visible_label: "DESCIFRAR LA PALABRA", action: "open_secret_word_input" },
-      { id: "hint", visible_label: "¿ESTÁS PERDIDO?", action: "reveal_hint" },
-    ],
-  },
-  {
-    order: 5,
-    id: "open-door",
-    title: "La respuesta correcta",
-    videoPath: "/journey-final/05-open-door.mp4",
-    frozenFramePath: "/journey-final/05-open-door-final.png",
-    surfaces: [...controls(), continueTo(6)],
-  },
-  {
-    order: 6,
-    id: "save-date",
-    title: "Reserva la fecha",
-    videoPath: "/journey-final/06-save-date.mp4",
-    frozenFramePath: "/journey-final/06-save-date-final.png",
-    surfaces: [
-      ...controls(),
-      { id: "save_date", visible_label: "GUARDA LA FECHA", action: "download_calendar_event" },
-      continueTo(7),
-    ],
-  },
-  {
-    order: 7,
-    id: "two-souls",
-    title: "El viaje de dos almas",
-    videoPath: "/journey-final/07-two-souls.mp4",
-    frozenFramePath: "/journey-final/07-two-souls-final.png",
-    surfaces: [...controls(), continueTo(8)],
-  },
-  {
-    order: 8,
-    id: "ceremony",
-    title: "La gran celebración",
-    videoPath: "/journey-final/08-ceremony.mp4",
-    frozenFramePath: "/journey-final/08-ceremony-final.png",
-    surfaces: [...controls(), continueTo(9)],
-  },
-  {
-    order: 9,
-    id: "journey-information",
-    title: "Información del viaje",
-    videoPath: "/journey-final/09-journey-information.mp4",
-    frozenFramePath: "/journey-final/09-journey-information-final.png",
-    surfaces: [
-      ...controls(),
-      { id: "location", visible_label: "VER UBICACIÓN", action: "open_map" },
-      continueTo(10),
-    ],
-  },
-  {
-    order: 10,
-    id: "dress-code",
-    title: "Código de vestimenta",
-    videoPath: "/journey-final/10-dress-code.mp4",
-    frozenFramePath: "/journey-final/10-dress-code-final.png",
-    surfaces: [
-      ...controls(),
-      { id: "dress_code", visible_label: "CÓDIGO DE VESTIMENTA", action: "open_dress_code" },
-      continueTo(11),
-    ],
-  },
-  {
-    order: 11,
-    id: "rsvp",
-    title: "Confirma tu asistencia",
-    videoPath: "/journey-final/11-rsvp.mp4",
-    frozenFramePath: "/journey-final/11-rsvp-final.png",
-    rsvpMedia: {
-      backgroundVideoPath: "/journey-final/11-rsvp-background.mp4",
-      attendanceArtworkPath: "/journey-final/11-rsvp-panel.png",
-    },
-    surfaces: [
-      ...controls(),
-      { id: "rsvp", visible_label: "INSCRIBIR MI RESPUESTA", action: "open_rsvp", destination_order: 12 },
-    ],
-  },
-];
-
-// Measured on the delivered films: the final composition settles before the container ends.
-// Showing controls must not stop the soundtrack. Long speech pauses restore the music;
-// short breaths remain inside each window to avoid pumping the mix.
-const timing: Record<number, Pick<FinalJourneyScene, "interactionReadyAt" | "narrationWindows">> = {
-  1: { interactionReadyAt: 285 / 30, narrationWindows: [[1.303, 17.207]] },
-  2: { interactionReadyAt: 3 / 30, narrationWindows: [[1.267, 17.785]] },
-  3: { interactionReadyAt: 3 / 30, narrationWindows: [[1.832, 6.481]] },
-  4: { interactionReadyAt: 3 / 30, narrationWindows: [[1.323, 15.626]] },
-  5: { interactionReadyAt: 10, narrationWindows: [[1.213, 10.581]] },
-  6: { interactionReadyAt: 10.867, narrationWindows: [[0.779, 12.806]] },
-  7: { interactionReadyAt: 9.267, narrationWindows: [[0.692, 25.371]] },
-  8: { interactionReadyAt: 11.967, narrationWindows: [[0.419, 1.196], [2.267, 23.526]] },
-  9: { interactionReadyAt: 8.167, narrationWindows: [[0, 22.616]] },
-  10: { interactionReadyAt: 11.934, narrationWindows: [] },
-  11: { interactionReadyAt: 10.367, narrationWindows: [] },
-  12: { interactionReadyAt: 16.434, narrationWindows: [[0.415, 18.006], [22.862, 40.472]] },
-  13: { interactionReadyAt: 16.834, narrationWindows: [[2.875, 15.626], [22.863, 40.472]] },
+type DeliveredScene = Omit<FinalJourneyScene, "videoPath" | "frozenFramePath" | "firstFramePath" | "hasNarration" | "narrationPath" | "interactionReadyAt" | "narrationWindows"> & {
+  stem: string;
 };
 
-// Voice is copied losslessly out of the supplied MP4s so it can share one
-// uninterrupted Web Audio mixer with the music. Scenes 10 and 11 are silent.
-export const finalJourneyScenes: FinalJourneyScene[] = [...deliveredScenes, {
-  order: 12, id: "treasure", title: "El cofre del tesoro",
-  videoPath: "/journey-final/12-treasure.mp4",
-  frozenFramePath: "/journey-final/12-treasure-final.png",
-  holdFrameAt: 776 / 30,
-  surfaces: [...controls(), continueTo(13)],
-}, {
-  order: 13, id: "eternal-bond", title: "Un vínculo eterno",
-  videoPath: "/journey-final/13-eternal-bond.mp4",
-  frozenFramePath: "/journey-final/13-eternal-bond-final.png",
-  holdFrameAt: 597 / 30,
-  surfaces: [...controls(), { id: "finish", visible_label: "Ver capítulos", action: "open_chapters" as const }],
-}].map((scene) => {
-  const hasNarration = scene.order !== 10 && scene.order !== 11;
+// The September 30 delivery is one complete, ordered film. Its numbered
+// media, voice tracks, stills, chapter names and interactive surfaces live here.
+const deliveredScenes: DeliveredScene[] = [
+  { order: 1, id: "opening", stem: "01-opening", title: "El camino comienza aquí", surfaces: [...controls(), { id: "start_journey", visible_label: "COMENZAR EL CAMINO", action: "go_to_step", destination_order: 2 }] },
+  { order: 2, id: "invitation", stem: "02-invitation", title: "Gladiola & Jordi", surfaces: [...controls(), { id: "start_journey", visible_label: "COMENZAR EL CAMINO", action: "go_to_step", destination_order: 3 }] },
+  { order: 3, id: "journey-begins", stem: "03-journey-begins", title: "El viaje comienza", surfaces: [...controls(), continueTo(4)] },
+  { order: 4, id: "secret-door", stem: "04-secret-door", title: "La puerta secreta", surfaces: [...controls(), { id: "decode_word", visible_label: "DESCIFRAR LA PALABRA", action: "open_secret_word_input" }, { id: "hint", visible_label: "¿ESTÁS PERDIDO?", action: "reveal_hint" }] },
+  { order: 5, id: "open-door", stem: "05-open-door", title: "La respuesta correcta", surfaces: [...controls(), continueTo(6)] },
+  { order: 6, id: "save-date", stem: "06-save-date", title: "Reserva la fecha", surfaces: [...controls(), { id: "save_date", visible_label: "Guardar en el calendario", action: "download_calendar_event" }, continueTo(7)] },
+  { order: 7, id: "two-souls", stem: "07-two-souls", title: "El viaje de dos almas", surfaces: [...controls(), continueTo(8)] },
+  { order: 8, id: "ceremony", stem: "08-ceremony", title: "La ceremonia", surfaces: [...controls(), { id: "ceremony_map", visible_label: "VER EN GOOGLE MAPS", action: "open_ceremony_map" }, continueTo(9)] },
+  { order: 9, id: "celebration", stem: "09-journey-information", title: "Celebración en Castell Jalpí", surfaces: [...controls(), { id: "celebration_map", visible_label: "VER EN GOOGLE MAPS", action: "open_map" }, continueTo(10)] },
+  { order: 10, id: "treasure", stem: "10-treasure", title: "El cofre del tesoro", surfaces: [...controls(), continueTo(11)] },
+  { order: 11, id: "dress-code", stem: "11-dress-code", title: "Código de vestimenta", surfaces: [...controls(), continueTo(12)] },
+  { order: 12, id: "rsvp", stem: "12-rsvp", title: "Confirmación de asistencia", rsvpArtworkPath: "/journey-final/12-rsvp-form.png", surfaces: [...controls(), { id: "rsvp", visible_label: "CONFIRMAR MI ASISTENCIA", action: "open_rsvp", destination_order: 13 }] },
+  { order: 13, id: "gratitude", stem: "13-gratitude", title: "Gracias por caminar con nosotros", surfaces: [...controls(), continueTo(14)] },
+  { order: 14, id: "details", stem: "14-details", title: "Un detalle del camino", detailArtwork: {
+    music: "/journey-final/14-music.png",
+    song: "/journey-final/14-song.png",
+    thanks: "/journey-final/14-song-thanks.png",
+    memories: "/journey-final/14-memories.png",
+    contact: "/journey-final/14-contact.png",
+  }, surfaces: [...controls(), { id: "music_joy", visible_label: "MÚSICA Y ALEGRÍA", action: "open_music_prompt" }, { id: "lasting_memories", visible_label: "RECUERDOS PARA SIEMPRE", action: "open_memories" }, { id: "contact", visible_label: "CONTACTO", action: "open_contact" }, continueTo(15)] },
+  { order: 15, id: "important-details", stem: "15-important-details", title: "Detalles importantes", surfaces: [...controls(), continueTo(16)] },
+  { order: 16, id: "final-thanks", stem: "16-final-thanks", title: "Gracias por ser parte del vínculo eterno", holdFrameAt: 15.3, surfaces: [...controls()] },
+];
+
+// Voice start/end measured from the delivered audio. The continuous ambient
+// Howl is never paused when a scene changes; it only ducks while words sound.
+const narrationWindows: Record<number, readonly (readonly [number, number])[]> = {
+  1: [[4.38, 20.42]], 2: [[1.53, 18.04]], 3: [[3.32, 7.84]],
+  4: [[2.31, 15.65]], 5: [[2.84, 11.62]], 6: [[1.76, 14.71]],
+  7: [[5.75, 29.22]], 8: [[3.65, 23.77]], 9: [[3.03, 21.25]],
+  10: [[1.32, 18.19]], 11: [], 12: [[3.19, 7.73]], 13: [],
+  14: [], 15: [], 16: [[1.56, 14.51]],
+};
+
+export const finalJourneyScenes: FinalJourneyScene[] = deliveredScenes.map(({ stem, ...scene }) => {
+  const hasNarration = narrationWindows[scene.order].length > 0;
   return {
     ...scene,
-    ...timing[scene.order],
-    firstFramePath: scene.videoPath.replace(/\.mp4$/, "-first.png"),
+    videoPath: `/journey-final/${stem}.mp4`,
+    frozenFramePath: `/journey-final/${stem}-final.png`,
+    firstFramePath: `/journey-final/${stem}-first.png`,
     hasNarration,
-    narrationPath: hasNarration ? scene.videoPath.replace(/\.mp4$/, "-voice.m4a") : undefined,
+    narrationPath: hasNarration ? `/journey-final/${stem}-voice.${scene.order === 12 ? "m4a" : "mp3"}` : undefined,
+    interactionReadyAt: 0,
+    narrationWindows: narrationWindows[scene.order],
   };
 });
 

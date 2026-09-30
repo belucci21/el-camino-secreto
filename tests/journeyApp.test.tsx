@@ -60,20 +60,21 @@ describe("JourneyApp", () => {
       expect(button.hasAttribute("disabled")).toBe(true);
     });
   });
-  it("continues from RSVP through the treasure to the final chapter", async () => {
+  it("continues from RSVP through the gratitude and final details", async () => {
     const user = userEvent.setup();
-    render(<JourneyApp initialStep={11} />);
+    render(<JourneyApp initialStep={12} />);
     fireEvent.ended(screen.getByTestId("journey-motion-video"));
-    await user.click(screen.getByRole("button", { name: "INSCRIBIR MI RESPUESTA" }));
-    await user.type(screen.getByLabelText("Nombre"), "Invitado de prueba");
-    await user.click(screen.getByLabelText(/Sí, caminaré/));
-    await user.click(screen.getByRole("button", { name: "Inscribir mi respuesta" }));
-    expect(JSON.parse(localStorage.getItem("gj-rsvp-draft")!)).toEqual({ name: "Invitado de prueba", attendance: "yes" });
-    await user.click(screen.getByRole("button", { name: "Continuar al cofre" }));
-    expect(screen.getByRole("region", { name: /Paso 12 de 13/ })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA" }));
+    await user.type(screen.getByLabelText("Nombre completo"), "Invitado de prueba");
+    await user.click(screen.getByLabelText(/Sí, no me lo pierdo/));
+    await user.click(screen.getByRole("button", { name: "Guardar mi respuesta" }));
+    expect(JSON.parse(localStorage.getItem("gj-rsvp-draft")!)).toEqual(expect.objectContaining({ name: "Invitado de prueba", attendance: "yes" }));
+    expect(screen.getByText(/Aún debes enviarla/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continuar el camino" }));
+    expect(screen.getByRole("region", { name: /Paso 13 de 16/ })).toBeInTheDocument();
     fireEvent.ended(screen.getByTestId("journey-motion-video"));
     await user.click(screen.getByRole("button", { name: "Continuar" }));
-    expect(screen.getByRole("region", { name: /Paso 13 de 13/ })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 14 de 16/ })).toBeInTheDocument();
   });
   it("waits for a mobile-safe gesture and starts the journey with music", async () => {
     const user = userEvent.setup();
@@ -157,7 +158,7 @@ describe("JourneyApp", () => {
     render(<JourneyApp initialStep={10} />);
     expect(screen.getByTestId("journey-motion-video")).toBeInTheDocument();
     expect(screen.getByTestId("journey-motion-video").querySelector("source"))
-      .toHaveAttribute("src", "/journey-final/10-dress-code.mp4");
+      .toHaveAttribute("src", "/journey-final/10-treasure.mp4");
   });
 
   it("removes moving video when the visitor requests reduced motion", async () => {
@@ -186,11 +187,11 @@ describe("JourneyApp", () => {
     render(<JourneyApp initialStep={2} />);
 
     expect(
-      screen.getByRole("region", { name: /Paso 2 de 13/i }),
+      screen.getByRole("region", { name: /Paso 2 de 16/i }),
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "COMENZAR EL CAMINO" }));
     expect(
-      screen.getByRole("region", { name: /Paso 3 de 13/i }),
+      screen.getByRole("region", { name: /Paso 3 de 16/i }),
     ).toBeInTheDocument();
   });
 
@@ -258,7 +259,7 @@ describe("JourneyApp", () => {
     expect(dialog).toHaveTextContent("Di la palabra amigo.");
   });
 
-  it("keeps the secret door in the 1–13 flow and accepts amigo", async () => {
+  it("keeps the secret door in the 1–16 flow and accepts amigo", async () => {
     const user = userEvent.setup();
     render(<JourneyApp initialStep={4} />);
 
@@ -268,18 +269,17 @@ describe("JourneyApp", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("region", { name: /Paso 5 de 13/i }),
+        screen.getByRole("region", { name: /Paso 5 de 16/i }),
       ).toBeInTheDocument();
     });
   });
 
   it("renders the dress-code and RSVP scenes as semantic controls", () => {
-    const { unmount } = render(<JourneyApp initialStep={10} />);
+    const { unmount } = render(<JourneyApp initialStep={11} />);
 
     const expectedButtons = [
       "Activar música",
       "CAPÍTULOS",
-      "CÓDIGO DE VESTIMENTA",
       "Continuar",
     ];
 
@@ -288,19 +288,14 @@ describe("JourneyApp", () => {
     });
 
     unmount();
-    render(<JourneyApp initialStep={11} />);
-    expect(screen.getByRole("button", { name: "INSCRIBIR MI RESPUESTA" })).toBeInTheDocument();
+    render(<JourneyApp initialStep={12} />);
+    expect(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA" })).toBeInTheDocument();
   });
 
-  it("reveals the defined dress code from the final reference artwork", async () => {
-    const user = userEvent.setup();
-    render(<JourneyApp initialStep={10} />);
-
-    await user.click(screen.getByRole("button", { name: "CÓDIGO DE VESTIMENTA" }));
-
-    const dialog = screen.getByRole("dialog", { name: "Código de vestimenta" });
-    expect(dialog).toBeInTheDocument();
-    expect(dialog).toHaveTextContent(/Formal elegante/i);
+  it("keeps the delivered dress-code film before RSVP", () => {
+    render(<JourneyApp initialStep={11} />);
+    expect(screen.getByRole("img", { name: /Código de vestimenta/i })).toHaveAttribute("src", "/journey-final/11-dress-code-final.png");
+    expect(screen.getByRole("button", { name: "Continuar" })).toBeInTheDocument();
   });
 
   it("opens chapter navigation without leaving the home journey", async () => {
@@ -309,9 +304,9 @@ describe("JourneyApp", () => {
 
     await user.click(screen.getByRole("button", { name: "CAPÍTULOS" }));
     expect(screen.getByRole("dialog", { name: "Capítulos" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /11.*CONFIRMA TU ASISTENCIA/i }));
+    await user.click(screen.getByRole("button", { name: /12.*CONFIRMACIÓN DE ASISTENCIA/i }));
     expect(
-      screen.getByRole("region", { name: /Paso 11 de 13/i }),
+      screen.getByRole("region", { name: /Paso 12 de 16/i }),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
   });
@@ -324,33 +319,53 @@ describe("JourneyApp", () => {
     fireEvent.pointerDown(stage!, { clientX: 240, clientY: 650 });
     fireEvent.pointerUp(stage!, { clientX: 240, clientY: 520 });
 
-    expect(screen.getByRole("region", { name: /Paso 2 de 13/i })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 2 de 16/i })).toBeInTheDocument();
   });
 
-  it("uses the supplied scene-eleven RSVP background and attendance artwork", async () => {
+  it("uses the supplied scene-twelve RSVP artwork", async () => {
     const user = userEvent.setup();
-    render(<JourneyApp initialStep={11} />);
+    render(<JourneyApp initialStep={12} />);
 
-    await user.click(screen.getByRole("button", { name: "INSCRIBIR MI RESPUESTA" }));
-
-    expect(screen.getByTestId("journey-rsvp-background").querySelector("source")).toHaveAttribute(
-      "src",
-      "/journey-final/11-rsvp-background.mp4",
-    );
-    expect(screen.getByRole("img", { name: "Arte de asistencia" })).toHaveAttribute(
-      "src",
-      "/journey-final/11-rsvp-panel.png",
-    );
+    await user.click(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA" }));
+    expect(document.querySelector(".journey-rsvp-decor")).toHaveAttribute("src", "/journey-final/12-rsvp-form.png");
+    expect(screen.getByLabelText("Menú preferido")).toBeInTheDocument();
   });
 
-  it("keeps RSVP artwork available without its looping background in reduced-motion mode", async () => {
+  it("keeps RSVP form available without movement in reduced-motion mode", async () => {
     const user = userEvent.setup();
-    render(<JourneyApp initialStep={11} />);
+    render(<JourneyApp initialStep={12} />);
 
     await user.click(screen.getByRole("button", { name: "Reducir movimiento" }));
-    await user.click(screen.getByRole("button", { name: "INSCRIBIR MI RESPUESTA" }));
+    await user.click(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA" }));
 
-    expect(screen.queryByTestId("journey-rsvp-background")).not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Arte de asistencia" })).toBeInTheDocument();
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Nombre completo")).toBeInTheDocument();
+  });
+
+  it("makes the three delivered detail cards and the final chapter reachable", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={14} />);
+
+    await user.click(screen.getByRole("button", { name: "MÚSICA Y ALEGRÍA" }));
+    expect(screen.getByRole("dialog", { name: "Música y alegría" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continuar para sugerir una canción" }));
+    await user.type(screen.getByLabelText("¿Qué canción no puede faltar?"), "Nuestra canción");
+    await user.click(screen.getByRole("button", { name: "Guardar mi canción" }));
+    expect(localStorage.getItem("gj-song-draft")).toBe("Nuestra canción");
+    expect(screen.getByText(/Guardada en este dispositivo/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cerrar" }));
+
+    await user.click(screen.getByRole("button", { name: "RECUERDOS PARA SIEMPRE" }));
+    expect(screen.getByRole("link", { name: "Abrir WhatsApp para adjuntar fotos y vídeos" })).toHaveAttribute("href", expect.stringContaining("wa.me/34641300670"));
+    await user.click(screen.getByRole("button", { name: "Cerrar" }));
+
+    await user.click(screen.getByRole("button", { name: "CONTACTO" }));
+    expect(screen.getByRole("link", { name: "Escribir correo a Gladiola y Jordi" })).toHaveAttribute("href", "mailto:vinculoglayjor@gmail.com");
+    await user.click(screen.getByRole("button", { name: "Cerrar" }));
+
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("region", { name: /Paso 15 de 16/ })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("region", { name: /Paso 16 de 16/ })).toBeInTheDocument();
   });
 });

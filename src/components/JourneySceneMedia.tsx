@@ -176,7 +176,7 @@ export function JourneySceneMedia({
         </video>
       )}
       {playbackActive && reducedMotion && (
-        <audio ref={audioRef} src={videoPath} autoPlay muted preload="auto" {...mediaEvents} />
+        <audio ref={audioRef} src={narrationPath} autoPlay muted preload="auto" {...mediaEvents} />
       )}
       {/* The film and its still use identical dimensions: no reframe at the end. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}

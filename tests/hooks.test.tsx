@@ -228,8 +228,8 @@ describe("useAudio", () => {
   });
 
   it("keeps ambient music playing while scene voices switch inside the shared Web Audio mixer", async () => {
-    const firstVoice = "/journey-final/01-opening-voice.m4a";
-    const secondVoice = "/journey-final/02-invitation-voice.m4a";
+    const firstVoice = "/journey-final/01-opening-voice.mp3";
+    const secondVoice = "/journey-final/02-invitation-voice.mp3";
     const { result } = renderHook(() => useAudio());
     await act(async () => result.current.start());
 

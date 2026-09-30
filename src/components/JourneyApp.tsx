@@ -33,8 +33,33 @@ type DialogState =
   | { kind: "secret" }
   | { kind: "message"; title: string; eyebrow?: string; body: string }
   | { kind: "rsvp" }
+  | { kind: "detail"; panel: "music" | "song" | "memories" | "contact" }
   | { kind: "complete" }
   | null;
+
+type RsvpDraft = {
+  name: string;
+  attendance: string;
+  companions: string;
+  allergies: string;
+  menu: string;
+  message: string;
+};
+
+function whatsappHref(message: string) {
+  return `https://wa.me/${weddingConfig.rsvpWhatsApp.value.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
+}
+
+function rsvpMessage(draft: RsvpDraft) {
+  return [
+    `Hola, Gladiola y Jordi. Soy ${draft.name}.`,
+    draft.attendance === "yes" ? "Confirmo mi asistencia." : "No podré asistir.",
+    `Acompañantes: ${draft.companions}.`,
+    draft.allergies && `Alergias/restricciones: ${draft.allergies}.`,
+    draft.menu && `Menú preferido: ${draft.menu}.`,
+    draft.message && `Mensaje: ${draft.message}`,
+  ].filter(Boolean).join("\n");
+}
 
 const detailCopy: Record<string, { title: string; body: string }> = {
   hint: {
@@ -110,6 +135,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const [secretWord, setSecretWord] = useState("");
   const [secretStatus, setSecretStatus] = useState<"idle" | "checking" | "wrong">("idle");
   const [rsvpSaved, setRsvpSaved] = useState(false);
+  const [rsvpDraft, setRsvpDraft] = useState<RsvpDraft | null>(null);
+  const [song, setSong] = useState("");
+  const [songSaved, setSongSaved] = useState(false);
   const [playedMotionSteps, setPlayedMotionSteps] = useState<Set<number>>(() => new Set());
   const stageRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
@@ -291,6 +319,18 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         case "open_rsvp":
           setDialog({ kind: "rsvp" });
           break;
+        case "open_music_prompt":
+          setDialog({ kind: "detail", panel: "music" });
+          break;
+        case "open_memories":
+          setDialog({ kind: "detail", panel: "memories" });
+          break;
+        case "open_contact":
+          setDialog({ kind: "detail", panel: "contact" });
+          break;
+        case "open_ceremony_map":
+          window.open(weddingConfig.event.ceremonyMapsUrl.value, "_blank", "noopener,noreferrer");
+          break;
         case "complete_or_replay_journey":
           setDialog({ kind: "complete" });
           break;
@@ -319,11 +359,16 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const form = new FormData(event.currentTarget);
-      const payload = {
+      const payload: RsvpDraft = {
         name: String(form.get("name") ?? ""),
         attendance: String(form.get("attendance") ?? ""),
+        companions: String(form.get("companions") ?? "0"),
+        allergies: String(form.get("allergies") ?? ""),
+        menu: String(form.get("menu") ?? ""),
+        message: String(form.get("message") ?? ""),
       };
       window.localStorage.setItem("gj-rsvp-draft", JSON.stringify(payload));
+      setRsvpDraft(payload);
       setRsvpSaved(true);
     },
     [],
@@ -356,6 +401,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             <span className="sr-only">
               {surface.id === "music_toggle" ? "Música" : buttonLabel(surface, audio.enabled)}
             </span>
+            {surface.id === "save_date" && (
+              <span className="journey-save-date-label" aria-hidden="true">Guardar fecha</span>
+            )}
             {surface.id === "music_toggle" && (
               <span className="journey-audio-off-mask" aria-hidden="true" />
             )}
@@ -429,12 +477,12 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             <div className="journey-hotspots">{hotspotButtons}</div>
             {primarySurface && primaryBounds && (
               <button
-                className="journey-primary-action"
+                className={`journey-primary-action${step === 15 ? " journey-primary-action--visible" : ""}`}
                 style={primaryStyle}
                 type="button"
                 onClick={() => void handleSurface(primarySurface)}
               >
-                <span className="sr-only">{primarySurface.visible_label}</span>
+                <span className={step === 15 ? "" : "sr-only"}>{primarySurface.visible_label}</span>
               </button>
             )}
           </div>
@@ -548,61 +596,107 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           onClose={() => setDialog(null)}
           variant="rsvp"
         >
-          {rsvpSaved ? (
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="journey-rsvp-decor" src={scene.rsvpArtworkPath} alt="" aria-hidden="true" />
+          {rsvpSaved && rsvpDraft ? (
             <>
-              <p className="journey-dialog-copy">
-                Tu respuesta se ha guardado en este dispositivo. El envío definitivo se activará
-                cuando los novios confirmen el canal de RSVP.
+              <p className="journey-dialog-copy" role="status">
+                Respuesta guardada en este dispositivo. Aún debes enviarla a Gladiola y Jordi.
               </p>
-              <button className="journey-dialog-primary" type="button" onClick={() => goToStep(primarySurface?.destination_order ?? step + 1)}>
-                Continuar al cofre
+              <a className="journey-dialog-primary" href={whatsappHref(rsvpMessage(rsvpDraft))} target="_blank" rel="noopener noreferrer">
+                Enviar por WhatsApp
+              </a>
+              <a className="journey-dialog-secondary" href={`mailto:${weddingConfig.contactEmail.value}?subject=${encodeURIComponent("RSVP Gladiola y Jordi")}&body=${encodeURIComponent(rsvpMessage(rsvpDraft))}`}>
+                Enviar por correo
+              </a>
+              <button className="journey-dialog-secondary" type="button" onClick={() => setRsvpSaved(false)}>
+                Editar respuesta
+              </button>
+              <button className="journey-dialog-secondary" type="button" onClick={() => goToStep(13)}>
+                Continuar el camino
               </button>
             </>
           ) : (
-            <div className="journey-rsvp-artwork">
-              {!reducedMotion && (
-                <video
-                  aria-hidden="true"
-                  autoPlay
-                  className="journey-rsvp-artwork__background"
-                  data-testid="journey-rsvp-background"
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                >
-                  <source src={scene.rsvpMedia?.backgroundVideoPath} type="video/mp4" />
-                </video>
-              )}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                alt="Arte de asistencia"
-                className="journey-rsvp-artwork__panel"
-                src={scene.rsvpMedia?.attendanceArtworkPath}
-              />
-              <form className="journey-rsvp-form" onSubmit={submitRsvp}>
-                <label htmlFor="guest-name">Nombre</label>
-                <input id="guest-name" name="name" required />
-                <fieldset>
-                  <legend>¿Nos acompañas?</legend>
-                  <label>
-                    <input type="radio" name="attendance" value="yes" required /> Sí, caminaré con
-                    vosotros
-                  </label>
-                  <label>
-                    <input type="radio" name="attendance" value="no" /> No podré acompañaros
-                  </label>
-                </fieldset>
-                <button type="submit">Inscribir mi respuesta</button>
-              </form>
-            </div>
+            <form className="journey-rsvp-form-final" onSubmit={submitRsvp}>
+              <p>Confirma antes del {weddingConfig.rsvpDeadline.value}.</p>
+              <label htmlFor="guest-name">Nombre completo</label>
+              <input id="guest-name" name="name" defaultValue={rsvpDraft?.name} autoComplete="name" required />
+              <fieldset>
+                <legend>¿Asistirás?</legend>
+                <label><input type="radio" name="attendance" value="yes" defaultChecked={rsvpDraft?.attendance === "yes"} required /> Sí, no me lo pierdo</label>
+                <label><input type="radio" name="attendance" value="no" defaultChecked={rsvpDraft?.attendance === "no"} /> No podré asistir</label>
+              </fieldset>
+              <label htmlFor="guest-companions">Número de acompañantes</label>
+              <select id="guest-companions" name="companions" defaultValue={rsvpDraft?.companions ?? "0"}>
+                {[0, 1, 2, 3, 4, 5].map((count) => <option key={count} value={count}>{count}</option>)}
+              </select>
+              <label htmlFor="guest-allergies">Alergias o restricciones alimentarias</label>
+              <textarea id="guest-allergies" name="allergies" defaultValue={rsvpDraft?.allergies} rows={2} />
+              <label htmlFor="guest-menu">Menú preferido</label>
+              <select id="guest-menu" name="menu" defaultValue={rsvpDraft?.menu ?? ""}>
+                <option value="">Selecciona una opción</option>
+                <option value="Carne">Carne</option>
+                <option value="Pescado">Pescado</option>
+                <option value="Vegetariano">Vegetariano</option>
+              </select>
+              <label htmlFor="guest-message">Déjanos un mensaje</label>
+              <textarea id="guest-message" name="message" defaultValue={rsvpDraft?.message} rows={2} />
+              <button type="submit">Guardar mi respuesta</button>
+            </form>
           )}
           {!rsvpSaved && (
-            <button className="journey-dialog-secondary" type="button" onClick={() => goToStep(primarySurface?.destination_order ?? step + 1)}>
-              Continuar al cofre sin responder
+            <button className="journey-dialog-secondary" type="button" onClick={() => goToStep(13)}>
+              Continuar sin responder
             </button>
           )}
         </JourneyDialog>
+      )}
+
+      {dialog?.kind === "detail" && scene.detailArtwork && (
+        <div className="journey-detail-layer" role="presentation" onMouseDown={() => setDialog(null)}>
+          <section className="journey-detail-panel" role="dialog" aria-modal="true" aria-label={
+            dialog.panel === "music" ? "Música y alegría" : dialog.panel === "song" ? "Sugiere una canción" : dialog.panel === "memories" ? "Recuerdos para siempre" : "Contacto"
+          } onMouseDown={(event) => event.stopPropagation()}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={scene.detailArtwork[dialog.panel === "song" ? "song" : dialog.panel]} alt="" aria-hidden="true" />
+            <button className="journey-detail-close" type="button" aria-label="Cerrar" onClick={() => setDialog(null)}>×</button>
+            {dialog.panel === "music" && (
+              <button className="journey-detail-hotspot journey-detail-hotspot--bottom" type="button" onClick={() => setDialog({ kind: "detail", panel: "song" })}>
+                <span className="sr-only">Continuar para sugerir una canción</span>
+              </button>
+            )}
+            {dialog.panel === "song" && (
+              <form className="journey-song-form" onSubmit={(event) => {
+                event.preventDefault();
+                if (!song.trim()) return;
+                window.localStorage.setItem("gj-song-draft", song.trim());
+                setSongSaved(true);
+              }}>
+                <label className="sr-only" htmlFor="journey-song">¿Qué canción no puede faltar?</label>
+                <input id="journey-song" value={song} onChange={(event) => { setSong(event.target.value); setSongSaved(false); }} placeholder="Escribe tu canción aquí..." required />
+                <button type="submit"><span className="sr-only">Guardar mi canción</span></button>
+                {songSaved && (
+                  <div className="journey-song-status" role="status">
+                    Guardada en este dispositivo. Envíala para completar la sugerencia.
+                    <a href={whatsappHref(`Hola, Gladiola y Jordi. Sugiero esta canción para vuestra boda: ${song.trim()}`)} target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a>
+                  </div>
+                )}
+              </form>
+            )}
+            {dialog.panel === "memories" && (
+              <a className="journey-detail-hotspot journey-detail-hotspot--bottom" href={whatsappHref("Hola, Gladiola y Jordi. Quiero compartir fotos y vídeos del Vínculo Eterno; los adjunto en este chat.")} target="_blank" rel="noopener noreferrer">
+                <span className="sr-only">Abrir WhatsApp para adjuntar fotos y vídeos</span>
+              </a>
+            )}
+            {dialog.panel === "contact" && (
+              <>
+                <a className="journey-detail-hotspot journey-detail-hotspot--email" href={`mailto:${weddingConfig.contactEmail.value}`}><span className="sr-only">Escribir correo a Gladiola y Jordi</span></a>
+                <a className="journey-detail-hotspot journey-detail-hotspot--whatsapp" href={whatsappHref("Hola, Gladiola y Jordi.")} target="_blank" rel="noopener noreferrer"><span className="sr-only">Escribir por WhatsApp a Gladiola y Jordi</span></a>
+                <button className="journey-detail-hotspot journey-detail-hotspot--bottom" type="button" onClick={() => setDialog(null)}><span className="sr-only">Volver al camino</span></button>
+              </>
+            )}
+          </section>
+        </div>
       )}
 
       {dialog?.kind === "complete" && (

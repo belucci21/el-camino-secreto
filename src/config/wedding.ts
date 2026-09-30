@@ -34,15 +34,20 @@ export const weddingConfig = {
     mapsUrl: confirmed(
       "https://www.google.com/maps/search/?api=1&query=Castell%20Jalp%C3%AD%2C%20Arenys%20de%20Munt%2C%20Barcelona",
     ),
+    ceremonyMapsUrl: confirmed(
+      "https://www.google.com/maps/search/?api=1&query=Bas%C3%ADlica%20de%20la%20Pur%C3%ADsima%20Concepci%C3%B3n%2C%20Carrer%20de%20Roger%20de%20Ll%C3%BAria%2070%2C%20Barcelona",
+    ),
   },
-  dressCode: confirmed("Formal elegante"),
+  dressCode: confirmed("Formal elegante. Blanco y colores claros reservados para la novia."),
   transport: confirmed(
     "Consulta las rutas hacia Barcelona y Arenys de Munt desde la sección «Cómo llegar».",
   ),
   accommodation: pending(),
   gifts: pending(),
-  contactPhone: pending(),
-  rsvpWhatsApp: pending("Número pendiente de confirmar"),
+  contactPhone: confirmed("+34 641 30 06 70"),
+  contactEmail: confirmed("vinculoglayjor@gmail.com"),
+  rsvpWhatsApp: confirmed("+34 641 30 06 70"),
+  rsvpDeadline: confirmed("1 de mayo de 2027"),
   finalMessage: confirmed(
     "Lo más valioso para nosotros es compartir este día contigo. Gracias por ser parte de nuestro viaje.",
   ),
