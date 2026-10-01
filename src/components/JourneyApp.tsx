@@ -141,6 +141,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const [playedMotionSteps, setPlayedMotionSteps] = useState<Set<number>>(() => new Set());
   const stageRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
+  const navigationRef = useRef(0);
   const scene = scenes[step - 1];
   const audio = useAudio();
   const { ensureContinuity, preloadNarration, syncNarration } = audio;
@@ -174,11 +175,20 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     : undefined;
 
   const goToStep = useCallback(
-    (nextStep: number, showFrozenFrame = false) => {
+    async (nextStep: number, showFrozenFrame = false) => {
       // Keep the already-running ambient track alive while iOS swaps the
       // native video element for the next scene. This never resets its seek.
       void ensureContinuity();
       const boundedStep = Math.min(scenes.length, Math.max(1, nextStep));
+      const navigation = ++navigationRef.current;
+      if (showFrozenFrame) {
+        // Keep the current composition visible until the chapter's full still
+        // is decoded, so a slow image download cannot paint in strips.
+        const frame = new window.Image();
+        frame.src = scenes[boundedStep - 1].frozenFramePath;
+        try { await frame.decode?.(); } catch { /* Preserve navigation if a media request fails. */ }
+        if (navigation !== navigationRef.current) return;
+      }
       setDialog(null);
       if (showFrozenFrame) {
         setPlayedMotionSteps((current) => new Set(current).add(boundedStep));

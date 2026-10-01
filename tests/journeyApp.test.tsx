@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import userEvent from "@testing-library/user-event";
@@ -50,6 +50,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   window.localStorage.clear();
 });
 
@@ -309,6 +310,25 @@ describe("JourneyApp", () => {
       screen.getByRole("region", { name: /Paso 12 de 16/i }),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+  });
+
+  it("keeps the current chapter visible until the requested still is decoded", async () => {
+    let finishDecode!: () => void;
+    const pending = new Promise<void>((resolve) => { finishDecode = resolve; });
+    vi.stubGlobal("Image", vi.fn(function () {
+      const image = document.createElement("img");
+      image.decode = () => image.src.includes("12-rsvp-final") ? pending : Promise.resolve();
+      return image;
+    }));
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={3} />);
+    await user.click(screen.getByRole("button", { name: "CAPÍTULOS" }));
+    await user.click(screen.getByRole("button", { name: /12.*CONFIRMACIÓN DE ASISTENCIA/i }));
+    expect(screen.getByRole("region", { name: /Paso 3 de 16/i })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Capítulos" })).toBeInTheDocument();
+    await act(async () => finishDecode());
+    expect(screen.getByRole("region", { name: /Paso 12 de 16/i })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Capítulos" })).not.toBeInTheDocument();
   });
 
   it("keeps scene two on screen when the visitor scrolls or swipes", () => {
