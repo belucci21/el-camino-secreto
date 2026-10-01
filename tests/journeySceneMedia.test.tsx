@@ -20,6 +20,10 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.clearAllMocks(); });
 
 describe("cinematic scene playback", () => {
+  it("keeps immediate actions available even before the first video event", () => {
+    const { container } = render(<JourneySceneMedia {...props} interactionReadyAt={0} />);
+    expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "interactive");
+  });
   it("asks the ambient soundtrack to recover when each new film starts", () => {
     render(<JourneySceneMedia {...props} />);
 

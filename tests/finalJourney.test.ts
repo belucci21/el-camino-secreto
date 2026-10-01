@@ -9,6 +9,26 @@ function publicAsset(path: string) {
 }
 
 describe("September 30 final journey", () => {
+  it("draws missing controls and covers the lower half of delivered buttons", () => {
+    expect(finalJourneyScenes[2].renderedControls).toEqual(["music_toggle", "chapters_menu", "continue"]);
+    expect(finalJourneyScenes[14].renderedControls).toEqual(["music_toggle", "chapters_menu"]);
+    expect(finalJourneyScenes[14].videoPath).toContain("15-important-details-v2");
+    expect(finalJourneyScenes[14].aspectRatio).toBe(1080 / 2230);
+    expect(finalJourneyScenes[15].videoPath).toContain("16-final-thanks-v2");
+    expect(finalJourneyScenes[15].narrationPath).toContain("16-final-thanks-v2-voice.mp3");
+    expect(finalJourneyScenes[15].holdFrameAt).toBeUndefined();
+    expect(finalJourneyScenes[15].renderedControls).toEqual(["music_toggle", "chapters_menu"]);
+    expect(finalJourneyScenes[5].surfaces.some(item => item.id === "save_date")).toBe(false);
+    for (const order of [7, 8, 9, 10, 11]) {
+      const bounds = journeyHotspots[order].continue;
+      expect(bounds.y).toBeLessThanOrEqual(92);
+      expect(bounds.y + bounds.height).toBeGreaterThanOrEqual(96);
+    }
+    const map = journeyHotspots[9].celebration_map;
+    expect(map.y + map.height).toBeGreaterThanOrEqual(87);
+    const rsvp = journeyHotspots[12].rsvp;
+    expect(rsvp.y + rsvp.height).toBeGreaterThanOrEqual(73);
+  });
   it("keeps all sixteen delivered scenes in one ordered manifest", () => {
     expect(finalJourneyScenes).toHaveLength(16);
     expect(finalJourneyScenes.map(({ order }) => order)).toEqual(Array.from({ length: 16 }, (_, index) => index + 1));

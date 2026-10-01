@@ -15,6 +15,8 @@ import { journeyHotspots } from "../config/journeyInteractions";
 import { weddingConfig } from "../config/wedding";
 import { useAudio } from "../hooks/useAudio";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useDialogViewport } from "../hooks/useDialogViewport";
+import { submitJourneyResponse } from "../utils/submitJourneyResponse";
 import type { JourneyButtonSurface } from "../types/journey";
 import { downloadICS } from "../utils/generateICS";
 import { validateSecretWord } from "../utils/secretWord";
@@ -33,7 +35,7 @@ type DialogState =
   | { kind: "secret" }
   | { kind: "message"; title: string; eyebrow?: string; body: string }
   | { kind: "rsvp" }
-  | { kind: "detail"; panel: "music" | "song" | "memories" | "contact" }
+  | { kind: "detail"; panel: "music" | "song" | "thanks" | "memories" | "contact" }
   | { kind: "complete" }
   | null;
 
@@ -48,17 +50,6 @@ type RsvpDraft = {
 
 function whatsappHref(message: string) {
   return `https://wa.me/${weddingConfig.rsvpWhatsApp.value.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
-}
-
-function rsvpMessage(draft: RsvpDraft) {
-  return [
-    `Hola, Gladiola y Jordi. Soy ${draft.name}.`,
-    draft.attendance === "yes" ? "Confirmo mi asistencia." : "No podré asistir.",
-    `Acompañantes: ${draft.companions}.`,
-    draft.allergies && `Alergias/restricciones: ${draft.allergies}.`,
-    draft.menu && `Menú preferido: ${draft.menu}.`,
-    draft.message && `Mensaje: ${draft.message}`,
-  ].filter(Boolean).join("\n");
 }
 
 const detailCopy: Record<string, { title: string; body: string }> = {
@@ -137,7 +128,11 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const [rsvpSaved, setRsvpSaved] = useState(false);
   const [rsvpDraft, setRsvpDraft] = useState<RsvpDraft | null>(null);
   const [song, setSong] = useState("");
-  const [songSaved, setSongSaved] = useState(false);
+  const [submissionPending, setSubmissionPending] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
+  const rsvpId = useRef<string>("");
+  const songId = useRef<string>("");
+  useDialogViewport(dialog !== null);
   const [playedMotionSteps, setPlayedMotionSteps] = useState<Set<number>>(() => new Set());
   const stageRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
@@ -164,6 +159,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
     [scene.surfaces],
   );
   const primaryBounds = primarySurface ? hotspots[primarySurface.id] : undefined;
+  const renderPrimary = primarySurface && scene.renderedControls?.includes(primarySurface.id);
   const primaryStyle = primaryBounds
     ? {
         "--hotspot-x": `${primaryBounds.x}%`,
@@ -327,9 +323,11 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           }
           break;
         case "open_rsvp":
+          setSubmissionError("");
           setDialog({ kind: "rsvp" });
           break;
         case "open_music_prompt":
+          setSubmissionError("");
           setDialog({ kind: "detail", panel: "music" });
           break;
         case "open_memories":
@@ -366,8 +364,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   );
 
   const submitRsvp = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
+    async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+      if (submissionPending) return;
       const form = new FormData(event.currentTarget);
       const payload: RsvpDraft = {
         name: String(form.get("name") ?? ""),
@@ -377,12 +376,35 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         menu: String(form.get("menu") ?? ""),
         message: String(form.get("message") ?? ""),
       };
-      window.localStorage.setItem("gj-rsvp-draft", JSON.stringify(payload));
       setRsvpDraft(payload);
-      setRsvpSaved(true);
+      setSubmissionPending(true);
+      setSubmissionError("");
+      rsvpId.current ||= crypto.randomUUID();
+      try {
+        await submitJourneyResponse({ kind: "rsvp", id: rsvpId.current, ...payload });
+        setRsvpSaved(true);
+        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      } catch {
+        setSubmissionError("No se ha podido enviar. Tus datos siguen aquí; vuelve a intentarlo.");
+      } finally { setSubmissionPending(false); }
     },
-    [],
+    [submissionPending],
   );
+
+  const submitSong = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!song.trim() || submissionPending) return;
+    setSubmissionPending(true);
+    setSubmissionError("");
+    songId.current ||= crypto.randomUUID();
+    try {
+      await submitJourneyResponse({ kind: "song", id: songId.current, song: song.trim() });
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      setDialog(current => current?.kind === "detail" && current.panel === "song" ? { kind: "detail", panel: "thanks" } : current);
+    } catch {
+      setSubmissionError("No se ha podido enviar. Tu canción sigue aquí; vuelve a intentarlo.");
+    } finally { setSubmissionPending(false); }
+  };
 
   const hotspotButtons = scene.surfaces.map((surface) => {
         if (surface.id === primarySurface?.id) return null;
@@ -398,7 +420,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
 
         return (
           <button
-            className="journey-hotspot"
+            className={`journey-hotspot${scene.renderedControls?.includes(surface.id) ? " journey-hotspot--rendered" : ""}`}
             data-control={surface.id === "music_toggle" || surface.id === "chapters_menu"}
             data-action={surface.action}
             data-surface={surface.id}
@@ -411,6 +433,16 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             <span className="sr-only">
               {surface.id === "music_toggle" ? "Música" : buttonLabel(surface, audio.enabled)}
             </span>
+            {scene.renderedControls?.includes(surface.id) && (
+              <span className="journey-rendered-control" aria-hidden="true">
+                {surface.id === "music_toggle" ? <span className="journey-rendered-icon">♪</span> : (
+                  <svg className="journey-rendered-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M16 8C12 5 7 5 3 6v20c4-1 9-1 13 2 4-3 9-3 13-2V6c-4-1-9-1-13 2Zm0 0v20" />
+                  </svg>
+                )}
+                <span className="journey-rendered-label">{surface.visible_label}</span>
+              </span>
+            )}
             {surface.id === "save_date" && (
               <span className="journey-save-date-label" aria-hidden="true">Guardar fecha</span>
             )}
@@ -443,6 +475,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
 
       <section
         className="journey-shell"
+        style={{ "--journey-ratio": scene.aspectRatio ?? 9 / 16 } as CSSProperties}
         aria-label={`Paso ${step} de ${scenes.length}: ${chapterName(scene)}`}
         ref={stageRef}
       >
@@ -484,12 +517,12 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             <div className="journey-hotspots">{hotspotButtons}</div>
             {primarySurface && primaryBounds && (
               <button
-                className={`journey-primary-action${step === 15 ? " journey-primary-action--visible" : ""}`}
+                className={`journey-primary-action${renderPrimary ? " journey-primary-action--visible" : ""}`}
                 style={primaryStyle}
                 type="button"
                 onClick={() => void handleSurface(primarySurface)}
               >
-                <span className={step === 15 ? "" : "sr-only"}>{primarySurface.visible_label}</span>
+                <span className={renderPrimary ? "" : "sr-only"}>{primarySurface.visible_label}</span>
               </button>
             )}
           </div>
@@ -536,7 +569,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       </section>
 
       {dialog?.kind === "chapters" && (
-        <JourneyDialog title="Capítulos" eyebrow="El Camino Secreto" onClose={() => setDialog(null)} wide>
+        <JourneyDialog title="Capítulos" eyebrow="El vínculo eterno" onClose={() => setDialog(null)} wide>
           <nav className="journey-chapters" aria-label="Navegación por capítulos">
             {scenes.slice(1).map((item) => (
               <button
@@ -561,8 +594,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           <form className="journey-secret-form" onSubmit={submitSecret}>
             <label htmlFor="secret-word">Di la palabra y entra</label>
             <input
-              autoFocus
               autoComplete="off"
+              autoCapitalize="none"
+              enterKeyHint="go"
               id="secret-word"
               name="secret-word"
               value={secretWord}
@@ -608,14 +642,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           {rsvpSaved && rsvpDraft ? (
             <>
               <p className="journey-dialog-copy" role="status">
-                Respuesta guardada en este dispositivo. Aún debes enviarla a Gladiola y Jordi.
+                ¡Gracias! Tu respuesta se ha enviado a Gladiola y Jordi.
               </p>
-              <a className="journey-dialog-primary" href={whatsappHref(rsvpMessage(rsvpDraft))} target="_blank" rel="noopener noreferrer">
-                Enviar por WhatsApp
-              </a>
-              <a className="journey-dialog-secondary" href={`mailto:${weddingConfig.contactEmail.value}?subject=${encodeURIComponent("RSVP Gladiola y Jordi")}&body=${encodeURIComponent(rsvpMessage(rsvpDraft))}`}>
-                Enviar por correo
-              </a>
               <button className="journey-dialog-secondary" type="button" onClick={() => setRsvpSaved(false)}>
                 Editar respuesta
               </button>
@@ -648,7 +676,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               </select>
               <label htmlFor="guest-message">Déjanos un mensaje</label>
               <textarea id="guest-message" name="message" defaultValue={rsvpDraft?.message} rows={2} />
-              <button type="submit">Guardar mi respuesta</button>
+              {submissionError && <p role="alert">{submissionError}</p>}
+              <button type="submit" disabled={submissionPending}>{submissionPending ? "Enviando…" : "Confirmar mi asistencia"}</button>
             </form>
           )}
           {!rsvpSaved && (
@@ -662,10 +691,10 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       {dialog?.kind === "detail" && scene.detailArtwork && (
         <div className="journey-detail-layer" role="presentation" onMouseDown={() => setDialog(null)}>
           <section className="journey-detail-panel" role="dialog" aria-modal="true" aria-label={
-            dialog.panel === "music" ? "Música y alegría" : dialog.panel === "song" ? "Sugiere una canción" : dialog.panel === "memories" ? "Recuerdos para siempre" : "Contacto"
+            dialog.panel === "music" ? "Música y alegría" : dialog.panel === "song" ? "Sugiere una canción" : dialog.panel === "thanks" ? "Canción enviada" : dialog.panel === "memories" ? "Recuerdos para siempre" : "Contacto"
           } onMouseDown={(event) => event.stopPropagation()}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={scene.detailArtwork[dialog.panel === "song" ? "song" : dialog.panel]} alt="" aria-hidden="true" />
+            <img src={scene.detailArtwork[dialog.panel]} alt="" aria-hidden="true" />
             <button className="journey-detail-close" type="button" aria-label="Cerrar" onClick={() => setDialog(null)}>×</button>
             {dialog.panel === "music" && (
               <button className="journey-detail-hotspot journey-detail-hotspot--bottom" type="button" onClick={() => setDialog({ kind: "detail", panel: "song" })}>
@@ -673,22 +702,19 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               </button>
             )}
             {dialog.panel === "song" && (
-              <form className="journey-song-form" onSubmit={(event) => {
-                event.preventDefault();
-                if (!song.trim()) return;
-                window.localStorage.setItem("gj-song-draft", song.trim());
-                setSongSaved(true);
-              }}>
+              <form className="journey-song-form" onSubmit={submitSong}>
                 <label className="sr-only" htmlFor="journey-song">¿Qué canción no puede faltar?</label>
-                <input id="journey-song" value={song} onChange={(event) => { setSong(event.target.value); setSongSaved(false); }} placeholder="Escribe tu canción aquí..." required />
-                <button type="submit"><span className="sr-only">Guardar mi canción</span></button>
-                {songSaved && (
-                  <div className="journey-song-status" role="status">
-                    Guardada en este dispositivo. Envíala para completar la sugerencia.
-                    <a href={whatsappHref(`Hola, Gladiola y Jordi. Sugiero esta canción para vuestra boda: ${song.trim()}`)} target="_blank" rel="noopener noreferrer">Abrir WhatsApp</a>
-                  </div>
-                )}
+                <input id="journey-song" value={song} onChange={(event) => { setSong(event.target.value); setSubmissionError(""); }} placeholder="Escribe tu canción aquí..." maxLength={500} enterKeyHint="send" required />
+                <button type="submit" disabled={submissionPending}><span className="sr-only">Enviar mi canción</span></button>
+                {submissionPending && <p className="journey-song-status" role="status">Enviando…</p>}
+                {submissionError && <p className="journey-song-error" role="alert">{submissionError}</p>}
               </form>
+            )}
+            {dialog.panel === "thanks" && (
+              <>
+                <p className="sr-only" role="status">¡Gracias! Tu canción se ha enviado y forma parte de nuestra banda sonora.</p>
+                <button className="journey-detail-hotspot journey-detail-hotspot--bottom" type="button" onClick={() => setDialog(null)}><span className="sr-only">Volver al camino</span></button>
+              </>
             )}
             {dialog.panel === "memories" && (
               <a className="journey-detail-hotspot journey-detail-hotspot--bottom" href={whatsappHref("Hola, Gladiola y Jordi. Quiero compartir fotos y vídeos del Vínculo Eterno; los adjunto en este chat.")} target="_blank" rel="noopener noreferrer">

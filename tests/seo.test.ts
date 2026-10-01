@@ -5,7 +5,8 @@ import { seoConfig } from "../src/config/seo";
 
 describe("delivered social preview", () => {
   it("uses the approved wedding-journey title", () => {
-    expect(seoConfig.title).toBe("El camino del vinculo eterno | Gladiola & Jordi");
+    expect(seoConfig.title).toBe("El vínculo eterno");
+    expect(readFileSync("public/manifest.webmanifest", "utf8")).not.toMatch(/Camino Secreto/i);
   });
 
   it("serves the exact lightweight JPEG approved for sharing", () => {

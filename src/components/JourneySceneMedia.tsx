@@ -38,8 +38,8 @@ export function JourneySceneMedia({
   const playhead = useRef(0);
   const completed = useRef(false);
   const playing = useRef(false);
-  const ready = useRef(false);
-  const [controlsReady, setControlsReady] = useState(false);
+  const ready = useRef(interactionReadyAt <= 0);
+  const [controlsReady, setControlsReady] = useState(interactionReadyAt <= 0);
   const [videoReady, setVideoReady] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
   const [holdingFrame, setHoldingFrame] = useState(false);

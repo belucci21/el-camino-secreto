@@ -5,6 +5,9 @@ import userEvent from "@testing-library/user-event";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { JourneyApp } from "../src/components/JourneyApp";
+import { submitJourneyResponse } from "../src/utils/submitJourneyResponse";
+
+vi.mock("../src/utils/submitJourneyResponse", () => ({ submitJourneyResponse: vi.fn() }));
 
 vi.mock("gsap", () => ({
   default: {
@@ -43,6 +46,7 @@ vi.mock("howler", () => ({
 }));
 
 beforeEach(() => {
+  vi.mocked(submitJourneyResponse).mockReset().mockResolvedValue();
   vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
   vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
 });
@@ -55,6 +59,33 @@ afterEach(() => {
 });
 
 describe("JourneyApp", () => {
+  it("retains failed RSVP data and only confirms after a successful retry", async () => {
+    vi.mocked(submitJourneyResponse).mockRejectedValueOnce(new Error("offline"));
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={12} />);
+    await user.click(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA", exact: true }));
+    await user.type(screen.getByLabelText("Nombre completo"), "Invitado prueba");
+    await user.click(screen.getByLabelText(/Sí, no me lo pierdo/));
+    await user.click(screen.getByRole("button", { name: "Confirmar mi asistencia", exact: true }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se ha podido enviar");
+    expect(screen.getByLabelText("Nombre completo")).toHaveValue("Invitado prueba");
+    expect(screen.queryByText(/Tu respuesta se ha enviado/)).not.toBeInTheDocument();
+    const firstId = vi.mocked(submitJourneyResponse).mock.calls[0][0].id;
+    await user.click(screen.getByRole("button", { name: "Confirmar mi asistencia", exact: true }));
+    expect(await screen.findByText(/Tu respuesta se ha enviado/)).toBeInTheDocument();
+    expect(vi.mocked(submitJourneyResponse).mock.calls[1][0].id).toBe(firstId);
+  });
+  it("keeps the song form on delivery failure instead of showing thanks", async () => {
+    vi.mocked(submitJourneyResponse).mockRejectedValueOnce(new Error("offline"));
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={14} />);
+    await user.click(screen.getByRole("button", { name: "MÚSICA Y ALEGRÍA" }));
+    await user.click(screen.getByRole("button", { name: "Continuar para sugerir una canción" }));
+    await user.type(screen.getByLabelText("¿Qué canción no puede faltar?"), "Canción de prueba");
+    await user.click(screen.getByRole("button", { name: "Enviar mi canción" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Tu canción sigue aquí");
+    expect(screen.queryByRole("dialog", { name: "Canción enviada" })).not.toBeInTheDocument();
+  });
   it("does not offer entry buttons before their client handlers are ready", () => {
     const document = new DOMParser().parseFromString(renderToString(<JourneyApp />), "text/html");
     document.querySelectorAll(".journey-entry-gate button").forEach((button) => {
@@ -68,9 +99,10 @@ describe("JourneyApp", () => {
     await user.click(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA" }));
     await user.type(screen.getByLabelText("Nombre completo"), "Invitado de prueba");
     await user.click(screen.getByLabelText(/Sí, no me lo pierdo/));
-    await user.click(screen.getByRole("button", { name: "Guardar mi respuesta" }));
-    expect(JSON.parse(localStorage.getItem("gj-rsvp-draft")!)).toEqual(expect.objectContaining({ name: "Invitado de prueba", attendance: "yes" }));
-    expect(screen.getByText(/Aún debes enviarla/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Confirmar mi asistencia", exact: true }));
+    expect(submitJourneyResponse).toHaveBeenCalledWith(expect.objectContaining({ kind: "rsvp", name: "Invitado de prueba", attendance: "yes" }));
+    expect(screen.getByText(/Tu respuesta se ha enviado/)).toBeInTheDocument();
+    expect(screen.queryByText("Enviar por WhatsApp")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continuar el camino" }));
     expect(screen.getByRole("region", { name: /Paso 13 de 16/ })).toBeInTheDocument();
     fireEvent.ended(screen.getByTestId("journey-motion-video"));
@@ -105,7 +137,7 @@ describe("JourneyApp", () => {
     expect(video).not.toHaveAttribute("poster");
     expect(source).toHaveAttribute("src", "/journey-final/04-secret-door.mp4");
     expect(sceneImage).toHaveAttribute("src", "/journey-final/04-secret-door-final.png");
-    expect(media).toHaveAttribute("data-media-phase", "motion");
+    expect(media).toHaveAttribute("data-media-phase", "interactive");
 
     fireEvent.ended(video);
 
@@ -206,15 +238,19 @@ describe("JourneyApp", () => {
   it("keeps utility controls visibly discoverable on hover without restoring a filled overlay", () => {
     const styles = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
 
-    expect(styles).toMatch(/\.journey-hotspot\[data-control="true"\]:hover\s*\{[^}]*outline:/s);
-    expect(styles).toMatch(/\.journey-hotspot\[data-control="true"\]:hover\s*\{[^}]*background:\s*radial-gradient/s);
+    expect(styles).toMatch(/\.journey-hotspot\[data-control="true"\]:hover\s*\{[^}]*background:\s*transparent/s);
+    expect(styles).toMatch(/\.journey-hotspot\[data-control="true"\]:hover\s*\{[^}]*box-shadow:\s*none/s);
   });
 
   it("keeps the scene three and four primary actions accessible inside their approved hotspots", () => {
     const { unmount } = render(<JourneyApp initialStep={3} />);
 
     const sceneThreeAction = screen.getByRole("button", { name: "Continuar" });
-    expect(sceneThreeAction.querySelector(".sr-only")?.textContent).toBe("Continuar");
+    expect(sceneThreeAction).toHaveClass("journey-primary-action--visible");
+    expect(sceneThreeAction.querySelector(".sr-only")).toBeNull();
+    for (const name of ["Activar música", "CAPÍTULOS"]) {
+      expect(screen.getByRole("button", { name })).toHaveClass("journey-hotspot--rendered");
+    }
     expect(sceneThreeAction).toHaveStyle({
       "--hotspot-x": "12%",
       "--hotspot-y": "91%",
@@ -370,10 +406,10 @@ describe("JourneyApp", () => {
     expect(screen.getByRole("dialog", { name: "Música y alegría" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continuar para sugerir una canción" }));
     await user.type(screen.getByLabelText("¿Qué canción no puede faltar?"), "Nuestra canción");
-    await user.click(screen.getByRole("button", { name: "Guardar mi canción" }));
-    expect(localStorage.getItem("gj-song-draft")).toBe("Nuestra canción");
-    expect(screen.getByText(/Guardada en este dispositivo/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Cerrar" }));
+    await user.click(screen.getByRole("button", { name: "Enviar mi canción" }));
+    expect(submitJourneyResponse).toHaveBeenCalledWith(expect.objectContaining({kind: "song", song: "Nuestra canción"}));
+    expect(screen.getByRole("dialog", { name: "Canción enviada" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Volver al camino" }));
 
     await user.click(screen.getByRole("button", { name: "RECUERDOS PARA SIEMPRE" }));
     expect(screen.getByRole("link", { name: "Abrir WhatsApp para adjuntar fotos y vídeos" })).toHaveAttribute("href", expect.stringContaining("wa.me/34641300670"));

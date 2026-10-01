@@ -1,8 +1,8 @@
 export const seoConfig = {
   canonical: "https://gladiolajordivinculoeterno.com/",
-  title: "El camino del vinculo eterno | Gladiola & Jordi",
+  title: "El vínculo eterno",
   description:
-    "Recorre El Camino del Vínculo: la invitación de boda de Gladiola y Jordi, una historia para vivir y celebrar juntos.",
+    "El vínculo eterno: la invitación de boda de Gladiola y Jordi. Una historia para vivir y celebrar juntos.",
   image: "/og-vinculo-20260907.jpg",
   imageWidth: 1640,
   imageHeight: 959,
