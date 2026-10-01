@@ -3389,31 +3389,6 @@ button:hover,
   animation-delay: -.38s;
 }
 
-.journey-audio-off-mask {
-  display: none;
-}
-
-.journey-hotspot[data-surface="music_toggle"]::after {
-  position: absolute;
-  z-index: 2;
-  top: 104%;
-  left: 6%;
-  display: grid;
-  place-items: center;
-  width: 165%;
-  height: 87%;
-  content: "MÚSICA";
-  pointer-events: none;
-  color: #f8e9c5;
-  border: 1px solid rgba(219, 181, 90, .65);
-  border-radius: 999px;
-  background: #0c2718;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, .32);
-  font-family: var(--serif-display);
-  font-size: clamp(.48rem, 1.7vw, .64rem);
-  letter-spacing: .04em;
-}
-
 .journey-audio-live i:nth-child(3) {
   height: 11px;
   animation-delay: -.15s;
@@ -3478,7 +3453,6 @@ button:hover,
   border: 1px solid rgba(225, 187, 80, .26);
   border-radius: 999px;
   background: rgba(3, 10, 5, .64);
-  backdrop-filter: blur(8px);
   font-family: var(--serif-display);
   font-size: clamp(.43rem, .72vw, .62rem);
   letter-spacing: .08em;

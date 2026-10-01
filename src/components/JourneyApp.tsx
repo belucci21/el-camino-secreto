@@ -404,9 +404,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             {surface.id === "save_date" && (
               <span className="journey-save-date-label" aria-hidden="true">Guardar fecha</span>
             )}
-            {surface.id === "music_toggle" && (
-              <span className="journey-audio-off-mask" aria-hidden="true" />
-            )}
             {surface.id === "music_toggle" && audio.enabled && (
               <span className="journey-audio-live" aria-hidden="true">
                 <i />

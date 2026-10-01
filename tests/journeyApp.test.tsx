@@ -244,13 +244,13 @@ describe("JourneyApp", () => {
 
     const music = screen.getByRole("button", { name: "Activar música" });
     expect(music).toHaveAttribute("data-surface", "music_toggle");
-    expect(music.querySelector(".journey-audio-off-mask")).toBeInTheDocument();
+    expect(music.querySelector(".journey-audio-off-mask")).toBeNull();
     expect(music.querySelector(".journey-audio-label")).toBeNull();
     expect(music.querySelector(".journey-audio-status")).toBeNull();
 
     await user.click(music);
     const activeMusic = await screen.findByRole("button", { name: "Desactivar música" });
-    expect(activeMusic.querySelector(".journey-audio-off-mask")).toBeInTheDocument();
+    expect(activeMusic.querySelector(".journey-audio-off-mask")).toBeNull();
     expect(activeMusic.querySelector(".journey-audio-status")).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "¿ESTÁS PERDIDO?" }));
