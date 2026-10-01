@@ -3174,6 +3174,33 @@ button:hover,
   transition: opacity 380ms ease-out;
 }
 
+/* Retain the already-decoded outgoing frame until the next video is presented.
+   This layer survives the keyed media mount and never needs a PNG round trip. */
+.journey-navigation-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+.journey-navigation-frame[data-visible="true"] {
+  opacity: 1;
+  transition: none;
+}
+
+.journey-navigation-frame[data-transitioning="true"] {
+  pointer-events: auto;
+}
+
+.journey-navigation-frame[data-transitioning="false"] {
+  transition: none;
+}
+
 /* A control becoming available must never cut a still-moving film. */
 .journey-primary-action {
   transition: opacity 160ms ease-out;

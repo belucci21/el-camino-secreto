@@ -12,7 +12,7 @@ const wideContinue = { x: 8, y: 83, width: 84, height: 13, radius: 4 };
 export const journeyHotspots: Record<number, Record<string, JourneyHotspot>> = {
   1: { music_toggle: music, chapters_menu: chapters, start_journey: { x: 14, y: 79, width: 72, height: 11, radius: 4 } },
   2: { music_toggle: music, chapters_menu: chapters, start_journey: { x: 16, y: 78, width: 68, height: 11, radius: 4 } },
-  3: { music_toggle: music, chapters_menu: chapters, continue: { x: 12, y: 91, width: 76, height: 7, radius: 4 } },
+  3: { music_toggle: music, chapters_menu: chapters, continue: { x: 12, y: 87, width: 76, height: 10, radius: 4 } },
   4: { music_toggle: music, chapters_menu: chapters, decode_word: { x: 20, y: 79, width: 60, height: 7, radius: 4 }, hint: { x: 29, y: 85.6, width: 42, height: 5.2, radius: .45 } },
   5: { music_toggle: music, chapters_menu: chapters, continue: wideContinue },
   6: { music_toggle: music, chapters_menu: chapters, continue: wideContinue },

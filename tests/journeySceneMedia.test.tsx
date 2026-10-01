@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { JourneySceneMedia } from "../src/components/JourneySceneMedia";
 import { finalJourneyScenes } from "../src/config/finalJourney";
@@ -7,7 +7,7 @@ const props = {
   sceneOrder: 12, title: "Confirmación de asistencia", couple: "Gladiola & Jordi",
   videoPath: "/journey-final/12-rsvp.mp4", frozenFramePath: "/journey-final/12-rsvp-final.png",
   narrationPath: "/journey-final/12-rsvp-voice.m4a",
-  firstFramePath: "/journey-final/12-rsvp-first.png", previousFramePath: "/journey-final/11-dress-code-final.png",
+  firstFramePath: "/journey-final/12-rsvp-first.png",
   holdFrameAt: 25.866667, hasNarration: true, audioEnabled: true, paused: false,
   interactionReadyAt: 16.433333, narrationWindows: [[0.414, 18.005], [22.862, 40.472]] as [number, number][],
   reducedMotion: false, motionEnabled: true, onMotionComplete: vi.fn(),
@@ -41,7 +41,11 @@ describe("cinematic scene playback", () => {
       const { container, unmount } = render(<JourneySceneMedia {...props} />);
       fireEvent.playing(screen.getByTestId("journey-motion-video"));
       expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-video-ready", "false");
+      expect(props.onSceneReady).not.toHaveBeenCalled();
       expect(present).toBeDefined();
+      act(() => present!(0, { mediaTime: 0 } as VideoFrameCallbackMetadata));
+      expect(props.onSceneReady).toHaveBeenCalledWith(12, false);
+      expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-video-ready", "true");
       unmount();
     } finally {
       Reflect.deleteProperty(HTMLVideoElement.prototype, "requestVideoFrameCallback");
@@ -92,10 +96,10 @@ describe("cinematic scene playback", () => {
     fireEvent.pause(video);
     expect(props.onNarrationSync).toHaveBeenLastCalledWith(props.narrationPath, 3.25, false);
   });
-  it("holds the outgoing frame until the next film actually plays", () => {
+  it("holds the first frame until the film actually plays", () => {
     const { container } = render(<JourneySceneMedia {...props} />);
     const media = container.querySelector(".journey-scene-media");
-    expect(container.querySelector(".journey-scene-transition")).toHaveAttribute("src", props.previousFramePath);
+    expect(container.querySelector(".journey-scene-transition")).toHaveAttribute("src", props.firstFramePath);
     expect(media).toHaveAttribute("data-video-ready", "false");
     fireEvent.loadedData(screen.getByTestId("journey-motion-video"));
     expect(media).toHaveAttribute("data-video-ready", "false");

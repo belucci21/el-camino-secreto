@@ -246,16 +246,16 @@ describe("JourneyApp", () => {
     const { unmount } = render(<JourneyApp initialStep={3} />);
 
     const sceneThreeAction = screen.getByRole("button", { name: "Continuar" });
-    expect(sceneThreeAction).toHaveClass("journey-primary-action--visible");
-    expect(sceneThreeAction.querySelector(".sr-only")).toBeNull();
+    expect(sceneThreeAction).not.toHaveClass("journey-primary-action--visible");
+    expect(sceneThreeAction.querySelector(".sr-only")).toHaveTextContent("Continuar");
     for (const name of ["Activar música", "CAPÍTULOS"]) {
-      expect(screen.getByRole("button", { name })).toHaveClass("journey-hotspot--rendered");
+      expect(screen.getByRole("button", { name })).not.toHaveClass("journey-hotspot--rendered");
     }
     expect(sceneThreeAction).toHaveStyle({
       "--hotspot-x": "12%",
-      "--hotspot-y": "91%",
+      "--hotspot-y": "87%",
       "--hotspot-width": "76%",
-      "--hotspot-height": "7%",
+      "--hotspot-height": "10%",
     });
 
     unmount();
@@ -273,6 +273,35 @@ describe("JourneyApp", () => {
     const riddle = screen.getByRole("button", { name: "¿ESTÁS PERDIDO?" });
     expect(riddle).not.toHaveAttribute("data-display-label");
     expect(riddle.querySelector(".journey-hotspot-label")).toBeNull();
+  });
+
+  it("retains a decoded outgoing canvas until the next film presents a frame", async () => {
+    const drawImage = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage } as unknown as CanvasRenderingContext2D);
+    const encode = vi.spyOn(HTMLCanvasElement.prototype, "toDataURL");
+    const user = userEvent.setup();
+    const { container } = render(<JourneyApp initialStep={2} />);
+    const outgoing = screen.getByTestId("journey-motion-video");
+    Object.defineProperties(outgoing, {
+      readyState: { value: 2 }, videoWidth: { value: 720 }, videoHeight: { value: 1280 },
+    });
+    fireEvent.playing(outgoing);
+    const canvas = container.querySelector(".journey-navigation-frame");
+
+    await user.click(screen.getByRole("button", { name: "COMENZAR EL CAMINO" }));
+
+    expect(drawImage).toHaveBeenCalledWith(outgoing, 0, 0);
+    expect(encode).not.toHaveBeenCalled();
+    expect(container.querySelector(".journey-navigation-frame")).toBe(canvas);
+    expect(canvas).toHaveAttribute("data-visible", "true");
+    expect(screen.getByRole("region", { name: /Paso 3 de 16/ })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("region", { name: /Paso 3 de 16/ })).toBeInTheDocument();
+    fireEvent.playing(screen.getByTestId("journey-motion-video"));
+    expect(canvas).toHaveAttribute("data-visible", "false");
+    expect(canvas).toHaveAttribute("data-transitioning", "true");
+    fireEvent.transitionEnd(canvas!);
+    expect(canvas).toHaveAttribute("data-transitioning", "false");
   });
 
   it("keeps the music label state-neutral and reveals the clue from the lost button", async () => {

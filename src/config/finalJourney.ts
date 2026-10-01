@@ -41,6 +41,7 @@ const continueTo = (destination_order: number): JourneyButtonSurface => ({
 
 type DeliveredScene = Omit<FinalJourneyScene, "videoPath" | "frozenFramePath" | "firstFramePath" | "hasNarration" | "narrationPath" | "interactionReadyAt" | "narrationWindows"> & {
   stem: string;
+  frozenFramePath?: string;
 };
 
 // The September 30 delivery is one complete, ordered film. Its numbered
@@ -48,7 +49,9 @@ type DeliveredScene = Omit<FinalJourneyScene, "videoPath" | "frozenFramePath" | 
 const deliveredScenes: DeliveredScene[] = [
   { order: 1, id: "opening", stem: "01-opening", title: "El camino comienza aquí", surfaces: [...controls(), { id: "start_journey", visible_label: "COMENZAR EL CAMINO", action: "go_to_step", destination_order: 2 }] },
   { order: 2, id: "invitation", stem: "02-invitation", title: "Gladiola & Jordi", surfaces: [...controls(), { id: "start_journey", visible_label: "COMENZAR EL CAMINO", action: "go_to_step", destination_order: 3 }] },
-  { order: 3, id: "journey-begins", stem: "03-journey-begins", title: "El viaje comienza", renderedControls: ["music_toggle", "chapters_menu", "continue"], surfaces: [...controls(), continueTo(4)] },
+  // The final two encoded frames omit the printed controls. Hold the last
+  // complete delivered frame instead of drawing replacement buttons over it.
+  { order: 3, id: "journey-begins", stem: "03-journey-begins", title: "El viaje comienza", frozenFramePath: "/journey-final/03-journey-begins-interactive.png", holdFrameAt: 9.8, surfaces: [...controls(), continueTo(4)] },
   { order: 4, id: "secret-door", stem: "04-secret-door", title: "La puerta secreta", surfaces: [...controls(), { id: "decode_word", visible_label: "DESCIFRAR LA PALABRA", action: "open_secret_word_input" }, { id: "hint", visible_label: "¿ESTÁS PERDIDO?", action: "reveal_hint" }] },
   { order: 5, id: "open-door", stem: "05-open-door", title: "La respuesta correcta", surfaces: [...controls(), continueTo(6)] },
   { order: 6, id: "save-date", stem: "06-save-date", title: "Reserva la fecha", surfaces: [...controls(), continueTo(7)] },
@@ -80,12 +83,12 @@ const narrationWindows: Record<number, readonly (readonly [number, number])[]> =
   14: [], 15: [], 16: [[1.56, 15.31]],
 };
 
-export const finalJourneyScenes: FinalJourneyScene[] = deliveredScenes.map(({ stem, ...scene }) => {
+export const finalJourneyScenes: FinalJourneyScene[] = deliveredScenes.map(({ stem, frozenFramePath, ...scene }) => {
   const hasNarration = narrationWindows[scene.order].length > 0;
   return {
     ...scene,
     videoPath: `/journey-final/${stem}.mp4`,
-    frozenFramePath: `/journey-final/${stem}-final.png`,
+    frozenFramePath: frozenFramePath ?? `/journey-final/${stem}-final.png`,
     firstFramePath: `/journey-final/${stem}-first.png`,
     hasNarration,
     narrationPath: hasNarration ? `/journey-final/${stem}-voice.${scene.order === 12 ? "m4a" : "mp3"}` : undefined,

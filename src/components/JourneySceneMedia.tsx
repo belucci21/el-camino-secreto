@@ -8,7 +8,6 @@ type JourneySceneMediaProps = {
   videoPath: string;
   frozenFramePath: string;
   firstFramePath: string;
-  previousFramePath?: string;
   holdFrameAt?: number;
   hasNarration: boolean;
   narrationPath?: string;
@@ -28,7 +27,7 @@ type JourneySceneMediaProps = {
 };
 
 export function JourneySceneMedia({
-  sceneOrder, title, videoPath, frozenFramePath, firstFramePath, previousFramePath,
+  sceneOrder, title, videoPath, frozenFramePath, firstFramePath,
   holdFrameAt, hasNarration, narrationPath, audioEnabled, paused, couple, reducedMotion,
   interactionReadyAt, narrationWindows,
   motionEnabled, onMotionComplete, onNarrationChange, onNarrationSync, onPlaybackStart, onSceneReady, priority,
@@ -38,6 +37,7 @@ export function JourneySceneMedia({
   const playhead = useRef(0);
   const completed = useRef(false);
   const playing = useRef(false);
+  const presented = useRef(false);
   const ready = useRef(interactionReadyAt <= 0);
   const [controlsReady, setControlsReady] = useState(interactionReadyAt <= 0);
   const [videoReady, setVideoReady] = useState(false);
@@ -74,16 +74,21 @@ export function JourneySceneMedia({
     const media = videoRef.current ?? audioRef.current;
     if (!media || paused || document.hidden) return;
     void media.play().then(() => setNeedsGesture(false)).catch((error: DOMException) => {
-      if (error.name !== "AbortError") setNeedsGesture(true);
+      if (error.name !== "AbortError") {
+        setNeedsGesture(true);
+        onSceneReady(sceneOrder, reducedMotion);
+      }
     });
-  }, [paused]);
+  }, [onSceneReady, paused, reducedMotion, sceneOrder]);
 
   const revealMotion = useCallback(() => {
     playing.current = true;
     onPlaybackStart();
-    if (!videoRef.current?.requestVideoFrameCallback) setVideoReady(true);
+    if (!videoRef.current?.requestVideoFrameCallback) {
+      setVideoReady(true);
+      onSceneReady(sceneOrder, reducedMotion);
+    }
     setNeedsGesture(false);
-    onSceneReady(sceneOrder, reducedMotion);
     updateNarration((videoRef.current ?? audioRef.current)?.currentTime ?? playhead.current);
   }, [onPlaybackStart, onSceneReady, reducedMotion, sceneOrder, updateNarration]);
 
@@ -138,6 +143,10 @@ export function JourneySceneMedia({
     let callbackId: number;
     const frame = (_now: number, metadata: VideoFrameCallbackMetadata) => {
       setVideoReady(true);
+      if (!presented.current) {
+        presented.current = true;
+        onSceneReady(sceneOrder, false);
+      }
       trackProgress();
       if (holdFrameAt !== undefined && metadata.mediaTime >= holdFrameAt) {
         setHoldingFrame(true);
@@ -185,7 +194,7 @@ export function JourneySceneMedia({
         fetchPriority={priority ? "high" : "auto"} />
       {motionActive && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="journey-scene-transition" src={previousFramePath ?? firstFramePath}
+        <img className="journey-scene-transition" src={firstFramePath}
           alt="" aria-hidden="true" width={720} height={1280} />
       )}
       {needsGesture && playbackActive && (

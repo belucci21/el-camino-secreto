@@ -136,16 +136,21 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const [playedMotionSteps, setPlayedMotionSteps] = useState<Set<number>>(() => new Set());
   const stageRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
+  const transitionCanvasRef = useRef<HTMLCanvasElement>(null);
   const navigationRef = useRef(0);
+  const navigationBusyRef = useRef(false);
+  const activeStepRef = useRef(step);
   const scene = scenes[step - 1];
   const audio = useAudio();
   const { ensureContinuity, preloadNarration, syncNarration } = audio;
   const { reducedMotion, setReducedMotion } = useReducedMotion();
-  const [previousFramePath, setPreviousFramePath] = useState<string>();
+  const [transitionPhase, setTransitionPhase] = useState<"idle" | "holding" | "revealing">("idle");
   const [imagePath, setImagePath] = useState(scene.frozenFramePath);
   const [backgroundBefore, setBackgroundBefore] = useState(scene.frozenFramePath);
   const backgroundRef = useRef(scene.frozenFramePath);
   const sceneReady = useCallback((order: number, final: boolean) => {
+    if (order !== activeStepRef.current) return;
+    setTransitionPhase(current => current === "holding" ? "revealing" : current);
     const current = scenes[order - 1];
     const next = final ? current.frozenFramePath : current.firstFramePath;
     if (backgroundRef.current === next) return;
@@ -172,6 +177,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
 
   const goToStep = useCallback(
     async (nextStep: number, showFrozenFrame = false) => {
+      if (navigationBusyRef.current) return;
       // Keep the already-running ambient track alive while iOS swaps the
       // native video element for the next scene. This never resets its seek.
       void ensureContinuity();
@@ -189,28 +195,53 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       if (showFrozenFrame) {
         setPlayedMotionSteps((current) => new Set(current).add(boundedStep));
       }
-      let outgoingFrame = scene.frozenFramePath;
       const video = visualRef.current?.querySelector("video");
       const media = visualRef.current?.querySelector<HTMLElement>(".journey-scene-media");
-      if (!showFrozenFrame && video?.readyState && media?.dataset.visualPhase === "motion") {
-        // Capture only on navigation, never every frame. Preserve the actual
-        // outgoing composition when the guest advances before the film ends.
+      const image = visualRef.current?.querySelector<HTMLImageElement>(
+        media?.dataset.visualPhase === "motion" && media.dataset.videoReady !== "true"
+          ? ".journey-scene-transition" : ".journey-scene-image",
+      );
+      const moving = video && video.readyState >= 2 && media?.dataset.visualPhase === "motion" && media.dataset.videoReady === "true";
+      const source = moving ? video : image?.complete && image.naturalWidth ? image : undefined;
+      const canvas = transitionCanvasRef.current;
+      let captured = false;
+      // Keep a decoded copy in the same canvas across scene mounts. Encoding
+      // a full PNG here stalled taps and required another asynchronous decode.
+      if (canvas && source) {
         try {
-          const canvas = document.createElement("canvas");
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          canvas.width = moving ? video.videoWidth : image!.naturalWidth;
+          canvas.height = moving ? video.videoHeight : image!.naturalHeight;
           const context = canvas.getContext("2d");
           if (context && canvas.width && canvas.height) {
-            context.drawImage(video, 0, 0);
-            outgoingFrame = canvas.toDataURL("image/png");
+            context.drawImage(source, 0, 0);
+            captured = true;
           }
-        } catch { /* The delivered still remains a safe fallback. */ }
+        } catch { /* The incoming scene's first frame remains available. */ }
       }
-      setPreviousFramePath(showFrozenFrame ? undefined : outgoingFrame);
+      navigationBusyRef.current = captured;
+      setTransitionPhase(captured ? "holding" : "idle");
+      activeStepRef.current = boundedStep;
       setStep(boundedStep);
     },
-    [ensureContinuity, scene.frozenFramePath],
+    [ensureContinuity],
   );
+
+  useEffect(() => {
+    if (transitionPhase === "idle") {
+      navigationBusyRef.current = false;
+      return;
+    }
+    if (transitionPhase === "holding") {
+      // A slow or blocked video must not trap the visitor behind this layer.
+      // Its preloaded first-frame image is the fallback while buffering.
+      const reveal = window.setTimeout(() => setTransitionPhase("revealing"), 1500);
+      return () => window.clearTimeout(reveal);
+    }
+    // Transition-end normally releases input. This also covers reduced-motion
+    // browsers that omit that event or coalesce both opacity changes.
+    const release = window.setTimeout(() => setTransitionPhase("idle"), 350);
+    return () => window.clearTimeout(release);
+  }, [transitionPhase]);
 
   const markMotionComplete = useCallback((sceneOrder: number) => {
     setPlayedMotionSteps((current) => {
@@ -475,7 +506,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
 
       <section
         className="journey-shell"
-        style={{ "--journey-ratio": scene.aspectRatio ?? 9 / 16 } as CSSProperties}
         aria-label={`Paso ${step} de ${scenes.length}: ${chapterName(scene)}`}
         ref={stageRef}
       >
@@ -485,7 +515,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img key={imagePath} src={imagePath} alt="" />
         </div>
-        <div className="journey-reference-frame">
+        <div className="journey-reference-frame" style={{ "--journey-ratio": scene.aspectRatio ?? 9 / 16 } as CSSProperties}>
           <div className="journey-reference-plane" ref={visualRef}>
             <div className="journey-scene-visual">
               <JourneySceneMedia
@@ -495,7 +525,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 videoPath={scene.videoPath}
                 frozenFramePath={scene.frozenFramePath}
                 firstFramePath={scene.firstFramePath}
-                previousFramePath={previousFramePath}
                 holdFrameAt={scene.holdFrameAt}
                 hasNarration={scene.hasNarration}
                 narrationPath={scene.narrationPath}
@@ -526,6 +555,10 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               </button>
             )}
           </div>
+          <canvas ref={transitionCanvasRef} className="journey-navigation-frame"
+            data-visible={transitionPhase === "holding"} data-transitioning={transitionPhase !== "idle"}
+            onTransitionEnd={() => setTransitionPhase(current => current === "revealing" ? "idle" : current)}
+            aria-hidden="true" />
         </div>
         <div className="journey-vignette" aria-hidden="true" />
         <div className="journey-grain" aria-hidden="true" />

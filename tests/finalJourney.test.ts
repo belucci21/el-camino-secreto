@@ -9,8 +9,10 @@ function publicAsset(path: string) {
 }
 
 describe("September 30 final journey", () => {
-  it("draws missing controls and covers the lower half of delivered buttons", () => {
-    expect(finalJourneyScenes[2].renderedControls).toEqual(["music_toggle", "chapters_menu", "continue"]);
+  it("preserves scene three's printed controls and covers delivered button targets", () => {
+    expect(finalJourneyScenes[2].renderedControls).toBeUndefined();
+    expect(finalJourneyScenes[2].frozenFramePath).toBe("/journey-final/03-journey-begins-interactive.png");
+    expect(finalJourneyScenes[2].holdFrameAt).toBe(9.8);
     expect(finalJourneyScenes[14].renderedControls).toEqual(["music_toggle", "chapters_menu"]);
     expect(finalJourneyScenes[14].videoPath).toContain("15-important-details-v2");
     expect(finalJourneyScenes[14].aspectRatio).toBe(1080 / 2230);
@@ -37,7 +39,7 @@ describe("September 30 final journey", () => {
     finalJourneyScenes.forEach((scene) => {
       expect(scene.videoPath).toMatch(/^\/journey-final\/\d{2}-.+\.mp4$/);
       expect(scene.firstFramePath).toMatch(/^\/journey-final\/\d{2}-.+-first\.png$/);
-      expect(scene.frozenFramePath).toMatch(/^\/journey-final\/\d{2}-.+-final\.png$/);
+      expect(scene.frozenFramePath).toMatch(/^\/journey-final\/\d{2}-.+-(final|interactive)\.png$/);
       for (const path of [scene.videoPath, scene.firstFramePath, scene.frozenFramePath]) {
         expect(existsSync(publicAsset(path)), path).toBe(true);
         expect(statSync(publicAsset(path)).size, path).toBeGreaterThan(100_000);
