@@ -764,8 +764,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               </>
             )}
             {dialog.panel === "memories" && (
-              <a className="journey-detail-hotspot journey-detail-hotspot--bottom" href={whatsappHref("Hola, Gladiola y Jordi. Quiero compartir fotos y vídeos del Vínculo Eterno; los adjunto en este chat.")} target="_blank" rel="noopener noreferrer">
-                <span className="sr-only">Abrir WhatsApp para adjuntar fotos y vídeos</span>
+              <a className="journey-detail-hotspot journey-detail-hotspot--bottom" href="https://drive.google.com/drive/folders/1shPcfW-dD8DOlALLBiaFFCnfimcQKxxT" target="_blank" rel="noopener noreferrer">
+                <span className="sr-only">Abrir la carpeta de fotos y vídeos</span>
               </a>
             )}
             {dialog.panel === "contact" && (

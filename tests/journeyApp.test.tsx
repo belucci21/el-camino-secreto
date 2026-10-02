@@ -446,7 +446,7 @@ describe("JourneyApp", () => {
     await user.click(screen.getByRole("button", { name: "Volver al camino" }));
 
     await user.click(screen.getByRole("button", { name: "RECUERDOS PARA SIEMPRE" }));
-    expect(screen.getByRole("link", { name: "Abrir WhatsApp para adjuntar fotos y vídeos" })).toHaveAttribute("href", expect.stringContaining("wa.me/34641300670"));
+    expect(screen.getByRole("link", { name: "Abrir la carpeta de fotos y vídeos" })).toHaveAttribute("href", "https://drive.google.com/drive/folders/1shPcfW-dD8DOlALLBiaFFCnfimcQKxxT");
     await user.click(screen.getByRole("button", { name: "Cerrar" }));
 
     await user.click(screen.getByRole("button", { name: "CONTACTO" }));
