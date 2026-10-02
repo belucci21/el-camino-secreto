@@ -187,16 +187,12 @@ export function JourneySceneMedia({
       {playbackActive && reducedMotion && (
         <audio ref={audioRef} src={narrationPath} autoPlay muted preload="auto" {...mediaEvents} />
       )}
-      {/* The film and its still use identical dimensions: no reframe at the end. */}
+      {/* While moving, keep the actual first frame under the video. The final
+          still only replaces it at the scene's end. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="journey-scene-image" src={frozenFramePath} alt={`${couple}. ${title}`}
+      <img className="journey-scene-image" src={motionActive && !holdingFrame ? firstFramePath : frozenFramePath} alt={`${couple}. ${title}`}
         draggable={false} width={720} height={1280} loading="eager" decoding="async"
         fetchPriority={priority ? "high" : "auto"} />
-      {motionActive && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="journey-scene-transition" src={firstFramePath}
-          alt="" aria-hidden="true" width={720} height={1280} />
-      )}
       {needsGesture && playbackActive && (
         <button className="journey-media-retry" type="button" onClick={play}>Reanudar escena</button>
       )}

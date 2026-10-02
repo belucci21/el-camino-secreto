@@ -136,12 +136,13 @@ describe("JourneyApp", () => {
     expect(video).toHaveAttribute("playsinline");
     expect(video).not.toHaveAttribute("poster");
     expect(source).toHaveAttribute("src", "/journey-final/04-secret-door.mp4");
-    expect(sceneImage).toHaveAttribute("src", "/journey-final/04-secret-door-final.png");
+    expect(sceneImage).toHaveAttribute("src", "/journey-final/04-secret-door-first.png");
     expect(media).toHaveAttribute("data-media-phase", "interactive");
 
     fireEvent.ended(video);
 
     expect(media).toHaveAttribute("data-media-phase", "interactive");
+    expect(sceneImage).toHaveAttribute("src", "/journey-final/04-secret-door-final.png");
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
   });
 
@@ -203,7 +204,7 @@ describe("JourneyApp", () => {
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
   });
 
-  it("keeps the final frozen frame eager and preserves its original file", () => {
+  it("keeps the first frame eager and switches to the original final frame", () => {
     render(<JourneyApp initialStep={5} />);
 
     const sceneImage = screen.getByRole("img", {
@@ -211,8 +212,12 @@ describe("JourneyApp", () => {
     });
 
     expect(sceneImage).toHaveAttribute("loading", "eager");
-    expect(sceneImage).toHaveAttribute("src", "/journey-final/05-open-door-final.png");
+    expect(sceneImage).toHaveAttribute("src", "/journey-final/05-open-door-first.png");
     expect(sceneImage).not.toHaveAttribute("srcset");
+    expect(screen.getByRole("button", { name: "Continuar" })).toHaveAttribute("data-shimmer", "false");
+    fireEvent.ended(screen.getByTestId("journey-motion-video"));
+    expect(sceneImage).toHaveAttribute("src", "/journey-final/05-open-door-final.png");
+    expect(screen.getByRole("button", { name: "Continuar" })).toHaveAttribute("data-shimmer", "true");
   });
 
   it("starts the approved journey from the home cover", async () => {
@@ -360,7 +365,7 @@ describe("JourneyApp", () => {
 
   it("keeps the delivered dress-code film before RSVP", () => {
     render(<JourneyApp initialStep={11} />);
-    expect(screen.getByRole("img", { name: /Código de vestimenta/i })).toHaveAttribute("src", "/journey-final/11-dress-code-final.png");
+    expect(screen.getByRole("img", { name: /Código de vestimenta/i })).toHaveAttribute("src", "/journey-final/11-dress-code-first.png");
     expect(screen.getByRole("button", { name: "Continuar" })).toBeInTheDocument();
   });
 
@@ -445,7 +450,10 @@ describe("JourneyApp", () => {
     await user.click(screen.getByRole("button", { name: "Cerrar" }));
 
     await user.click(screen.getByRole("button", { name: "CONTACTO" }));
+    expect(screen.getByRole("dialog", { name: "Contacto" }).querySelector("img")).toHaveAttribute("src", "/journey-final/14-contact-v2.jpg");
     expect(screen.getByRole("link", { name: "Escribir correo a Gladiola y Jordi" })).toHaveAttribute("href", "mailto:vinculoglayjor@gmail.com");
+    expect(screen.getByRole("link", { name: "Escribir por WhatsApp a Gladiola y Jordi" })).toHaveAttribute("href", expect.stringContaining("wa.me/34641300670"));
+    expect(screen.getByRole("link", { name: "Abrir el canal de YouTube para ver la boda en vivo" })).toHaveAttribute("href", "https://www.youtube.com/@elviajedelvinculo");
     await user.click(screen.getByRole("button", { name: "Cerrar" }));
 
     await user.click(screen.getByRole("button", { name: "Continuar" }));

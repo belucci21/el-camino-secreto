@@ -197,10 +197,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       }
       const video = visualRef.current?.querySelector("video");
       const media = visualRef.current?.querySelector<HTMLElement>(".journey-scene-media");
-      const image = visualRef.current?.querySelector<HTMLImageElement>(
-        media?.dataset.visualPhase === "motion" && media.dataset.videoReady !== "true"
-          ? ".journey-scene-transition" : ".journey-scene-image",
-      );
+      const image = visualRef.current?.querySelector<HTMLImageElement>(".journey-scene-image");
       const moving = video && video.readyState >= 2 && media?.dataset.visualPhase === "motion" && media.dataset.videoReady === "true";
       const source = moving ? video : image?.complete && image.naturalWidth ? image : undefined;
       const canvas = transitionCanvasRef.current;
@@ -232,10 +229,25 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       return;
     }
     if (transitionPhase === "holding") {
-      // A slow or blocked video must not trap the visitor behind this layer.
-      // Its preloaded first-frame image is the fallback while buffering.
-      const reveal = window.setTimeout(() => setTransitionPhase("revealing"), 1500);
-      return () => window.clearTimeout(reveal);
+      // If the video is slow, reveal only after its first-frame poster has
+      // decoded. The previous unconditional timer could expose a blank image.
+      const poster = visualRef.current?.querySelector<HTMLImageElement>(".journey-scene-image");
+      const reveal = () => {
+        if (poster?.complete && poster.naturalWidth) {
+          setTransitionPhase((current) => current === "holding" ? "revealing" : current);
+        }
+      };
+      const fallback = window.setTimeout(() => {
+        reveal();
+        poster?.addEventListener("load", reveal);
+      }, 1500);
+      // A failed image request must not leave the visitor stuck.
+      const release = window.setTimeout(() => setTransitionPhase("revealing"), 6000);
+      return () => {
+        window.clearTimeout(fallback);
+        window.clearTimeout(release);
+        poster?.removeEventListener("load", reveal);
+      };
     }
     // Transition-end normally releases input. This also covers reduced-motion
     // browsers that omit that event or coalesce both opacity changes.
@@ -261,6 +273,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       void image.decode?.().catch(() => undefined);
       const firstFrame = new window.Image();
       firstFrame.src = item.firstFramePath;
+      void firstFrame.decode?.().catch(() => undefined);
 
       const video = document.createElement("video");
       video.preload = "metadata";
@@ -547,6 +560,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             {primarySurface && primaryBounds && (
               <button
                 className={`journey-primary-action${renderPrimary ? " journey-primary-action--visible" : ""}`}
+                data-shimmer={step === 5 && (playedMotionSteps.has(5) || reducedMotion)}
                 style={primaryStyle}
                 type="button"
                 onClick={() => void handleSurface(primarySurface)}
@@ -758,6 +772,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               <>
                 <a className="journey-detail-hotspot journey-detail-hotspot--email" href={`mailto:${weddingConfig.contactEmail.value}`}><span className="sr-only">Escribir correo a Gladiola y Jordi</span></a>
                 <a className="journey-detail-hotspot journey-detail-hotspot--whatsapp" href={whatsappHref("Hola, Gladiola y Jordi.")} target="_blank" rel="noopener noreferrer"><span className="sr-only">Escribir por WhatsApp a Gladiola y Jordi</span></a>
+                <a className="journey-detail-hotspot journey-detail-hotspot--youtube" href="https://www.youtube.com/@elviajedelvinculo" target="_blank" rel="noopener noreferrer"><span className="sr-only">Abrir el canal de YouTube para ver la boda en vivo</span></a>
                 <button className="journey-detail-hotspot journey-detail-hotspot--bottom" type="button" onClick={() => setDialog(null)}><span className="sr-only">Volver al camino</span></button>
               </>
             )}

@@ -99,12 +99,15 @@ describe("cinematic scene playback", () => {
   it("holds the first frame until the film actually plays", () => {
     const { container } = render(<JourneySceneMedia {...props} />);
     const media = container.querySelector(".journey-scene-media");
-    expect(container.querySelector(".journey-scene-transition")).toHaveAttribute("src", props.firstFramePath);
+    expect(container.querySelector(".journey-scene-image")).toHaveAttribute("src", props.firstFramePath);
     expect(media).toHaveAttribute("data-video-ready", "false");
     fireEvent.loadedData(screen.getByTestId("journey-motion-video"));
     expect(media).toHaveAttribute("data-video-ready", "false");
     fireEvent.playing(screen.getByTestId("journey-motion-video"));
     expect(media).toHaveAttribute("data-video-ready", "true");
+    expect(container.querySelector(".journey-scene-image")).toHaveAttribute("src", props.firstFramePath);
+    fireEvent.ended(screen.getByTestId("journey-motion-video"));
+    expect(container.querySelector(".journey-scene-image")).toHaveAttribute("src", props.frozenFramePath);
   });
   it("covers the source's black tail without cutting off its voice", () => {
     const { container } = render(<JourneySceneMedia {...props} />);
