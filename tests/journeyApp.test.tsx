@@ -280,10 +280,16 @@ describe("JourneyApp", () => {
     expect(riddle.querySelector(".journey-hotspot-label")).toBeNull();
   });
 
-  it("retains a decoded outgoing canvas until the next film presents a frame", async () => {
-    const drawImage = vi.fn();
-    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage } as unknown as CanvasRenderingContext2D);
-    const encode = vi.spyOn(HTMLCanvasElement.prototype, "toDataURL");
+  it("decodes the incoming poster before replacing the scene without a video readback", async () => {
+    let decode: (() => void) | undefined;
+    const NativeImage = window.Image;
+    vi.stubGlobal("Image", class extends NativeImage {
+      constructor() {
+        super();
+        this.decode = () => new Promise<void>(resolve => { decode = resolve; });
+      }
+    });
+    const readback = vi.spyOn(HTMLCanvasElement.prototype, "getContext");
     const user = userEvent.setup();
     const { container } = render(<JourneyApp initialStep={2} />);
     const outgoing = screen.getByTestId("journey-motion-video");
@@ -291,22 +297,13 @@ describe("JourneyApp", () => {
       readyState: { value: 2 }, videoWidth: { value: 720 }, videoHeight: { value: 1280 },
     });
     fireEvent.playing(outgoing);
-    const canvas = container.querySelector(".journey-navigation-frame");
-
     await user.click(screen.getByRole("button", { name: "COMENZAR EL CAMINO" }));
-
-    expect(drawImage).toHaveBeenCalledWith(outgoing, 0, 0);
-    expect(encode).not.toHaveBeenCalled();
-    expect(container.querySelector(".journey-navigation-frame")).toBe(canvas);
-    expect(canvas).toHaveAttribute("data-visible", "true");
+    expect(screen.getByRole("region", { name: /Paso 2 de 15/ })).toBeInTheDocument();
+    await act(async () => { decode!(); });
     expect(screen.getByRole("region", { name: /Paso 3 de 15/ })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Continuar" }));
-    expect(screen.getByRole("region", { name: /Paso 3 de 15/ })).toBeInTheDocument();
-    fireEvent.playing(screen.getByTestId("journey-motion-video"));
-    expect(canvas).toHaveAttribute("data-visible", "false");
-    expect(canvas).toHaveAttribute("data-transitioning", "true");
-    fireEvent.transitionEnd(canvas!);
-    expect(canvas).toHaveAttribute("data-transitioning", "false");
+    expect(readback).not.toHaveBeenCalled();
+    expect(container.querySelectorAll("video")).toHaveLength(1);
+    expect(container.querySelector(".journey-navigation-frame")).toBeNull();
   });
 
   it("keeps the music label state-neutral and reveals the clue from the lost button", async () => {
@@ -355,7 +352,7 @@ describe("JourneyApp", () => {
 
     await waitFor(() => expect(screen.getByRole("region", { name: /Paso 5 de 15/i })).toBeInTheDocument());
     const unifiedVideo = screen.getByTestId("journey-motion-video");
-    expect(unifiedVideo.querySelector("source")).toHaveAttribute("src", "/journey-final/05-06-unified.mp4");
+    expect(unifiedVideo.querySelector("source")).toHaveAttribute("src", "/journey-final/05-06-unified-web.mp4");
     expect(screen.getByRole("img", { name: /La puerta a lo eterno/i })).toHaveAttribute("src", "/journey-final/05-06-unified-first.png");
 
     fireEvent.ended(unifiedVideo);

@@ -20,6 +20,37 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.clearAllMocks(); });
 
 describe("cinematic scene playback", () => {
+  it("does not pause or restart the film when the music button changes audio state", () => {
+    const { rerender } = render(<JourneySceneMedia {...props} />);
+    const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
+    video.currentTime = 8;
+    fireEvent.playing(video);
+    vi.mocked(HTMLMediaElement.prototype.pause).mockClear();
+    vi.mocked(HTMLMediaElement.prototype.play).mockClear();
+    rerender(<JourneySceneMedia {...props} audioEnabled={false} />);
+    expect(HTMLMediaElement.prototype.pause).not.toHaveBeenCalled();
+    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
+    expect(screen.getByTestId("journey-motion-video")).toBe(video);
+    expect(video.currentTime).toBe(8);
+  });
+  it("reveals a progressing Safari video even when its frame callback is delayed", () => {
+    Object.defineProperty(HTMLVideoElement.prototype, "requestVideoFrameCallback", { configurable: true, value: vi.fn(() => 1) });
+    Object.defineProperty(HTMLVideoElement.prototype, "cancelVideoFrameCallback", { configurable: true, value: vi.fn() });
+    try {
+      const { container, unmount } = render(<JourneySceneMedia {...props} />);
+      const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
+      Object.defineProperty(video, "readyState", { value: 2 });
+      fireEvent.playing(video);
+      video.currentTime = 0.2;
+      fireEvent.timeUpdate(video);
+      expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-video-ready", "true");
+      expect(props.onSceneReady).toHaveBeenCalledWith(12, false);
+      unmount();
+    } finally {
+      Reflect.deleteProperty(HTMLVideoElement.prototype, "requestVideoFrameCallback");
+      Reflect.deleteProperty(HTMLVideoElement.prototype, "cancelVideoFrameCallback");
+    }
+  });
   it("keeps immediate actions available even before the first video event", () => {
     const { container } = render(<JourneySceneMedia {...props} interactionReadyAt={0} />);
     expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "interactive");

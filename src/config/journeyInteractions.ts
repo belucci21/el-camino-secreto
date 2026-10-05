@@ -23,6 +23,8 @@ export const journeyHotspots: Record<number, Record<string, JourneyHotspot>> = {
   11: { music_toggle: finalMusic, chapters_menu: chapters, rsvp: { x: 16, y: 28, width: 68, height: 46, radius: 2 } },
   12: { music_toggle: finalMusic, chapters_menu: chapters, continue: wideContinue },
   13: { music_toggle: finalMusic, chapters_menu: chapters, music_joy: { x: 16, y: 31, width: 68, height: 12, radius: 4 }, lasting_memories: { x: 16, y: 44, width: 68, height: 12, radius: 4 }, contact: { x: 16, y: 57, width: 68, height: 12, radius: 4 }, continue: wideContinue },
-  14: { music_toggle: { ...music, x: 2, y: 1 }, chapters_menu: { ...chapters, x: 87, y: 1 }, continue: { x: 3, y: 86, width: 94, height: 12, radius: 4 } },
+  // This taller artwork needs extra room for the rendered labels and the
+  // minimum 44px touch targets; percentages alone clipped Chapters on iPhone.
+  14: { music_toggle: { ...music, x: 6, y: 1, width: 14, height: 6.5 }, chapters_menu: { ...chapters, x: 80, y: 1, width: 14, height: 6.5 }, continue: { x: 3, y: 86, width: 94, height: 12, radius: 4 } },
   15: { music_toggle: music, chapters_menu: chapters },
 };

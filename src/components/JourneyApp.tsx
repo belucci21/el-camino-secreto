@@ -135,8 +135,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   useDialogViewport(dialog !== null);
   const [playedMotionSteps, setPlayedMotionSteps] = useState<Set<number>>(() => new Set());
   const stageRef = useRef<HTMLDivElement>(null);
-  const visualRef = useRef<HTMLDivElement>(null);
-  const transitionCanvasRef = useRef<HTMLCanvasElement>(null);
   const navigationRef = useRef(0);
   const navigationBusyRef = useRef(false);
   const activeStepRef = useRef(step);
@@ -144,13 +142,11 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const audio = useAudio();
   const { ensureContinuity, preloadNarration, syncNarration } = audio;
   const { reducedMotion, setReducedMotion } = useReducedMotion();
-  const [transitionPhase, setTransitionPhase] = useState<"idle" | "holding" | "revealing">("idle");
   const [imagePath, setImagePath] = useState(scene.frozenFramePath);
   const [backgroundBefore, setBackgroundBefore] = useState(scene.frozenFramePath);
   const backgroundRef = useRef(scene.frozenFramePath);
   const sceneReady = useCallback((order: number, final: boolean) => {
     if (order !== activeStepRef.current) return;
-    setTransitionPhase(current => current === "holding" ? "revealing" : current);
     const current = scenes[order - 1];
     const next = final ? current.frozenFramePath : current.firstFramePath;
     if (backgroundRef.current === next) return;
@@ -178,82 +174,32 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const goToStep = useCallback(
     async (nextStep: number, showFrozenFrame = false) => {
       if (navigationBusyRef.current) return;
+      navigationBusyRef.current = true;
       // Keep the already-running ambient track alive while iOS swaps the
       // native video element for the next scene. This never resets its seek.
       void ensureContinuity();
       const boundedStep = Math.min(scenes.length, Math.max(1, nextStep));
       const navigation = ++navigationRef.current;
-      if (showFrozenFrame) {
-        // Keep the current composition visible until the chapter's full still
-        // is decoded, so a slow image download cannot paint in strips.
-        const frame = new window.Image();
-        frame.src = scenes[boundedStep - 1].frozenFramePath;
-        try { await frame.decode?.(); } catch { /* Preserve navigation if a media request fails. */ }
-        if (navigation !== navigationRef.current) return;
-      }
+      // Keep the current scene running while decoding the incoming poster.
+      // Never read back the native video into a canvas: on iOS that stalls the
+      // tap and dissolving it over a second film produces a double-image flash.
+      const nextScene = scenes[boundedStep - 1];
+      const frozen = showFrozenFrame || reducedMotion || playedMotionSteps.has(boundedStep);
+      const frame = new window.Image();
+      frame.src = frozen ? nextScene.frozenFramePath : nextScene.firstFramePath;
+      try { await frame.decode?.(); } catch { /* A failed poster must not block navigation. */ }
+      if (navigation !== navigationRef.current) return;
       setDialog(null);
       if (showFrozenFrame) {
         setPlayedMotionSteps((current) => new Set(current).add(boundedStep));
       }
-      const video = visualRef.current?.querySelector("video");
-      const media = visualRef.current?.querySelector<HTMLElement>(".journey-scene-media");
-      const image = visualRef.current?.querySelector<HTMLImageElement>(".journey-scene-image");
-      const moving = video && video.readyState >= 2 && media?.dataset.visualPhase === "motion" && media.dataset.videoReady === "true";
-      const source = moving ? video : image?.complete && image.naturalWidth ? image : undefined;
-      const canvas = transitionCanvasRef.current;
-      let captured = false;
-      // Keep a decoded copy in the same canvas across scene mounts. Encoding
-      // a full PNG here stalled taps and required another asynchronous decode.
-      if (canvas && source) {
-        try {
-          canvas.width = moving ? video.videoWidth : image!.naturalWidth;
-          canvas.height = moving ? video.videoHeight : image!.naturalHeight;
-          const context = canvas.getContext("2d");
-          if (context && canvas.width && canvas.height) {
-            context.drawImage(source, 0, 0);
-            captured = true;
-          }
-        } catch { /* The incoming scene's first frame remains available. */ }
-      }
-      navigationBusyRef.current = captured;
-      setTransitionPhase(captured ? "holding" : "idle");
       activeStepRef.current = boundedStep;
+      sceneReady(boundedStep, frozen);
       setStep(boundedStep);
-    },
-    [ensureContinuity],
-  );
-
-  useEffect(() => {
-    if (transitionPhase === "idle") {
       navigationBusyRef.current = false;
-      return;
-    }
-    if (transitionPhase === "holding") {
-      // If the video is slow, reveal only after its first-frame poster has
-      // decoded. The previous unconditional timer could expose a blank image.
-      const poster = visualRef.current?.querySelector<HTMLImageElement>(".journey-scene-image");
-      const reveal = () => {
-        if (poster?.complete && poster.naturalWidth) {
-          setTransitionPhase((current) => current === "holding" ? "revealing" : current);
-        }
-      };
-      const fallback = window.setTimeout(() => {
-        reveal();
-        poster?.addEventListener("load", reveal);
-      }, 1500);
-      // A failed image request must not leave the visitor stuck.
-      const release = window.setTimeout(() => setTransitionPhase("revealing"), 6000);
-      return () => {
-        window.clearTimeout(fallback);
-        window.clearTimeout(release);
-        poster?.removeEventListener("load", reveal);
-      };
-    }
-    // Transition-end normally releases input. This also covers reduced-motion
-    // browsers that omit that event or coalesce both opacity changes.
-    const release = window.setTimeout(() => setTransitionPhase("idle"), 350);
-    return () => window.clearTimeout(release);
-  }, [transitionPhase]);
+    },
+    [ensureContinuity, playedMotionSteps, reducedMotion, sceneReady],
+  );
 
   const markMotionComplete = useCallback((sceneOrder: number) => {
     setPlayedMotionSteps((current) => {
@@ -275,9 +221,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       firstFrame.src = item.firstFramePath;
       void firstFrame.decode?.().catch(() => undefined);
 
-      const video = document.createElement("video");
-      video.preload = "metadata";
-      video.src = item.videoPath;
     });
   }, [preloadNarration, step]);
 
@@ -506,6 +449,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
       className="journey-app"
       id="main-content"
       data-step={step}
+      data-scene={scene.id}
       data-reduced-motion={reducedMotion}
     >
       <div className="journey-backdrop" aria-hidden="true">
@@ -529,7 +473,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           <img key={imagePath} src={imagePath} alt="" />
         </div>
         <div className="journey-reference-frame" style={{ "--journey-ratio": scene.aspectRatio ?? 9 / 16 } as CSSProperties}>
-          <div className="journey-reference-plane" ref={visualRef}>
+          <div className="journey-reference-plane">
             <div className="journey-scene-visual">
               <JourneySceneMedia
                 key={scene.order}
@@ -569,10 +513,6 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               </button>
             )}
           </div>
-          <canvas ref={transitionCanvasRef} className="journey-navigation-frame"
-            data-visible={transitionPhase === "holding"} data-transitioning={transitionPhase !== "idle"}
-            onTransitionEnd={() => setTransitionPhase(current => current === "revealing" ? "idle" : current)}
-            aria-hidden="true" />
         </div>
         <div className="journey-vignette" aria-hidden="true" />
         <div className="journey-grain" aria-hidden="true" />

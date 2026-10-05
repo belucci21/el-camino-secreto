@@ -96,6 +96,13 @@ export function JourneySceneMedia({
     const media = videoRef.current ?? audioRef.current;
     if (!media) return;
     playhead.current = media.currentTime;
+    // Safari may delay frame callbacks while a poster covers the video. A
+    // decoded, advancing playhead is also proof that the film can be shown.
+    if (!presented.current && videoRef.current && media.readyState >= 2 && media.currentTime > 0) {
+      presented.current = true;
+      setVideoReady(true);
+      onSceneReady(sceneOrder, false);
+    }
     updateNarration(media.currentTime);
     if (!ready.current && media.currentTime >= interactionReadyAt) {
       ready.current = true;
@@ -122,7 +129,6 @@ export function JourneySceneMedia({
         pauseNarration();
       } else {
         play();
-        updateNarration(media.currentTime);
       }
     };
     syncPlayback();
@@ -133,7 +139,9 @@ export function JourneySceneMedia({
       pauseNarration();
       document.removeEventListener("visibilitychange", syncPlayback);
     };
-  }, [onSceneReady, pauseNarration, paused, play, playbackActive, reducedMotion, sceneOrder, updateNarration]);
+  // Audio state only changes the mixer, never the native video's lifecycle.
+  // Voice timing is updated by playing/timeupdate/the presented-frame callback.
+  }, [onSceneReady, pauseNarration, paused, play, playbackActive, reducedMotion, sceneOrder]);
 
   // Align controls with the presented frame, not a late ended event or timer.
   // timeupdate remains the older-browser fallback.

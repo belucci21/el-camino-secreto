@@ -41,6 +41,7 @@ const continueTo = (destination_order: number): JourneyButtonSurface => ({
 
 type DeliveredScene = Omit<FinalJourneyScene, "videoPath" | "frozenFramePath" | "firstFramePath" | "hasNarration" | "narrationPath" | "interactionReadyAt" | "narrationWindows"> & {
   stem: string;
+  videoPath?: string;
   frozenFramePath?: string;
 };
 
@@ -55,7 +56,7 @@ const deliveredScenes: DeliveredScene[] = [
   { order: 4, id: "secret-door", stem: "04-secret-door", title: "La puerta secreta", surfaces: [...controls(), { id: "decode_word", visible_label: "DESCIFRAR LA PALABRA", action: "open_secret_word_input" }, { id: "hint", visible_label: "¿ESTÁS PERDIDO?", action: "reveal_hint" }] },
   // Drive delivery UNIFICACION ESC 5 Y 6 is one approved film: the opening
   // door continues straight into the save-the-date reveal, with one CTA only.
-  { order: 5, id: "open-door-date", stem: "05-06-unified", title: "La puerta a lo eterno", frozenFramePath: "/journey-final/05-06-unified-final.png", holdFrameAt: 28.8, surfaces: [...controls(), continueTo(6)] },
+  { order: 5, id: "open-door-date", stem: "05-06-unified", videoPath: "/journey-final/05-06-unified-web.mp4", title: "La puerta a lo eterno", frozenFramePath: "/journey-final/05-06-unified-final.png", holdFrameAt: 28.8, surfaces: [...controls(), continueTo(6)] },
   { order: 6, id: "two-souls", stem: "07-two-souls", title: "El viaje de dos almas", surfaces: [...controls(), continueTo(7)] },
   { order: 7, id: "ceremony", stem: "08-ceremony", title: "La ceremonia", surfaces: [...controls(), { id: "ceremony_map", visible_label: "VER EN GOOGLE MAPS", action: "open_ceremony_map" }, continueTo(8)] },
   { order: 8, id: "celebration", stem: "09-journey-information", title: "Celebración en Castell Jalpí", surfaces: [...controls(), { id: "celebration_map", visible_label: "VER EN GOOGLE MAPS", action: "open_map" }, continueTo(9)] },
@@ -85,11 +86,11 @@ const narrationWindows: Record<number, readonly (readonly [number, number])[]> =
   13: [], 14: [], 15: [[1.56, 15.31]],
 };
 
-export const finalJourneyScenes: FinalJourneyScene[] = deliveredScenes.map(({ stem, frozenFramePath, ...scene }) => {
+export const finalJourneyScenes: FinalJourneyScene[] = deliveredScenes.map(({ stem, videoPath, frozenFramePath, ...scene }) => {
   const hasNarration = narrationWindows[scene.order].length > 0;
   return {
     ...scene,
-    videoPath: `/journey-final/${stem}.mp4`,
+    videoPath: videoPath ?? `/journey-final/${stem}.mp4`,
     frozenFramePath: frozenFramePath ?? `/journey-final/${stem}-final.png`,
     firstFramePath: `/journey-final/${stem}-first.png`,
     hasNarration,

@@ -33,7 +33,7 @@ describe("September 30 final journey", () => {
   });
   it("plays the approved unified door-and-date film as one scene before the two-souls scene", () => {
     const unified = finalJourneyScenes[4];
-    expect(unified.videoPath).toBe("/journey-final/05-06-unified.mp4");
+    expect(unified.videoPath).toBe("/journey-final/05-06-unified-web.mp4");
     expect(unified.firstFramePath).toBe("/journey-final/05-06-unified-first.png");
     expect(unified.frozenFramePath).toBe("/journey-final/05-06-unified-final.png");
     expect(unified.narrationPath).toBe("/journey-final/05-06-unified-voice.mp3");

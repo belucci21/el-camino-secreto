@@ -66,10 +66,12 @@ button,
     border-color .28s ease;
 }
 
-button:hover,
-.stone-pill:hover,
-.experience-link:hover {
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  button:hover,
+  .stone-pill:hover,
+  .experience-link:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .teaser-page {
@@ -3029,7 +3031,6 @@ button:hover,
   width: max(100cqw, calc(100cqh * var(--journey-ratio)));
   aspect-ratio: var(--journey-ratio);
   overflow: hidden;
-  will-change: transform, opacity, filter;
 }
 
 .journey-entry-gate {
@@ -3114,7 +3115,7 @@ button:hover,
 }
 
 .journey-scene-video {
-  z-index: 1;
+  z-index: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -3122,12 +3123,12 @@ button:hover,
   pointer-events: none;
   transform: translateZ(0);
   backface-visibility: hidden;
-  opacity: 0;
+  opacity: 1;
   transition: none;
 }
 
 .journey-scene-image {
-  z-index: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   user-select: none;
@@ -3146,43 +3147,10 @@ button:hover,
   mix-blend-mode: normal;
 }
 
-.journey-scene-media[data-visual-phase="motion"][data-video-ready="true"] .journey-scene-video {
-  opacity: 1;
-}
-
-.journey-scene-media[data-media-phase="motion"][data-video-ready="true"] .journey-scene-image {
-  opacity: 1;
-}
-
-.journey-scene-media[data-hold-frame="true"] .journey-scene-video {
-  opacity: 0 !important;
-}
-
-/* Retain the already-decoded outgoing frame until the next video is presented.
-   This layer survives the keyed media mount and never needs a PNG round trip. */
-.journey-navigation-frame {
-  position: absolute;
-  inset: 0;
-  z-index: 9;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
+/* The native video remains visible to Safari's autoplay policy. Its decoded
+   first-frame poster sits above it until playback starts, with no crossfade. */
+.journey-scene-media[data-visual-phase="motion"][data-video-ready="true"] .journey-scene-image {
   opacity: 0;
-  transition: opacity 300ms ease-out;
-}
-
-.journey-navigation-frame[data-visible="true"] {
-  opacity: 1;
-  transition: none;
-}
-
-.journey-navigation-frame[data-transitioning="true"] {
-  pointer-events: auto;
-}
-
-.journey-navigation-frame[data-transitioning="false"] {
-  transition: none;
 }
 
 /* A control becoming available must never cut a still-moving film. */
@@ -3237,7 +3205,6 @@ button:hover,
 }
 
 .journey-scene-media[data-media-phase="interactive"] .journey-scene-image {
-  opacity: 1;
   mix-blend-mode: normal;
   transition: none;
 }
@@ -3312,15 +3279,17 @@ button:hover,
   -webkit-tap-highlight-color: transparent;
 }
 
-.journey-hotspot:hover {
-  border-color: rgba(255, 225, 134, .76);
-  background:
-    radial-gradient(circle at 50% 50%, rgba(253, 211, 93, .11), transparent 72%);
-  box-shadow:
-    0 0 0 1px rgba(54, 38, 7, .4),
-    0 0 28px rgba(250, 202, 75, .22),
-    inset 0 0 22px rgba(250, 202, 75, .08);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .journey-hotspot:hover {
+    border-color: rgba(255, 225, 134, .76);
+    background:
+      radial-gradient(circle at 50% 50%, rgba(253, 211, 93, .11), transparent 72%);
+    box-shadow:
+      0 0 0 1px rgba(54, 38, 7, .4),
+      0 0 28px rgba(250, 202, 75, .22),
+      inset 0 0 22px rgba(250, 202, 75, .08);
+    transform: translateY(-1px);
+  }
 }
 
 .journey-hotspot:focus-visible {
@@ -4127,7 +4096,7 @@ button:hover,
 
 .journey-detail-panel {
   position: relative;
-  width: min(92vw, 88svh, 620px);
+  width: min(100%, calc(var(--journey-dialog-height, 100svh) - 2rem), 620px);
   aspect-ratio: 1;
   box-shadow: 0 24px 70px rgba(0, 0, 0, .6);
 }
@@ -4275,6 +4244,11 @@ button:hover,
     padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right));
   }
 
+  .journey-app[data-scene="details"],
+  .journey-app[data-scene="important-details"] {
+    padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+  }
+
   .journey-shell {
     width: 100%;
     max-width: none;
@@ -4301,6 +4275,7 @@ button:hover,
 
   .journey-detail-layer {
     align-items: start;
+    padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
   }
 
   .journey-detail-panel {
