@@ -53,34 +53,36 @@ const deliveredScenes: DeliveredScene[] = [
   // complete delivered frame instead of drawing replacement buttons over it.
   { order: 3, id: "journey-begins", stem: "03-journey-begins", title: "El viaje comienza", frozenFramePath: "/journey-final/03-journey-begins-interactive.png", holdFrameAt: 9.8, surfaces: [...controls(), continueTo(4)] },
   { order: 4, id: "secret-door", stem: "04-secret-door", title: "La puerta secreta", surfaces: [...controls(), { id: "decode_word", visible_label: "DESCIFRAR LA PALABRA", action: "open_secret_word_input" }, { id: "hint", visible_label: "¿ESTÁS PERDIDO?", action: "reveal_hint" }] },
-  { order: 5, id: "open-door", stem: "05-open-door", title: "La respuesta correcta", surfaces: [...controls(), continueTo(6)] },
-  { order: 6, id: "save-date", stem: "06-save-date", title: "Reserva la fecha", surfaces: [...controls(), continueTo(7)] },
-  { order: 7, id: "two-souls", stem: "07-two-souls", title: "El viaje de dos almas", surfaces: [...controls(), continueTo(8)] },
-  { order: 8, id: "ceremony", stem: "08-ceremony", title: "La ceremonia", surfaces: [...controls(), { id: "ceremony_map", visible_label: "VER EN GOOGLE MAPS", action: "open_ceremony_map" }, continueTo(9)] },
-  { order: 9, id: "celebration", stem: "09-journey-information", title: "Celebración en Castell Jalpí", surfaces: [...controls(), { id: "celebration_map", visible_label: "VER EN GOOGLE MAPS", action: "open_map" }, continueTo(10)] },
-  { order: 10, id: "treasure", stem: "10-treasure", title: "El cofre del tesoro", surfaces: [...controls(), continueTo(11)] },
-  { order: 11, id: "dress-code", stem: "11-dress-code", title: "Código de vestimenta", surfaces: [...controls(), continueTo(12)] },
-  { order: 12, id: "rsvp", stem: "12-rsvp", title: "Confirmación de asistencia", rsvpArtworkPath: "/journey-final/12-rsvp-form.png", surfaces: [...controls(), { id: "rsvp", visible_label: "CONFIRMAR MI ASISTENCIA", action: "open_rsvp", destination_order: 13 }] },
-  { order: 13, id: "gratitude", stem: "13-gratitude", title: "Gracias por caminar con nosotros", surfaces: [...controls(), continueTo(14)] },
-  { order: 14, id: "details", stem: "14-details", title: "Un detalle del camino", detailArtwork: {
+  // Drive delivery UNIFICACION ESC 5 Y 6 is one approved film: the opening
+  // door continues straight into the save-the-date reveal, with one CTA only.
+  { order: 5, id: "open-door-date", stem: "05-06-unified", title: "La puerta a lo eterno", frozenFramePath: "/journey-final/05-06-unified-final.png", holdFrameAt: 28.8, surfaces: [...controls(), continueTo(6)] },
+  { order: 6, id: "two-souls", stem: "07-two-souls", title: "El viaje de dos almas", surfaces: [...controls(), continueTo(7)] },
+  { order: 7, id: "ceremony", stem: "08-ceremony", title: "La ceremonia", surfaces: [...controls(), { id: "ceremony_map", visible_label: "VER EN GOOGLE MAPS", action: "open_ceremony_map" }, continueTo(8)] },
+  { order: 8, id: "celebration", stem: "09-journey-information", title: "Celebración en Castell Jalpí", surfaces: [...controls(), { id: "celebration_map", visible_label: "VER EN GOOGLE MAPS", action: "open_map" }, continueTo(9)] },
+  { order: 9, id: "treasure", stem: "10-treasure", title: "El cofre del tesoro", surfaces: [...controls(), continueTo(10)] },
+  { order: 10, id: "dress-code", stem: "11-dress-code", title: "Código de vestimenta", surfaces: [...controls(), continueTo(11)] },
+  { order: 11, id: "rsvp", stem: "12-rsvp", title: "Confirmación de asistencia", rsvpArtworkPath: "/journey-final/12-rsvp-form.png", surfaces: [...controls(), { id: "rsvp", visible_label: "CONFIRMAR MI ASISTENCIA", action: "open_rsvp", destination_order: 12 }] },
+  { order: 12, id: "gratitude", stem: "13-gratitude", title: "Gracias por caminar con nosotros", surfaces: [...controls(), continueTo(13)] },
+  { order: 13, id: "details", stem: "14-details", title: "Un detalle del camino", detailArtwork: {
     music: "/journey-final/14-music.png",
     song: "/journey-final/14-song.png",
     thanks: "/journey-final/14-song-thanks.png",
     memories: "/journey-final/14-memories.png",
     contact: "/journey-final/14-contact-v2.jpg",
-  }, surfaces: [...controls(), { id: "music_joy", visible_label: "MÚSICA Y ALEGRÍA", action: "open_music_prompt" }, { id: "lasting_memories", visible_label: "RECUERDOS PARA SIEMPRE", action: "open_memories" }, { id: "contact", visible_label: "CONTACTO", action: "open_contact" }, continueTo(15)] },
-  { order: 15, id: "important-details", stem: "15-important-details-v2", title: "Detalles importantes", aspectRatio: 1080 / 2230, renderedControls: ["music_toggle", "chapters_menu"], surfaces: [...controls(), continueTo(16)] },
-  { order: 16, id: "final-thanks", stem: "16-final-thanks-v2", title: "Gracias por ser parte del vínculo eterno", renderedControls: ["music_toggle", "chapters_menu"], surfaces: [...controls()] },
+  }, surfaces: [...controls(), { id: "music_joy", visible_label: "MÚSICA Y ALEGRÍA", action: "open_music_prompt" }, { id: "lasting_memories", visible_label: "RECUERDOS PARA SIEMPRE", action: "open_memories" }, { id: "contact", visible_label: "CONTACTO", action: "open_contact" }, continueTo(14)] },
+  { order: 14, id: "important-details", stem: "15-important-details-v2", title: "Detalles importantes", aspectRatio: 1080 / 2230, renderedControls: ["music_toggle", "chapters_menu"], surfaces: [...controls(), continueTo(15)] },
+  { order: 15, id: "final-thanks", stem: "16-final-thanks-v2", title: "Gracias por ser parte del vínculo eterno", renderedControls: ["music_toggle", "chapters_menu"], surfaces: [...controls()] },
 ];
 
 // Voice start/end measured from the delivered audio. The continuous ambient
 // Howl is never paused when a scene changes; it only ducks while words sound.
 const narrationWindows: Record<number, readonly (readonly [number, number])[]> = {
   1: [[4.38, 20.42]], 2: [[1.53, 18.04]], 3: [[3.32, 7.84]],
-  4: [[2.31, 15.65]], 5: [[2.84, 11.62]], 6: [[1.76, 14.71]],
-  7: [[5.75, 29.22]], 8: [[3.65, 23.77]], 9: [[3.03, 21.25]],
-  10: [[1.32, 18.19]], 11: [], 12: [[3.19, 7.73]], 13: [],
-  14: [], 15: [], 16: [[1.56, 15.31]],
+  4: [[2.31, 15.65]],
+  5: [[2.821565, 7.552948], [8.203605, 11.63907], [14.592313, 16.737528], [17.056757, 19.411814], [20.000794, 27.684104]],
+  6: [[5.75, 29.22]], 7: [[3.65, 23.77]], 8: [[3.03, 21.25]],
+  9: [[1.32, 18.19]], 10: [], 11: [[3.19, 7.73]], 12: [],
+  13: [], 14: [], 15: [[1.56, 15.31]],
 };
 
 export const finalJourneyScenes: FinalJourneyScene[] = deliveredScenes.map(({ stem, frozenFramePath, ...scene }) => {
@@ -91,7 +93,7 @@ export const finalJourneyScenes: FinalJourneyScene[] = deliveredScenes.map(({ st
     frozenFramePath: frozenFramePath ?? `/journey-final/${stem}-final.png`,
     firstFramePath: `/journey-final/${stem}-first.png`,
     hasNarration,
-    narrationPath: hasNarration ? `/journey-final/${stem}-voice.${scene.order === 12 ? "m4a" : "mp3"}` : undefined,
+    narrationPath: hasNarration ? `/journey-final/${stem}-voice.${stem === "12-rsvp" ? "m4a" : "mp3"}` : undefined,
     interactionReadyAt: 0,
     narrationWindows: narrationWindows[scene.order],
   };

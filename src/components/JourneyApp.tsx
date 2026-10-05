@@ -694,7 +694,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
               <button className="journey-dialog-secondary" type="button" onClick={() => setRsvpSaved(false)}>
                 Editar respuesta
               </button>
-              <button className="journey-dialog-secondary" type="button" onClick={() => goToStep(13)}>
+              <button className="journey-dialog-secondary" type="button" onClick={() => goToStep(12)}>
                 Continuar el camino
               </button>
             </>
@@ -728,7 +728,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             </form>
           )}
           {!rsvpSaved && (
-            <button className="journey-dialog-secondary" type="button" onClick={() => goToStep(13)}>
+            <button className="journey-dialog-secondary" type="button" onClick={() => goToStep(12)}>
               Continuar sin responder
             </button>
           )}

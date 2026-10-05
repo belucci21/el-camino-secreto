@@ -62,7 +62,7 @@ describe("JourneyApp", () => {
   it("retains failed RSVP data and only confirms after a successful retry", async () => {
     vi.mocked(submitJourneyResponse).mockRejectedValueOnce(new Error("offline"));
     const user = userEvent.setup();
-    render(<JourneyApp initialStep={12} />);
+    render(<JourneyApp initialStep={11} />);
     await user.click(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA", exact: true }));
     await user.type(screen.getByLabelText("Nombre completo"), "Invitado prueba");
     await user.click(screen.getByLabelText(/Sí, no me lo pierdo/));
@@ -78,7 +78,7 @@ describe("JourneyApp", () => {
   it("keeps the song form on delivery failure instead of showing thanks", async () => {
     vi.mocked(submitJourneyResponse).mockRejectedValueOnce(new Error("offline"));
     const user = userEvent.setup();
-    render(<JourneyApp initialStep={14} />);
+    render(<JourneyApp initialStep={13} />);
     await user.click(screen.getByRole("button", { name: "MÚSICA Y ALEGRÍA" }));
     await user.click(screen.getByRole("button", { name: "Continuar para sugerir una canción" }));
     await user.type(screen.getByLabelText("¿Qué canción no puede faltar?"), "Canción de prueba");
@@ -94,7 +94,7 @@ describe("JourneyApp", () => {
   });
   it("continues from RSVP through the gratitude and final details", async () => {
     const user = userEvent.setup();
-    render(<JourneyApp initialStep={12} />);
+    render(<JourneyApp initialStep={11} />);
     fireEvent.ended(screen.getByTestId("journey-motion-video"));
     await user.click(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA" }));
     await user.type(screen.getByLabelText("Nombre completo"), "Invitado de prueba");
@@ -104,10 +104,10 @@ describe("JourneyApp", () => {
     expect(screen.getByText(/Tu respuesta se ha enviado/)).toBeInTheDocument();
     expect(screen.queryByText("Enviar por WhatsApp")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continuar el camino" }));
-    expect(screen.getByRole("region", { name: /Paso 13 de 16/ })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 12 de 15/ })).toBeInTheDocument();
     fireEvent.ended(screen.getByTestId("journey-motion-video"));
     await user.click(screen.getByRole("button", { name: "Continuar" }));
-    expect(screen.getByRole("region", { name: /Paso 14 de 16/ })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 13 de 15/ })).toBeInTheDocument();
   });
   it("waits for a mobile-safe gesture and starts the journey with music", async () => {
     const user = userEvent.setup();
@@ -189,7 +189,7 @@ describe("JourneyApp", () => {
     expect(screen.getByTestId("journey-motion-video")).not.toHaveAttribute("loop");
 
     unmount();
-    render(<JourneyApp initialStep={10} />);
+    render(<JourneyApp initialStep={9} />);
     expect(screen.getByTestId("journey-motion-video")).toBeInTheDocument();
     expect(screen.getByTestId("journey-motion-video").querySelector("source"))
       .toHaveAttribute("src", "/journey-final/10-treasure.mp4");
@@ -204,19 +204,19 @@ describe("JourneyApp", () => {
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
   });
 
-  it("keeps the first frame eager and switches to the original final frame", () => {
+  it("keeps the unified scene's first frame eager and switches to its exact final frame", () => {
     render(<JourneyApp initialStep={5} />);
 
     const sceneImage = screen.getByRole("img", {
-      name: /La respuesta correcta/i,
+      name: /La puerta a lo eterno/i,
     });
 
     expect(sceneImage).toHaveAttribute("loading", "eager");
-    expect(sceneImage).toHaveAttribute("src", "/journey-final/05-open-door-first.png");
+    expect(sceneImage).toHaveAttribute("src", "/journey-final/05-06-unified-first.png");
     expect(sceneImage).not.toHaveAttribute("srcset");
     expect(screen.getByRole("button", { name: "Continuar" })).toHaveAttribute("data-shimmer", "false");
     fireEvent.ended(screen.getByTestId("journey-motion-video"));
-    expect(sceneImage).toHaveAttribute("src", "/journey-final/05-open-door-final.png");
+    expect(sceneImage).toHaveAttribute("src", "/journey-final/05-06-unified-final.png");
     expect(screen.getByRole("button", { name: "Continuar" })).toHaveAttribute("data-shimmer", "true");
   });
 
@@ -225,11 +225,11 @@ describe("JourneyApp", () => {
     render(<JourneyApp initialStep={2} />);
 
     expect(
-      screen.getByRole("region", { name: /Paso 2 de 16/i }),
+      screen.getByRole("region", { name: /Paso 2 de 15/i }),
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "COMENZAR EL CAMINO" }));
     expect(
-      screen.getByRole("region", { name: /Paso 3 de 16/i }),
+      screen.getByRole("region", { name: /Paso 3 de 15/i }),
     ).toBeInTheDocument();
   });
 
@@ -299,9 +299,9 @@ describe("JourneyApp", () => {
     expect(encode).not.toHaveBeenCalled();
     expect(container.querySelector(".journey-navigation-frame")).toBe(canvas);
     expect(canvas).toHaveAttribute("data-visible", "true");
-    expect(screen.getByRole("region", { name: /Paso 3 de 16/ })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 3 de 15/ })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continuar" }));
-    expect(screen.getByRole("region", { name: /Paso 3 de 16/ })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 3 de 15/ })).toBeInTheDocument();
     fireEvent.playing(screen.getByTestId("journey-motion-video"));
     expect(canvas).toHaveAttribute("data-visible", "false");
     expect(canvas).toHaveAttribute("data-transitioning", "true");
@@ -330,7 +330,7 @@ describe("JourneyApp", () => {
     expect(dialog).toHaveTextContent("Di la palabra amigo.");
   });
 
-  it("keeps the secret door in the 1–16 flow and accepts amigo", async () => {
+  it("keeps the secret door before the unified scene and accepts amigo", async () => {
     const user = userEvent.setup();
     render(<JourneyApp initialStep={4} />);
 
@@ -340,13 +340,32 @@ describe("JourneyApp", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("region", { name: /Paso 5 de 16/i }),
+        screen.getByRole("region", { name: /Paso 5 de 15/i }),
       ).toBeInTheDocument();
     });
   });
 
+  it("connects amigo directly to the unified clip and uses one Continue into two souls", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={4} />);
+
+    await user.click(screen.getByRole("button", { name: "DESCIFRAR LA PALABRA" }));
+    await user.type(screen.getByLabelText("Di la palabra y entra"), "amigo");
+    await user.click(screen.getByRole("button", { name: /Abrir la puerta/i }));
+
+    await waitFor(() => expect(screen.getByRole("region", { name: /Paso 5 de 15/i })).toBeInTheDocument());
+    const unifiedVideo = screen.getByTestId("journey-motion-video");
+    expect(unifiedVideo.querySelector("source")).toHaveAttribute("src", "/journey-final/05-06-unified.mp4");
+    expect(screen.getByRole("img", { name: /La puerta a lo eterno/i })).toHaveAttribute("src", "/journey-final/05-06-unified-first.png");
+
+    fireEvent.ended(unifiedVideo);
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("region", { name: /Paso 6 de 15/i })).toBeInTheDocument();
+    expect(screen.getByTestId("journey-motion-video").querySelector("source")).toHaveAttribute("src", "/journey-final/07-two-souls.mp4");
+  });
+
   it("renders the dress-code and RSVP scenes as semantic controls", () => {
-    const { unmount } = render(<JourneyApp initialStep={11} />);
+    const { unmount } = render(<JourneyApp initialStep={10} />);
 
     const expectedButtons = [
       "Activar música",
@@ -359,12 +378,12 @@ describe("JourneyApp", () => {
     });
 
     unmount();
-    render(<JourneyApp initialStep={12} />);
+    render(<JourneyApp initialStep={11} />);
     expect(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA" })).toBeInTheDocument();
   });
 
   it("keeps the delivered dress-code film before RSVP", () => {
-    render(<JourneyApp initialStep={11} />);
+    render(<JourneyApp initialStep={10} />);
     expect(screen.getByRole("img", { name: /Código de vestimenta/i })).toHaveAttribute("src", "/journey-final/11-dress-code-first.png");
     expect(screen.getByRole("button", { name: "Continuar" })).toBeInTheDocument();
   });
@@ -375,9 +394,9 @@ describe("JourneyApp", () => {
 
     await user.click(screen.getByRole("button", { name: "CAPÍTULOS" }));
     expect(screen.getByRole("dialog", { name: "Capítulos" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /12.*CONFIRMACIÓN DE ASISTENCIA/i }));
+    await user.click(screen.getByRole("button", { name: /11.*CONFIRMACIÓN DE ASISTENCIA/i }));
     expect(
-      screen.getByRole("region", { name: /Paso 12 de 16/i }),
+      screen.getByRole("region", { name: /Paso 11 de 15/i }),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
   });
@@ -393,11 +412,11 @@ describe("JourneyApp", () => {
     const user = userEvent.setup();
     render(<JourneyApp initialStep={3} />);
     await user.click(screen.getByRole("button", { name: "CAPÍTULOS" }));
-    await user.click(screen.getByRole("button", { name: /12.*CONFIRMACIÓN DE ASISTENCIA/i }));
-    expect(screen.getByRole("region", { name: /Paso 3 de 16/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /11.*CONFIRMACIÓN DE ASISTENCIA/i }));
+    expect(screen.getByRole("region", { name: /Paso 3 de 15/i })).toBeInTheDocument();
     expect(screen.getByRole("dialog", { name: "Capítulos" })).toBeInTheDocument();
     await act(async () => finishDecode());
-    expect(screen.getByRole("region", { name: /Paso 12 de 16/i })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 11 de 15/i })).toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "Capítulos" })).not.toBeInTheDocument();
   });
 
@@ -409,12 +428,12 @@ describe("JourneyApp", () => {
     fireEvent.pointerDown(stage!, { clientX: 240, clientY: 650 });
     fireEvent.pointerUp(stage!, { clientX: 240, clientY: 520 });
 
-    expect(screen.getByRole("region", { name: /Paso 2 de 16/i })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 2 de 15/i })).toBeInTheDocument();
   });
 
   it("uses the supplied scene-twelve RSVP artwork", async () => {
     const user = userEvent.setup();
-    render(<JourneyApp initialStep={12} />);
+    render(<JourneyApp initialStep={11} />);
 
     await user.click(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA" }));
     expect(document.querySelector(".journey-rsvp-decor")).toHaveAttribute("src", "/journey-final/12-rsvp-form.png");
@@ -423,7 +442,7 @@ describe("JourneyApp", () => {
 
   it("keeps RSVP form available without movement in reduced-motion mode", async () => {
     const user = userEvent.setup();
-    render(<JourneyApp initialStep={12} />);
+    render(<JourneyApp initialStep={11} />);
 
     await user.click(screen.getByRole("button", { name: "Reducir movimiento" }));
     await user.click(screen.getByRole("button", { name: "CONFIRMAR MI ASISTENCIA" }));
@@ -434,7 +453,7 @@ describe("JourneyApp", () => {
 
   it("makes the three delivered detail cards and the final chapter reachable", async () => {
     const user = userEvent.setup();
-    render(<JourneyApp initialStep={14} />);
+    render(<JourneyApp initialStep={13} />);
 
     await user.click(screen.getByRole("button", { name: "MÚSICA Y ALEGRÍA" }));
     expect(screen.getByRole("dialog", { name: "Música y alegría" })).toBeInTheDocument();
@@ -457,8 +476,8 @@ describe("JourneyApp", () => {
     await user.click(screen.getByRole("button", { name: "Cerrar" }));
 
     await user.click(screen.getByRole("button", { name: "Continuar" }));
-    expect(screen.getByRole("region", { name: /Paso 15 de 16/ })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 14 de 15/ })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continuar" }));
-    expect(screen.getByRole("region", { name: /Paso 16 de 16/ })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Paso 15 de 15/ })).toBeInTheDocument();
   });
 });
