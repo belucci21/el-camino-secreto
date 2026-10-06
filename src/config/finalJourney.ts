@@ -12,6 +12,8 @@ export type FinalJourneyScene = {
   interactionReadyAt: number;
   narrationWindows: readonly (readonly [number, number])[];
   holdFrameAt?: number;
+  // The printed Continue on the chapel's opening frame starts its reveal.
+  revealOnContinue?: boolean;
   aspectRatio?: number;
   // Most controls are printed in the film; these are absent from the artwork
   // and must be drawn by the application, not just transparent hit targets.
@@ -57,8 +59,10 @@ const deliveredScenes: DeliveredScene[] = [
   // Drive delivery UNIFICACION ESC 5 Y 6 is one approved film: the opening
   // door continues straight into the save-the-date reveal, with one CTA only.
   { order: 5, id: "open-door-date", stem: "05-06-unified", videoPath: "/journey-final/05-06-unified-web.mp4", title: "La puerta a lo eterno", frozenFramePath: "/journey-final/05-06-unified-final.png", holdFrameAt: 28.8, surfaces: [...controls(), continueTo(6)] },
-  { order: 6, id: "two-souls", stem: "07-two-souls", title: "El viaje de dos almas", surfaces: [...controls(), continueTo(7)] },
-  { order: 7, id: "ceremony", stem: "08-ceremony", title: "La ceremonia", surfaces: [...controls(), { id: "ceremony_map", visible_label: "VER EN GOOGLE MAPS", action: "open_ceremony_map" }, continueTo(8)] },
+  // The source film contains a single chapel frame after the last note frame.
+  // Hold the note until its Continue is touched instead of revealing that cut.
+  { order: 6, id: "two-souls", stem: "07-two-souls", title: "El viaje de dos almas", frozenFramePath: "/journey-final/07-two-souls-897-final.png", holdFrameAt: 29.6, surfaces: [...controls(), continueTo(7)] },
+  { order: 7, id: "ceremony", stem: "08-ceremony", title: "La ceremonia", revealOnContinue: true, surfaces: [...controls(), { id: "ceremony_map", visible_label: "VER EN GOOGLE MAPS", action: "open_ceremony_map" }, continueTo(8)] },
   { order: 8, id: "celebration", stem: "09-journey-information", title: "Celebración en Castell Jalpí", surfaces: [...controls(), { id: "celebration_map", visible_label: "VER EN GOOGLE MAPS", action: "open_map" }, continueTo(9)] },
   { order: 9, id: "treasure", stem: "10-treasure", title: "El cofre del tesoro", surfaces: [...controls(), continueTo(10)] },
   { order: 10, id: "dress-code", stem: "11-dress-code", title: "Código de vestimenta", surfaces: [...controls(), continueTo(11)] },

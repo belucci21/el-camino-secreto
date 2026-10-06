@@ -18,6 +18,7 @@ type JourneySceneMediaProps = {
   couple: string;
   reducedMotion: boolean;
   motionEnabled: boolean;
+  awaitingStart?: boolean;
   onMotionComplete: (sceneOrder: number) => void;
   onNarrationChange: (active: boolean) => void;
   onNarrationSync: (path: string | undefined, time: number, playing: boolean) => void;
@@ -30,7 +31,7 @@ export function JourneySceneMedia({
   sceneOrder, title, videoPath, frozenFramePath, firstFramePath,
   holdFrameAt, hasNarration, narrationPath, audioEnabled, paused, couple, reducedMotion,
   interactionReadyAt, narrationWindows,
-  motionEnabled, onMotionComplete, onNarrationChange, onNarrationSync, onPlaybackStart, onSceneReady, priority,
+  motionEnabled, awaitingStart = false, onMotionComplete, onNarrationChange, onNarrationSync, onPlaybackStart, onSceneReady, priority,
 }: JourneySceneMediaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -118,7 +119,7 @@ export function JourneySceneMedia({
   useEffect(() => {
     if (!playbackActive) {
       pauseNarration();
-      onSceneReady(sceneOrder, true);
+      onSceneReady(sceneOrder, !awaitingStart);
       return;
     }
     const media = videoRef.current ?? audioRef.current;
@@ -141,7 +142,7 @@ export function JourneySceneMedia({
     };
   // Audio state only changes the mixer, never the native video's lifecycle.
   // Voice timing is updated by playing/timeupdate/the presented-frame callback.
-  }, [onSceneReady, pauseNarration, paused, play, playbackActive, reducedMotion, sceneOrder]);
+  }, [awaitingStart, onSceneReady, pauseNarration, paused, play, playbackActive, reducedMotion, sceneOrder]);
 
   // Align controls with the presented frame, not a late ended event or timer.
   // timeupdate remains the older-browser fallback.
@@ -198,7 +199,7 @@ export function JourneySceneMedia({
       {/* While moving, keep the actual first frame under the video. The final
           still only replaces it at the scene's end. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="journey-scene-image" src={motionActive && !holdingFrame ? firstFramePath : frozenFramePath} alt={`${couple}. ${title}`}
+      <img className="journey-scene-image" src={awaitingStart || (motionActive && !holdingFrame) ? firstFramePath : frozenFramePath} alt={`${couple}. ${title}`}
         draggable={false} width={720} height={1280} loading="eager" decoding="async"
         fetchPriority={priority ? "high" : "auto"} />
       {needsGesture && playbackActive && (

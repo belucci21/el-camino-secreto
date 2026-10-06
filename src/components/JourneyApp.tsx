@@ -134,6 +134,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
   const songId = useRef<string>("");
   useDialogViewport(dialog !== null);
   const [playedMotionSteps, setPlayedMotionSteps] = useState<Set<number>>(() => new Set());
+  const [activatedMotionSteps, setActivatedMotionSteps] = useState<Set<number>>(() => new Set());
   const stageRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef(0);
   const navigationBusyRef = useRef(false);
@@ -259,6 +260,14 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           setDialog({ kind: "chapters" });
           break;
         case "go_to_step":
+          if (surface.id === "continue" && scene.revealOnContinue && !playedMotionSteps.has(step)) {
+            if (!activatedMotionSteps.has(step)) {
+              setActivatedMotionSteps((current) => new Set(current).add(step));
+              // A silent reduced-motion visit has no media to finish naturally.
+              if (reducedMotion && !audio.enabled) markMotionComplete(step);
+            }
+            break;
+          }
           goToStep(surface.destination_order ?? step + 1);
           break;
         case "open_secret_word_input":
@@ -331,7 +340,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
           break;
       }
     },
-    [goToStep, openMessage, step, toggleMusic],
+    [activatedMotionSteps, audio.enabled, goToStep, markMotionComplete, openMessage, playedMotionSteps, reducedMotion, scene.revealOnContinue, step, toggleMusic],
   );
 
   const submitSecret = useCallback(
@@ -444,6 +453,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
         );
       });
 
+  const awaitingSceneReveal = !!scene.revealOnContinue && !activatedMotionSteps.has(step) && !playedMotionSteps.has(step);
+  const sceneRevealPlaying = !!scene.revealOnContinue && activatedMotionSteps.has(step) && !playedMotionSteps.has(step);
+
   return (
     <main
       className="journey-app"
@@ -495,7 +507,8 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 onSceneReady={sceneReady}
                 couple={couple}
                 reducedMotion={reducedMotion}
-                motionEnabled={experienceStarted && !playedMotionSteps.has(step)}
+                motionEnabled={experienceStarted && !playedMotionSteps.has(step) && !awaitingSceneReveal}
+                awaitingStart={awaitingSceneReveal}
                 onMotionComplete={markMotionComplete}
                 priority={step <= 2}
               />
@@ -507,6 +520,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 data-shimmer={step === 5 && (playedMotionSteps.has(5) || reducedMotion)}
                 style={primaryStyle}
                 type="button"
+                disabled={sceneRevealPlaying}
                 onClick={() => void handleSurface(primarySurface)}
               >
                 <span className={renderPrimary ? "" : "sr-only"}>{primarySurface.visible_label}</span>

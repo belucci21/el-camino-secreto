@@ -361,6 +361,31 @@ describe("JourneyApp", () => {
     expect(screen.getByTestId("journey-motion-video").querySelector("source")).toHaveAttribute("src", "/journey-final/07-two-souls.mp4");
   });
 
+  it("holds the two-souls note until touched, then starts the chapel reveal on its own Continue", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={6} />);
+
+    fireEvent.ended(screen.getByTestId("journey-motion-video"));
+    expect(screen.getByRole("region", { name: /Paso 6 de 15/i })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /El viaje de dos almas/i })).toHaveAttribute("src", "/journey-final/07-two-souls-897-final.png");
+
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("region", { name: /Paso 7 de 15/i })).toBeInTheDocument();
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /La ceremonia/i })).toHaveAttribute("src", "/journey-final/08-ceremony-first.png");
+
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    const reveal = screen.getByTestId("journey-motion-video");
+    expect(reveal.querySelector("source")).toHaveAttribute("src", "/journey-final/08-ceremony.mp4");
+    expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled();
+    fireEvent.ended(reveal);
+    expect(screen.getByRole("region", { name: /Paso 7 de 15/i })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /La ceremonia/i })).toHaveAttribute("src", "/journey-final/08-ceremony-final.png");
+
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("region", { name: /Paso 8 de 15/i })).toBeInTheDocument();
+  });
+
   it("renders the dress-code and RSVP scenes as semantic controls", () => {
     const { unmount } = render(<JourneyApp initialStep={10} />);
 
