@@ -13,9 +13,9 @@ describe("September 30 final journey", () => {
     expect(finalJourneyScenes[2].renderedControls).toBeUndefined();
     expect(finalJourneyScenes[2].frozenFramePath).toBe("/journey-final/03-journey-begins-interactive.png");
     expect(finalJourneyScenes[2].holdFrameAt).toBe(9.8);
-    expect(finalJourneyScenes[13].renderedControls).toEqual(["music_toggle", "chapters_menu"]);
-    expect(finalJourneyScenes[13].videoPath).toContain("15-important-details-v2");
-    expect(finalJourneyScenes[13].aspectRatio).toBe(1080 / 2230);
+    expect(finalJourneyScenes[13].renderedControls).toBeUndefined();
+    expect(finalJourneyScenes[13].videoPath).toContain("15-important-details-v3");
+    expect(finalJourneyScenes[13].aspectRatio).toBe(9 / 16);
     expect(finalJourneyScenes[14].videoPath).toContain("16-final-thanks-v2");
     expect(finalJourneyScenes[14].narrationPath).toContain("16-final-thanks-v2-voice.mp3");
     expect(finalJourneyScenes[14].holdFrameAt).toBeUndefined();
