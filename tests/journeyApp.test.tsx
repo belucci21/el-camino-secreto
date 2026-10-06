@@ -361,7 +361,7 @@ describe("JourneyApp", () => {
     expect(screen.getByTestId("journey-motion-video").querySelector("source")).toHaveAttribute("src", "/journey-final/07-two-souls.mp4");
   });
 
-  it("holds the two-souls note until touched, then starts the chapel reveal on its own Continue", async () => {
+  it("holds the two-souls note until touched, then plays the chapel card before Continue becomes active", async () => {
     const user = userEvent.setup();
     render(<JourneyApp initialStep={6} />);
 
@@ -371,13 +371,13 @@ describe("JourneyApp", () => {
 
     await user.click(screen.getByRole("button", { name: "Continuar" }));
     expect(screen.getByRole("region", { name: /Paso 7 de 15/i })).toBeInTheDocument();
-    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: /La ceremonia/i })).toHaveAttribute("src", "/journey-final/08-ceremony-first.png");
-
-    await user.click(screen.getByRole("button", { name: "Continuar" }));
     const reveal = screen.getByTestId("journey-motion-video");
     expect(reveal.querySelector("source")).toHaveAttribute("src", "/journey-final/08-ceremony.mp4");
-    expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled();
+    expect(screen.getByRole("img", { name: /La ceremonia/i })).toHaveAttribute("src", "/journey-final/08-ceremony-first.png");
+    expect(reveal.parentElement).toHaveAttribute("data-media-phase", "motion");
+    reveal.currentTime = 6.8;
+    fireEvent.timeUpdate(reveal);
+    expect(reveal.parentElement).toHaveAttribute("data-media-phase", "interactive");
     fireEvent.ended(reveal);
     expect(screen.getByRole("region", { name: /Paso 7 de 15/i })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: /La ceremonia/i })).toHaveAttribute("src", "/journey-final/08-ceremony-final.png");

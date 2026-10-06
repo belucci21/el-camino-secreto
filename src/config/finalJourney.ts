@@ -12,8 +12,6 @@ export type FinalJourneyScene = {
   interactionReadyAt: number;
   narrationWindows: readonly (readonly [number, number])[];
   holdFrameAt?: number;
-  // The printed Continue on the chapel's opening frame starts its reveal.
-  revealOnContinue?: boolean;
   aspectRatio?: number;
   // Most controls are printed in the film; these are absent from the artwork
   // and must be drawn by the application, not just transparent hit targets.
@@ -45,6 +43,7 @@ type DeliveredScene = Omit<FinalJourneyScene, "videoPath" | "frozenFramePath" | 
   stem: string;
   videoPath?: string;
   frozenFramePath?: string;
+  interactionReadyAt?: number;
 };
 
 // The September 30 delivery is one complete, ordered film. Its numbered
@@ -62,7 +61,9 @@ const deliveredScenes: DeliveredScene[] = [
   // The source film contains a single chapel frame after the last note frame.
   // Hold the note until its Continue is touched instead of revealing that cut.
   { order: 6, id: "two-souls", stem: "07-two-souls", title: "El viaje de dos almas", frozenFramePath: "/journey-final/07-two-souls-897-final.png", holdFrameAt: 29.6, surfaces: [...controls(), continueTo(7)] },
-  { order: 7, id: "ceremony", stem: "08-ceremony", title: "La ceremonia", revealOnContinue: true, surfaces: [...controls(), { id: "ceremony_map", visible_label: "VER EN GOOGLE MAPS", action: "open_ceremony_map" }, continueTo(8)] },
+  // The ceremony card now enters automatically. Its printed Continue appears
+  // after the card, so the hit targets become available at that point.
+  { order: 7, id: "ceremony", stem: "08-ceremony", title: "La ceremonia", interactionReadyAt: 6.7, surfaces: [...controls(), { id: "ceremony_map", visible_label: "VER EN GOOGLE MAPS", action: "open_ceremony_map" }, continueTo(8)] },
   { order: 8, id: "celebration", stem: "09-journey-information", title: "Celebración en Castell Jalpí", surfaces: [...controls(), { id: "celebration_map", visible_label: "VER EN GOOGLE MAPS", action: "open_map" }, continueTo(9)] },
   { order: 9, id: "treasure", stem: "10-treasure", title: "El cofre del tesoro", surfaces: [...controls(), continueTo(10)] },
   { order: 10, id: "dress-code", stem: "11-dress-code", title: "Código de vestimenta", surfaces: [...controls(), continueTo(11)] },
@@ -99,7 +100,7 @@ export const finalJourneyScenes: FinalJourneyScene[] = deliveredScenes.map(({ st
     firstFramePath: `/journey-final/${stem}-first.png`,
     hasNarration,
     narrationPath: hasNarration ? `/journey-final/${stem}-voice.${stem === "12-rsvp" ? "m4a" : "mp3"}` : undefined,
-    interactionReadyAt: 0,
+    interactionReadyAt: scene.interactionReadyAt ?? 0,
     narrationWindows: narrationWindows[scene.order],
   };
 });
