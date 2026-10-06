@@ -176,6 +176,16 @@ describe("cinematic scene playback", () => {
     fireEvent.timeUpdate(video);
     expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-hold-frame", "true");
   });
+  it("stops the two-souls film on its last valid note so its stray chapel cannot appear", () => {
+    const { container } = render(<JourneySceneMedia {...props} sceneOrder={6} holdFrameAt={29.6} stopAtHoldFrame interactionReadyAt={0} />);
+    const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
+    video.currentTime = 29.4;
+    fireEvent.timeUpdate(video);
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
+    expect(props.onMotionComplete).toHaveBeenCalledWith(6);
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+    expect(container.querySelector(".journey-scene-image")).toHaveAttribute("src", props.frozenFramePath);
+  });
   it("provides a gesture-based recovery when a browser blocks playback", async () => {
     vi.mocked(HTMLMediaElement.prototype.play).mockRejectedValueOnce(new DOMException("Blocked", "NotAllowedError"));
     render(<JourneySceneMedia {...props} />);

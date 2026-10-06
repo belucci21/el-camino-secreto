@@ -9,6 +9,7 @@ type JourneySceneMediaProps = {
   frozenFramePath: string;
   firstFramePath: string;
   holdFrameAt?: number;
+  stopAtHoldFrame?: boolean;
   hasNarration: boolean;
   narrationPath?: string;
   interactionReadyAt: number;
@@ -28,7 +29,7 @@ type JourneySceneMediaProps = {
 
 export function JourneySceneMedia({
   sceneOrder, title, videoPath, frozenFramePath, firstFramePath,
-  holdFrameAt, hasNarration, narrationPath, audioEnabled, paused, couple, reducedMotion,
+  holdFrameAt, stopAtHoldFrame, hasNarration, narrationPath, audioEnabled, paused, couple, reducedMotion,
   interactionReadyAt, narrationWindows,
   motionEnabled, onMotionComplete, onNarrationChange, onNarrationSync, onPlaybackStart, onSceneReady, priority,
 }: JourneySceneMediaProps) {
@@ -64,6 +65,7 @@ export function JourneySceneMedia({
     if (completed.current) return;
     completed.current = true;
     playing.current = false;
+    (videoRef.current ?? audioRef.current)?.pause();
     setVideoEnded(true);
     pauseNarration();
     onSceneReady(sceneOrder, true);
@@ -110,10 +112,14 @@ export function JourneySceneMedia({
     }
     const fallbackLead = videoRef.current?.requestVideoFrameCallback ? 0 : 0.25;
     if (holdFrameAt !== undefined && media.currentTime >= holdFrameAt - fallbackLead) {
+      if (stopAtHoldFrame) {
+        completeMotion();
+        return;
+      }
       setHoldingFrame(true);
       onSceneReady(sceneOrder, true);
     }
-  }, [holdFrameAt, interactionReadyAt, onSceneReady, sceneOrder, updateNarration]);
+  }, [completeMotion, holdFrameAt, interactionReadyAt, onSceneReady, sceneOrder, stopAtHoldFrame, updateNarration]);
 
   useEffect(() => {
     if (!playbackActive) {
@@ -150,13 +156,19 @@ export function JourneySceneMedia({
     if (!video || !video.requestVideoFrameCallback) return;
     let callbackId: number;
     const frame = (_now: number, metadata: VideoFrameCallbackMetadata) => {
+      if (completed.current) return;
       setVideoReady(true);
       if (!presented.current) {
         presented.current = true;
         onSceneReady(sceneOrder, false);
       }
       trackProgress();
+      if (completed.current) return;
       if (holdFrameAt !== undefined && metadata.mediaTime >= holdFrameAt) {
+        if (stopAtHoldFrame) {
+          completeMotion();
+          return;
+        }
         setHoldingFrame(true);
         onSceneReady(sceneOrder, true);
       }
@@ -164,7 +176,7 @@ export function JourneySceneMedia({
     };
     callbackId = video.requestVideoFrameCallback(frame);
     return () => video.cancelVideoFrameCallback(callbackId);
-  }, [holdFrameAt, motionActive, onSceneReady, sceneOrder, trackProgress]);
+  }, [completeMotion, holdFrameAt, motionActive, onSceneReady, sceneOrder, stopAtHoldFrame, trackProgress]);
 
   const mediaEvents = {
     onPlaying: revealMotion,

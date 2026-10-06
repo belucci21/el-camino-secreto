@@ -22,6 +22,10 @@ describe("September 30 final journey", () => {
     expect(finalJourneyScenes[14].renderedControls).toEqual(["music_toggle", "chapters_menu"]);
     expect(finalJourneyScenes[5].id).toBe("two-souls");
     expect(finalJourneyScenes[5].holdFrameAt).toBe(29.6);
+    expect(finalJourneyScenes[5].stopAtHoldFrame).toBe(true);
+    expect(finalJourneyScenes[5].videoPath).toBe("/journey-final/07-two-souls-clean.mp4");
+    expect(Math.max(...finalJourneyScenes[5].narrationWindows.map(([, end]) => end)))
+      .toBeLessThan(finalJourneyScenes[5].holdFrameAt! - 0.25);
     expect(finalJourneyScenes[6].interactionReadyAt).toBe(6.7);
     for (const order of [6, 7, 8, 9, 10]) {
       const bounds = journeyHotspots[order].continue;

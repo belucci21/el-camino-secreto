@@ -358,7 +358,7 @@ describe("JourneyApp", () => {
     fireEvent.ended(unifiedVideo);
     await user.click(screen.getByRole("button", { name: "Continuar" }));
     expect(screen.getByRole("region", { name: /Paso 6 de 15/i })).toBeInTheDocument();
-    expect(screen.getByTestId("journey-motion-video").querySelector("source")).toHaveAttribute("src", "/journey-final/07-two-souls.mp4");
+    expect(screen.getByTestId("journey-motion-video").querySelector("source")).toHaveAttribute("src", "/journey-final/07-two-souls-clean.mp4");
   });
 
   it("holds the two-souls note until touched, then plays the chapel card before Continue becomes active", async () => {

@@ -483,6 +483,7 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 frozenFramePath={scene.frozenFramePath}
                 firstFramePath={scene.firstFramePath}
                 holdFrameAt={scene.holdFrameAt}
+                stopAtHoldFrame={scene.stopAtHoldFrame}
                 hasNarration={scene.hasNarration}
                 narrationPath={scene.narrationPath}
                 interactionReadyAt={scene.interactionReadyAt}

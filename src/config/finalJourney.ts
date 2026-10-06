@@ -12,6 +12,7 @@ export type FinalJourneyScene = {
   interactionReadyAt: number;
   narrationWindows: readonly (readonly [number, number])[];
   holdFrameAt?: number;
+  stopAtHoldFrame?: boolean;
   aspectRatio?: number;
   // Most controls are printed in the film; these are absent from the artwork
   // and must be drawn by the application, not just transparent hit targets.
@@ -58,9 +59,9 @@ const deliveredScenes: DeliveredScene[] = [
   // Drive delivery UNIFICACION ESC 5 Y 6 is one approved film: the opening
   // door continues straight into the save-the-date reveal, with one CTA only.
   { order: 5, id: "open-door-date", stem: "05-06-unified", videoPath: "/journey-final/05-06-unified-web.mp4", title: "La puerta a lo eterno", frozenFramePath: "/journey-final/05-06-unified-final.png", holdFrameAt: 28.8, surfaces: [...controls(), continueTo(6)] },
-  // The source film contains a single chapel frame after the last note frame.
-  // Hold the note until its Continue is touched instead of revealing that cut.
-  { order: 6, id: "two-souls", stem: "07-two-souls", title: "El viaje de dos almas", frozenFramePath: "/journey-final/07-two-souls-897-final.png", holdFrameAt: 29.6, surfaces: [...controls(), continueTo(7)] },
+  // The delivered tail contains a stray chapel frame with duplicate controls.
+  // Use the clean cut and stop native playback on the note before that tail.
+  { order: 6, id: "two-souls", stem: "07-two-souls", videoPath: "/journey-final/07-two-souls-clean.mp4", title: "El viaje de dos almas", frozenFramePath: "/journey-final/07-two-souls-897-final.png", holdFrameAt: 29.6, stopAtHoldFrame: true, surfaces: [...controls(), continueTo(7)] },
   // The ceremony card now enters automatically. Its printed Continue appears
   // after the card, so the hit targets become available at that point.
   { order: 7, id: "ceremony", stem: "08-ceremony", title: "La ceremonia", interactionReadyAt: 6.7, surfaces: [...controls(), { id: "ceremony_map", visible_label: "VER EN GOOGLE MAPS", action: "open_ceremony_map" }, continueTo(8)] },
