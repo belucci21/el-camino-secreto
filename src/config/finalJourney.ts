@@ -4,9 +4,10 @@ export type FinalJourneyScene = {
   order: number;
   id: string;
   title: string;
-  videoPath: string;
+  videoPath?: string;
   frozenFramePath: string;
   firstFramePath: string;
+  stillImagePath?: string;
   hasNarration: boolean;
   narrationPath?: string;
   interactionReadyAt: number;
@@ -77,9 +78,9 @@ const deliveredScenes: DeliveredScene[] = [
     memories: "/journey-final/14-memories.png",
     contact: "/journey-final/14-contact-v2.jpg",
   }, surfaces: [...controls(), { id: "music_joy", visible_label: "MÚSICA Y ALEGRÍA", action: "open_music_prompt" }, { id: "lasting_memories", visible_label: "RECUERDOS PARA SIEMPRE", action: "open_memories" }, { id: "contact", visible_label: "CONTACTO", action: "open_contact" }, continueTo(14)] },
-  // The replacement film already includes the printed music and chapter
-  // controls; keep only their transparent hit targets on top of the artwork.
-  { order: 14, id: "important-details", stem: "15-important-details-v3", title: "Detalles importantes", aspectRatio: 9 / 16, surfaces: [...controls(), continueTo(15)] },
+  // The supplied legible still replaces the film with distorted small text.
+  // Its printed controls keep transparent hit targets, just like the film.
+  { order: 14, id: "important-details", stem: "15-important-details", title: "Detalles importantes", stillImagePath: "/journey-final/15-important-details-photo.png", aspectRatio: 9 / 16, surfaces: [...controls(), continueTo(15)] },
   { order: 15, id: "final-thanks", stem: "16-final-thanks-v2", title: "Gracias por ser parte del vínculo eterno", renderedControls: ["music_toggle", "chapters_menu"], surfaces: [...controls()] },
 ];
 
@@ -98,9 +99,9 @@ export const finalJourneyScenes: FinalJourneyScene[] = deliveredScenes.map(({ st
   const hasNarration = narrationWindows[scene.order].length > 0;
   return {
     ...scene,
-    videoPath: videoPath ?? `/journey-final/${stem}.mp4`,
-    frozenFramePath: frozenFramePath ?? `/journey-final/${stem}-final.png`,
-    firstFramePath: `/journey-final/${stem}-first.png`,
+    videoPath: scene.stillImagePath ? undefined : videoPath ?? `/journey-final/${stem}.mp4`,
+    frozenFramePath: scene.stillImagePath ?? frozenFramePath ?? `/journey-final/${stem}-final.png`,
+    firstFramePath: scene.stillImagePath ?? `/journey-final/${stem}-first.png`,
     hasNarration,
     narrationPath: hasNarration ? `/journey-final/${stem}-voice.${stem === "12-rsvp" ? "m4a" : "mp3"}` : undefined,
     interactionReadyAt: scene.interactionReadyAt ?? 0,

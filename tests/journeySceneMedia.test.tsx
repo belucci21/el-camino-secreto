@@ -83,7 +83,7 @@ describe("cinematic scene playback", () => {
       Reflect.deleteProperty(HTMLVideoElement.prototype, "cancelVideoFrameCallback");
     }
   });
-  it.each(finalJourneyScenes)("unlocks scene $order while its film still runs", (scene) => {
+  it.each(finalJourneyScenes.filter(scene => scene.videoPath))("unlocks scene $order while its film still runs", (scene) => {
     const { container } = render(<JourneySceneMedia {...props} {...scene} />);
     const video = screen.getByTestId("journey-motion-video") as HTMLVideoElement;
     video.currentTime = scene.interactionReadyAt + 0.01;
@@ -91,6 +91,13 @@ describe("cinematic scene playback", () => {
     expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "interactive");
     expect(video).toBeInTheDocument();
     expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-visual-phase", "motion");
+  });
+  it("renders the important-details photo without creating native video or narration", () => {
+    const scene = finalJourneyScenes[13];
+    const { container } = render(<JourneySceneMedia {...props} {...scene} />);
+    expect(container.querySelector("video, audio")).not.toBeInTheDocument();
+    expect(container.querySelector(".journey-scene-image")).toHaveAttribute("src", scene.stillImagePath);
+    expect(container.querySelector(".journey-scene-media")).toHaveAttribute("data-media-phase", "interactive");
   });
   it("reveals controls without replacing a moving frame with the final still", () => {
     const { container } = render(<JourneySceneMedia {...props} />);

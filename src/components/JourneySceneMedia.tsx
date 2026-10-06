@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 type JourneySceneMediaProps = {
   sceneOrder: number;
   title: string;
-  videoPath: string;
+  videoPath?: string;
   frozenFramePath: string;
   firstFramePath: string;
   holdFrameAt?: number;
@@ -46,7 +46,7 @@ export function JourneySceneMedia({
   const [holdingFrame, setHoldingFrame] = useState(false);
   const [needsGesture, setNeedsGesture] = useState(false);
   const [mediaError, setMediaError] = useState(false);
-  const playbackActive = motionEnabled && !videoEnded && (!reducedMotion || (audioEnabled && hasNarration));
+  const playbackActive = Boolean(videoPath) && motionEnabled && !videoEnded && (!reducedMotion || (audioEnabled && hasNarration));
   const motionActive = playbackActive && !reducedMotion;
   const updateNarration = useCallback((time: number) => {
     const voicePlaying = playing.current && audioEnabled && hasNarration && !paused && !document.hidden;

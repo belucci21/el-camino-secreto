@@ -3343,6 +3343,139 @@ button,
   outline-offset: 4px;
 }
 
+.journey-photo-expand {
+  position: absolute;
+  z-index: 9;
+  right: 2.5%;
+  bottom: 14%;
+  display: flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  padding: .45rem .7rem;
+  border: 1px solid #d8aa45;
+  border-radius: 999px;
+  color: #f8e6b5;
+  background: rgba(3, 24, 14, .95);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .5);
+  font-family: var(--serif-display);
+  font-size: clamp(.66rem, 2.3cqw, .86rem);
+  cursor: pointer;
+}
+
+.journey-photo-expand svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+.journey-photo-expand:focus-visible {
+  outline: 2px solid #fff5c6;
+  outline-offset: 3px;
+}
+
+.journey-photo-zoom-layer {
+  position: fixed;
+  z-index: 100;
+  inset: var(--journey-dialog-top, 0px) 0 auto;
+  height: var(--journey-dialog-height, 100dvh);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: rgba(1, 8, 4, .98);
+}
+
+.journey-photo-zoom {
+  display: flex;
+  width: min(100%, 980px);
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  color: #f7e6b5;
+}
+
+.journey-photo-zoom__toolbar {
+  display: flex;
+  min-height: 60px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem;
+  padding: max(.45rem, env(safe-area-inset-top)) max(.65rem, env(safe-area-inset-right)) .45rem max(.65rem, env(safe-area-inset-left));
+  border-bottom: 1px solid rgba(216, 170, 69, .5);
+}
+
+.journey-photo-zoom__toolbar h2 {
+  flex: 1 1 7rem;
+  margin: 0;
+  font-family: var(--serif-display);
+  font-size: clamp(.9rem, 3.6vw, 1.3rem);
+  font-weight: 400;
+}
+
+.journey-photo-zoom__controls {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+
+.journey-photo-zoom__controls button,
+.journey-photo-zoom__close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid #d8aa45;
+  border-radius: 50%;
+  color: #f7e6b5;
+  background: #0a2415;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.journey-photo-zoom__controls button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+.journey-photo-zoom__controls output {
+  min-width: 3.4rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: .75rem;
+}
+
+.journey-photo-zoom__viewport {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-x pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+  background: #08130b;
+}
+
+.journey-photo-zoom__viewport img {
+  display: block;
+  height: auto;
+  margin-inline: auto;
+  user-select: none;
+}
+
+.journey-photo-zoom__hint {
+  margin: 0;
+  padding: .45rem .75rem max(.45rem, env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: .72rem;
+}
+
+.journey-photo-zoom button:focus-visible,
+.journey-photo-zoom__viewport:focus-visible {
+  outline: 2px solid #fff5c6;
+  outline-offset: -3px;
+}
+
 /* A quiet light sweep over the button already printed in the Durin scene. */
 .journey-primary-action[data-shimmer="true"] {
   overflow: hidden;

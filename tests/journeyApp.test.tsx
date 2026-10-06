@@ -410,6 +410,25 @@ describe("JourneyApp", () => {
     expect(screen.getByRole("button", { name: "Continuar" })).toBeInTheDocument();
   });
 
+  it("lets guests enlarge and pan the legible details photo before continuing", async () => {
+    const user = userEvent.setup();
+    render(<JourneyApp initialStep={14} />);
+
+    expect(screen.queryByTestId("journey-motion-video")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Gladiola & Jordi\. Detalles importantes/ }))
+      .toHaveAttribute("src", "/journey-final/15-important-details-photo.png");
+    await user.click(screen.getByRole("button", { name: "Ampliar detalles importantes" }));
+    const dialog = screen.getByRole("dialog", { name: "Detalles importantes" });
+    const image = dialog.querySelector("img");
+    expect(image).toHaveAttribute("src", "/journey-final/15-important-details-photo.png");
+    await user.click(screen.getByRole("button", { name: "Ampliar imagen" }));
+    expect(image).toHaveStyle({ width: "150%" });
+    await user.click(screen.getByRole("button", { name: "Cerrar imagen ampliada" }));
+    expect(screen.queryByRole("dialog", { name: "Detalles importantes" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("region", { name: /Paso 15 de 15/ })).toBeInTheDocument();
+  });
+
   it("opens chapter navigation without leaving the home journey", async () => {
     const user = userEvent.setup();
     render(<JourneyApp initialStep={3} />);

@@ -14,7 +14,10 @@ describe("September 30 final journey", () => {
     expect(finalJourneyScenes[2].frozenFramePath).toBe("/journey-final/03-journey-begins-interactive.png");
     expect(finalJourneyScenes[2].holdFrameAt).toBe(9.8);
     expect(finalJourneyScenes[13].renderedControls).toBeUndefined();
-    expect(finalJourneyScenes[13].videoPath).toContain("15-important-details-v3");
+    expect(finalJourneyScenes[13].videoPath).toBeUndefined();
+    expect(finalJourneyScenes[13].stillImagePath).toBe("/journey-final/15-important-details-photo.png");
+    expect(finalJourneyScenes[13].firstFramePath).toBe(finalJourneyScenes[13].stillImagePath);
+    expect(finalJourneyScenes[13].frozenFramePath).toBe(finalJourneyScenes[13].stillImagePath);
     expect(finalJourneyScenes[13].aspectRatio).toBe(9 / 16);
     expect(finalJourneyScenes[14].videoPath).toContain("16-final-thanks-v2");
     expect(finalJourneyScenes[14].narrationPath).toContain("16-final-thanks-v2-voice.mp3");
@@ -59,10 +62,16 @@ describe("September 30 final journey", () => {
     expect(new Set(finalJourneyScenes.map(({ id }) => id)).size).toBe(15);
 
     finalJourneyScenes.forEach((scene) => {
-      expect(scene.videoPath).toMatch(/^\/journey-final\/\d{2}-.+\.mp4$/);
-      expect(scene.firstFramePath).toMatch(/^\/journey-final\/\d{2}-.+-first\.png$/);
-      expect(scene.frozenFramePath).toMatch(/^\/journey-final\/\d{2}-.+-(final|interactive)\.png$/);
-      for (const path of [scene.videoPath, scene.firstFramePath, scene.frozenFramePath]) {
+      if (scene.stillImagePath) {
+        expect(scene.videoPath).toBeUndefined();
+        expect(scene.firstFramePath).toBe(scene.stillImagePath);
+        expect(scene.frozenFramePath).toBe(scene.stillImagePath);
+      } else {
+        expect(scene.videoPath).toMatch(/^\/journey-final\/\d{2}-.+\.mp4$/);
+        expect(scene.firstFramePath).toMatch(/^\/journey-final\/\d{2}-.+-first\.png$/);
+        expect(scene.frozenFramePath).toMatch(/^\/journey-final\/\d{2}-.+-(final|interactive)\.png$/);
+      }
+      for (const path of [scene.videoPath, scene.firstFramePath, scene.frozenFramePath].filter((path): path is string => Boolean(path))) {
         expect(existsSync(publicAsset(path)), path).toBe(true);
         expect(statSync(publicAsset(path)).size, path).toBeGreaterThan(100_000);
       }

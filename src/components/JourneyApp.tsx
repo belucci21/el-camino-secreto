@@ -21,6 +21,7 @@ import type { JourneyButtonSurface } from "../types/journey";
 import { downloadICS } from "../utils/generateICS";
 import { validateSecretWord } from "../utils/secretWord";
 import { JourneyDialog } from "./JourneyDialog";
+import { JourneyPhotoZoom } from "./JourneyPhotoZoom";
 import { JourneySceneMedia } from "./JourneySceneMedia";
 
 const scenes = finalJourneyScenes;
@@ -36,6 +37,7 @@ type DialogState =
   | { kind: "message"; title: string; eyebrow?: string; body: string }
   | { kind: "rsvp" }
   | { kind: "detail"; panel: "music" | "song" | "thanks" | "memories" | "contact" }
+  | { kind: "photo-zoom" }
   | { kind: "complete" }
   | null;
 
@@ -513,6 +515,15 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
                 <span className={renderPrimary ? "" : "sr-only"}>{primarySurface.visible_label}</span>
               </button>
             )}
+            {scene.stillImagePath && (
+              <button className="journey-photo-expand" type="button" aria-label="Ampliar detalles importantes" onClick={() => setDialog({ kind: "photo-zoom" })}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <circle cx="10.5" cy="10.5" r="6.5" />
+                  <path d="m15.5 15.5 5 5M10.5 7.5v6m-3-3h6" />
+                </svg>
+                <span>Ampliar</span>
+              </button>
+            )}
           </div>
         </div>
         <div className="journey-vignette" aria-hidden="true" />
@@ -730,6 +741,9 @@ export function JourneyApp({ initialStep = 1 }: { initialStep?: number }) {
             Recorrer de nuevo
           </button>
         </JourneyDialog>
+      )}
+      {dialog?.kind === "photo-zoom" && scene.stillImagePath && (
+        <JourneyPhotoZoom src={scene.stillImagePath} onClose={() => setDialog(null)} />
       )}
     </main>
   );
