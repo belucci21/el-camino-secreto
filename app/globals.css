@@ -3476,6 +3476,27 @@ button,
   outline-offset: -3px;
 }
 
+@media (max-width: 360px) {
+  .journey-photo-zoom__toolbar {
+    gap: .25rem;
+    padding-inline: .4rem;
+  }
+
+  .journey-photo-zoom__toolbar h2 {
+    flex-basis: 5rem;
+    font-size: .75rem;
+  }
+
+  .journey-photo-zoom__controls {
+    gap: .12rem;
+  }
+
+  .journey-photo-zoom__controls output {
+    min-width: 2.5rem;
+    font-size: .68rem;
+  }
+}
+
 /* A quiet light sweep over the button already printed in the Durin scene. */
 .journey-primary-action[data-shimmer="true"] {
   overflow: hidden;
