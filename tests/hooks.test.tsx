@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useAudio } from "../src/hooks/useAudio";
@@ -63,6 +63,7 @@ vi.mock("howler", () => ({
 }));
 
 afterEach(() => {
+  cleanup();
   vi.unstubAllGlobals();
   howlerMock.instances.length = 0;
   howlerMock.Howl.mockClear();
@@ -319,6 +320,36 @@ describe("useAudio", () => {
     expect(result.current.enabled).toBe(true);
   });
 
+  it("resumes music when an external app returns through pagehide/pageshow", async () => {
+    const { result } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+    const ambient = howlerMock.instances[0];
+    ambient.play.mockClear();
+
+    act(() => window.dispatchEvent(new Event("pagehide")));
+    howlerMock.audioContext.state = "interrupted";
+    await act(async () => window.dispatchEvent(new Event("pageshow")));
+
+    expect(ambient.pause).toHaveBeenCalledOnce();
+    expect(howlerMock.audioContext.resume).toHaveBeenCalledOnce();
+    expect(ambient.play).toHaveBeenCalledOnce();
+    expect(result.current.enabled).toBe(true);
+  });
+
+  it("retries iOS audio recovery on the first touch after automatic resume is blocked", async () => {
+    const { result } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+    howlerMock.audioContext.state = "interrupted";
+    howlerMock.audioContext.resume.mockRejectedValueOnce(new Error("user activation required"));
+
+    await act(async () => window.dispatchEvent(new Event("focus")));
+    expect(howlerMock.audioContext.resume).toHaveBeenCalledOnce();
+
+    await act(async () => document.dispatchEvent(new Event("click")));
+    expect(howlerMock.audioContext.resume).toHaveBeenCalledTimes(2);
+    expect(result.current.enabled).toBe(true);
+  });
+
   it("does not resume audio after the user mutes it", async () => {
     const { result } = renderHook(() => useAudio());
     await act(async () => result.current.start());
@@ -334,6 +365,22 @@ describe("useAudio", () => {
     });
 
     expect(howlerMock.instances[0].play).not.toHaveBeenCalled();
+    expect(result.current.enabled).toBe(false);
+  });
+
+  it("does not turn music back on when returning from an external app after muting", async () => {
+    const { result } = renderHook(() => useAudio());
+    await act(async () => result.current.start());
+    act(() => result.current.mute());
+    const ambient = howlerMock.instances[0];
+    ambient.play.mockClear();
+    howlerMock.audioContext.state = "interrupted";
+
+    await act(async () => window.dispatchEvent(new Event("pageshow")));
+    await act(async () => document.dispatchEvent(new Event("click")));
+
+    expect(howlerMock.audioContext.resume).not.toHaveBeenCalled();
+    expect(ambient.play).not.toHaveBeenCalled();
     expect(result.current.enabled).toBe(false);
   });
 

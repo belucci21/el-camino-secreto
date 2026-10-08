@@ -86,6 +86,22 @@ export function useAudio() {
 
   useVisibilityPause(stop, resume);
 
+  useEffect(() => {
+    // Safari can reject an automatic AudioContext.resume() after returning
+    // from YouTube. Retry inside the next user activation, without turning
+    // music back on if the visitor explicitly muted it.
+    const recoverOnGesture = () => {
+      if (!enabledRef.current || document.hidden) return;
+      void ensureContinuity();
+    };
+    document.addEventListener("click", recoverOnGesture);
+    document.addEventListener("keydown", recoverOnGesture);
+    return () => {
+      document.removeEventListener("click", recoverOnGesture);
+      document.removeEventListener("keydown", recoverOnGesture);
+    };
+  }, [ensureContinuity]);
+
   useEffect(() => () => {
     if (tracksRef.current) Object.values(tracksRef.current).forEach((track) => track.unload());
     narrationTracksRef.current.forEach((track) => track.unload());
